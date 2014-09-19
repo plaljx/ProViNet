@@ -2,9 +2,14 @@
 # Django settings for glabnetman project.
 
 from django import VERSION as DJANGO_VERSION
+from django.utils.translation import ugettext_lazy as _
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
+
+LOCALE_PATHS = (
+    '/usr/share/tomato/web/tomato/locale'
+)
 
 ADMINS = (
     # ('Your Name', 'your_email@domain.com'),
@@ -24,11 +29,17 @@ DATABASE_PORT = ''             # Set to empty string for default. Not used with 
 # although not all choices may be available on all operating systems.
 # If running in a Windows environment this must be set to the same as your
 # system time zone.
-TIME_ZONE = 'Europe/Berlin'
+TIME_ZONE = 'Asia/Shanghai'
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
-LANGUAGE_CODE = 'en-US'
+LANGUAGE_CODE = 'zh-cn'
+gettext_noop = lambda s: s
+LANGUAGES = (
+    ('en', gettext_noop('English')),
+    ('zh-cn', gettext_noop('Simplified Chinese')),
+    ('zh-tw', gettext_noop('Traditional Chinese')),
+)
 
 # If you set this to False, Django will make some optimizations so as not
 # to load the internationalization machinery.
@@ -56,6 +67,7 @@ TEMPLATE_LOADERS = (
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
 )
 
@@ -76,7 +88,8 @@ CACHES = {
 SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
 SESSION_SERIALIZER='django.contrib.sessions.serializers.PickleSerializer'
 
-TEMPLATE_CONTEXT_PROCESSORS = ('django.core.context_processors.request',)
+TEMPLATE_CONTEXT_PROCESSORS = ('django.core.context_processors.request',
+                               'django.core.context_processors.i18n',)
 
 import os
 CURRENT_DIR = os.path.dirname(__file__)
@@ -93,7 +106,7 @@ INSTALLED_APPS = (
 server_protocol = "http"
 server_host = "localhost"
 server_port = "8000"
-server_httprealm="G-Lab ToMaTo"
+server_httprealm="Tiandon Hoelab"
 tutorial_list_url="http://packages.tomato-lab.org/tutorials/index.json"
 
 CRISPY_TEMPLATE_PACK = "bootstrap3"
