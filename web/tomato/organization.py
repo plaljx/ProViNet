@@ -32,10 +32,10 @@ from django.utils.translation import ugettext as _
 
 class OrganizationForm(BootstrapForm):
 	name = forms.CharField(max_length=50,label=_("Name"), help_text=_("The name of the organization. Must be unique to all organizations. e.g.: ukl"))
-    description = forms.CharField(max_length=255, label=_("Label"), help_text=_("e.g.: Beijing University of Posts and Commuinications; Beijing"))
-    homepage_url = forms.CharField(max_length=255,label=_("Homepage url"), required=False, help_text=_("must start with protocol, i.e. http://www.cybertestbed.com"))
-    image_url = forms.CharField(max_length=255,label=_("Image url"), required=False, help_text=_("must start with protocol, i.e. http://www.cybertestbed.com/logo.png"))
-    description_text = forms.CharField(widget = forms.Textarea, label=_("Description"), required=False)
+	description = forms.CharField(max_length=255, label=_("Label"), help_text=_("e.g.: Beijing University of Posts and Commuinications; Beijing"))
+	homepage_url = forms.CharField(max_length=255,label=_("Homepage url"), required=False, help_text=_("must start with protocol, i.e. http://www.cybertestbed.com"))
+	image_url = forms.CharField(max_length=255,label=_("Image url"), required=False, help_text=_("must start with protocol, i.e. http://www.cybertestbed.com/logo.png"))
+	description_text = forms.CharField(widget = forms.Textarea, label=_("Description"), required=False)
 	buttons = Buttons.cancel_add
 	def __init__(self, *args, **kwargs):
 		super(OrganizationForm, self).__init__(*args, **kwargs)
