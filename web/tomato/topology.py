@@ -27,14 +27,15 @@ from lib import wrap_rpc, AuthError, serverInfo
 
 from admin_common import BootstrapForm, Buttons
 from tomato.crispy_forms.layout import Layout
+from django.utils.translation import ugettext_lazy as _
 
 class ImportTopologyForm(BootstrapForm):
-	topologyfile = forms.FileField(label="Topology File")	
+	topologyfile = forms.FileField(label=_("Topology File"))	
 	def __init__(self, *args, **kwargs):
 		super(ImportTopologyForm, self).__init__(*args, **kwargs)
 		self.helper.layout = Layout(
 			'topologyfile',
-			Buttons.default(label="Import")
+			Buttons.default(label=_("Import"))
 		)
 @wrap_rpc
 def list(api, request, show_all=False, organization=None):
@@ -109,7 +110,7 @@ def usage(api, request, id): #@ReservedAssignment
 	if not api.user:
 		raise AuthError()
 	usage=api.topology_usage(id)
-	return render(request, "main/usage.html", {'usage': json.dumps(usage), 'name': 'Topology #%d' % int(id)})
+	return render(request, "main/usage.html", {'usage': json.dumps(usage), 'name': _('Topology') + '#%d' % int(id)})
 
 @wrap_rpc
 def create(api, request):
@@ -130,18 +131,18 @@ def import_(api, request):
 			id_, _, _, errors = api.topology_import(topology_structure)
 			api.topology_modify(id_, {'_initialized': True})
 			if errors != []:
-				errors = ["%s %s: failed to set %s=%r, %s" % (type_, cid, key, val, err) for type_, cid, key, val, err in errors]
-				note = "Errors occured during import:\n" + "\n".join(errors);
+				errors = ["%s %s:" + _("failed to set") + "%s=%r, %s" % (type_, cid, key, val, err) for type_, cid, key, val, err in errors]
+				note = _("Errors occured during import") + ":\n" + "\n".join(errors);
 				t = api.topology_info(id_)
 				if t['attrs'].has_key('_notes') and t['attrs']['_notes']:
-					note += "\n__________\nOriginal Notes:\n" + t['attrs']['_notes']
+					note += "\n__________\n" + _("Original Notes") + ":\n" + t['attrs']['_notes']
 				api.topology_modify(id_,{'_notes':note,'_notes_autodisplay':True})				
 			return redirect("tomato.topology.info", id=id_)
 		else:
-			return render(request, "form.html", {'form': form, "heading":"Import Topology", 'message_before': "Here you can import a topology file which you have previously exported from the Editor."})
+			return render(request, "form.html", {'form': form, "heading":_("Import Topology"), 'message_before': _("Here you can import a topology file which you have previously exported from the Editor.")})
 	else:
 		form = ImportTopologyForm()
-		return render(request, "form.html", {'form': form, "heading":"Import Topology", 'message_before': "Here you can import a topology file which you have previously exported from the Editor."})
+		return render(request, "form.html", {'form': form, "heading":_("Import Topology"), 'message_before': _("Here you can import a topology file which you have previously exported from the Editor.")})
 		
 @wrap_rpc
 def export(api, request, id):

@@ -28,14 +28,15 @@ from admin_common import RemoveConfirmForm, BootstrapForm, Buttons
 from template import techs_dict,techs_choices
 
 from tomato.crispy_forms.layout import Layout
+from django.utils.translation import ugettext_lazy as _
 
 class ProfileForm(BootstrapForm):
-	label = forms.CharField(max_length=255, help_text="The displayed label for this template")
-	ram = forms.IntegerField(label="RAM (MB)")
-	preference = forms.IntegerField(label="Preference", help_text="Sort profiles in the editor (higher preference first). The profile with highest preference will be the default. Must be an integer number.")
-	restricted = forms.BooleanField(label="Restricted", help_text="Restrict usage of this template to administrators", required=False)
-	tech = forms.ChoiceField(label="Tech",choices=techs_choices())
-	description = forms.CharField(widget = forms.Textarea, required=False)
+	label = forms.CharField(max_length=255,label=_("label"), help_text=_("The displayed label for this template"))
+	ram = forms.IntegerField(label=_("RAM (MB)"))
+	preference = forms.IntegerField(label=_("Preference"), help_text=_("Sort profiles in the editor (higher preference first). The profile with highest preference will be the default. Must be an integer number."))
+	restricted = forms.BooleanField(label=_("Restricted"), help_text=_("Restrict usage of this template to administrators"), required=False)
+	tech = forms.ChoiceField(label=_("Tech"),choices=techs_choices())
+	description = forms.CharField(widget = forms.Textarea,label=_("description"), required=False)
 	def __init__(self, *args, **kwargs):
 		super(ProfileForm, self).__init__(*args, **kwargs)
 		
@@ -47,8 +48,8 @@ class EditProfileForm(ProfileForm):
 
 
 class EditOpenVZForm(EditProfileForm):
-	cpus = forms.FloatField(label = "number of CPUs")
-	diskspace = forms.IntegerField(label="Disk Space (MB)")
+	cpus = forms.FloatField(label = _("number of CPUs"))
+	diskspace = forms.IntegerField(label=_("Disk Space (MB)"))
 	def __init__(self, res_id, *args, **kwargs):
 		super(EditOpenVZForm, self).__init__(res_id, *args, **kwargs)
 		self.helper.layout = Layout(
@@ -65,7 +66,7 @@ class EditOpenVZForm(EditProfileForm):
 		)
 
 class EditRePyForm(EditProfileForm):
-	cpus = forms.FloatField(label = "number of CPUs")
+	cpus = forms.FloatField(label = _("number of CPUs"))
 	def __init__(self, res_id, *args, **kwargs):
 		super(EditRePyForm, self).__init__(res_id, *args, **kwargs)
 		self.helper.layout = Layout(
@@ -81,8 +82,8 @@ class EditRePyForm(EditProfileForm):
 		)
 
 class EditKVMqmForm(EditProfileForm):
-	diskspace = forms.IntegerField(label="Disk Space (MB)")
-	cpus = forms.FloatField(label = "number of CPUs")
+	diskspace = forms.IntegerField(label=_("Disk Space (MB)"))
+	cpus = forms.FloatField(label = _("number of CPUs"))
 	def __init__(self, res_id, *args, **kwargs):
 		super(EditKVMqmForm, self).__init__(res_id, *args, **kwargs)
 		self.helper.layout = Layout(
@@ -100,9 +101,9 @@ class EditKVMqmForm(EditProfileForm):
 	
 	
 class AddProfileForm(ProfileForm):
-	name = forms.CharField(max_length=50,label="Internal Name", help_text="Must be unique for all templates of the same tech. Cannot be changed. Not displayed.")
-	diskspace = forms.IntegerField(label="Disk Space (MB)", required = False, help_text="only OpenVZ and KVMqm")
-	cpus = forms.FloatField(label="number of CPUs", help_text="Repy, OpenVZ: float number; KVMqm: integer number")
+	name = forms.CharField(max_length=50,label=_("Internal Name"), help_text=_("Must be unique for all templates of the same tech. Cannot be changed. Not displayed."))
+	diskspace = forms.IntegerField(label="Disk Space (MB)", required = False, help_text=_("only OpenVZ and KVMqm"))
+	cpus = forms.FloatField(label=_("number of CPUs"), help_text=_("Repy, OpenVZ: float number; KVMqm: integer number"))
 	def __init__(self, *args, **kwargs):
 		super(AddProfileForm, self).__init__(*args, **kwargs)
 		self.helper.form_action = reverse(add)
@@ -165,12 +166,12 @@ def add(api, request, tech=None):
 			res = api.resource_create('profile',data)
 			return HttpResponseRedirect(reverse("tomato.profile.info", kwargs={"res_id": res["id"]}))
 		else:
-			return render(request, "form.html", {'form': form, "heading":"Add Device Profile"})
+			return render(request, "form.html", {'form': form, "heading":_("Add Device Profile")})
 	else:
 		form = AddProfileForm()
 		if tech:
 			form.fields['tech'].initial = tech
-		return render(request, "form.html", {'form': form, "heading":"Add Device Profile"})
+		return render(request, "form.html", {'form': form, "heading":_("Add Device Profile")})
 
 @wrap_rpc
 def remove(api, request, res_id=None):
@@ -181,7 +182,7 @@ def remove(api, request, res_id=None):
 			return HttpResponseRedirect(reverse("profile_list"))
 	form = RemoveConfirmForm.build(reverse("tomato.profile.remove", kwargs={"res_id": res_id}))
 	res = api.resource_info(res_id)
-	return render(request, "form.html", {"heading": "Remove Device Profile", "message_before": "Are you sure you want to remove the device profile '"+res["attrs"]["name"]+"'?", 'form': form})	
+	return render(request, "form.html", {"heading": _("Remove Device Profile"), "message_before": _("Are you sure you want to remove the device profile '")+res["attrs"]["name"]+"'?", 'form': form})	
 	
 @wrap_rpc
 def edit(api, request, res_id=None):
@@ -211,13 +212,13 @@ def edit(api, request, res_id=None):
 				api.resource_modify(formData["res_id"],data)
 				return HttpResponseRedirect(reverse("tomato.profile.info", kwargs={"res_id": res_id}))
 			else:
-				return render(request, "main/error.html",{'type':'invalid id','text':'The resource with id '+formData['res_id']+' is no repy device profile.'})
+				return render(request, "main/error.html",{'type':'invalid id','text':_('The resource with id ')+formData['res_id']+_(' is no repy device profile.')})
 		else:
 			label = request.POST["label"]
 			if label:
-				return render(request, "form.html", {'form': form, "heading":"Edit Device Profile '"+label+"'"})
+				return render(request, "form.html", {'form': form, "heading":_("Edit Device Profile '")+label+"'"})
 			else:
-				return render(request, "main/error.html",{'type':'Transmission Error','text':'There was a problem transmitting your data.'})
+				return render(request, "main/error.html",{'type':'Transmission Error','text':_('There was a problem transmitting your data.')})
 	else:
 		if res_id:
 			res_info = api.resource_info(res_id)
@@ -229,6 +230,6 @@ def edit(api, request, res_id=None):
 				form = EditOpenVZForm(res_id, origData)
 			else:
 				form = EditKVMqmForm(res_id, origData)
-			return render(request, "form.html", {'form': form, "heading":"Edit "+res_info['attrs']['tech']+" Device Profile '"+res_info['attrs']['label']+"'"})
+			return render(request, "form.html", {'form': form, "heading":_("Edit ")+res_info['attrs']['tech']+_(" Device Profile '")+res_info['attrs']['label']+"'"})
 		else:
-			return render(request, "main/error.html",{'type':'not enough parameters','text':'No resource specified. Have you followed a valid link?'})
+			return render(request, "main/error.html",{'type':'not enough parameters','text':_('No resource specified. Have you followed a valid link?')})

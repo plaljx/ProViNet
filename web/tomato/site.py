@@ -27,15 +27,16 @@ from lib import wrap_rpc
 from admin_common import organization_name_list, BootstrapForm, RemoveConfirmForm, Buttons, append_empty_choice
 from tomato.crispy_forms.layout import Layout
 from django.core.urlresolvers import reverse
+from django.utils.translation import ugettext_lazy as _
 
 class SiteForm(BootstrapForm):
-	name = forms.CharField(max_length=50, help_text="The name of the site. Must be unique to all sites. e.g.: ukl")
-	description = forms.CharField(max_length=255, label="Label", help_text="e.g.: Technische Universit&auml;t Kaiserslautern")
-	description_text = forms.CharField(widget = forms.Textarea, label="Description", required=False)
-	organization = forms.CharField(max_length=50)
-	location = forms.CharField(max_length=255, help_text="e.g.: Germany")
-	geolocation_longitude = forms.FloatField(help_text="Float Number. >0 if East, <0 if West",label="Geolocation: Longitude")
-	geolocation_latitude = forms.FloatField(help_text="Float Number. >0 if North, <0 if South",label="Geolocation: Latitude")
+	name = forms.CharField(max_length=50,label=_("name"), help_text=_("The name of the site. Must be unique to all sites. e.g.: ukl"))
+    description = forms.CharField(max_length=255, label=_("Label"), help_text=_("e.g.: Technische Universit&auml;t Kaiserslautern"))
+    description_text = forms.CharField(widget = forms.Textarea, label=_("Description"), required=False)
+    organization = forms.CharField(max_length=50,label=_("organization"))
+    location = forms.CharField(max_length=255,label=_("location"), help_text=_("e.g.: China"))
+    geolocation_longitude = forms.FloatField(help_text=_("Float Number. >0 if East, <0 if West"),label=_("Geolocation: Longitude"))
+    geolocation_latitude = forms.FloatField(help_text=_("Float Number. >0 if North, <0 if South"),label=_("Geolocation: Latitude"))
 	def __init__(self, api, *args, **kwargs):
 		super(SiteForm, self).__init__(*args, **kwargs)
 		self.fields["organization"].widget = forms.widgets.Select(choices=append_empty_choice(organization_name_list(api)))
@@ -115,10 +116,10 @@ def add(api, request, organization):
 											  'description_text':formData['description_text']})
 			return HttpResponseRedirect(reverse("tomato.organization.info", kwargs={"name": formData["organization"]}))
 		else:
-			return render(request, "form.html", {'form': form, "heading":"Add Site", 'message_after':geolocation_script})
+			return render(request, "form.html", {'form': form, "heading":_("Add Site"), 'message_after':geolocation_script})
 	else:
 		form = AddSiteForm(api, organization)
-		return render(request, "form.html", {'form': form, "heading":"Add Site", 'message_after':geolocation_script})
+		return render(request, "form.html", {'form': form, "heading":_("Add Site"), 'message_after':geolocation_script})
 	
 @wrap_rpc
 def remove(api, request, name=None):
@@ -129,7 +130,7 @@ def remove(api, request, name=None):
 			api.site_remove(name)
 			return HttpResponseRedirect(reverse("tomato.organization.info", kwargs={"name": site["organization"]}))
 	form = RemoveConfirmForm.build(reverse("tomato.site.remove", kwargs={"name": name}))
-	return render(request, "form.html", {"heading": "Remove Site", "message_before": "Are you sure you want to remove the site '"+name+"'?", 'form': form})
+	return render(request, "form.html", {"heading": _("Remove Site"), "message_before": _("Are you sure you want to remove the site '")+name+"'?", 'form': form})
 	
 @wrap_rpc
 def edit(api, request, name):
@@ -150,9 +151,9 @@ def edit(api, request, name):
 			if name:
 				form.fields["name"].widget=forms.TextInput(attrs={'readonly':'readonly'})
 				form.fields["name"].help_text=None
-				return render(request, "form.html", {"heading": "Editing Site '"+name+"'", 'form': form, 'message_after':geolocation_script})
+				return render(request, "form.html", {"heading": _("Editing Site '")+name+"'", 'form': form, 'message_after':geolocation_script})
 			else:
-				return render(request, "main/error.html",{'type':'Transmission Error','text':'There was a problem transmitting your data.'})
+				return render(request, "main/error.html",{'type':'Transmission Error','text':_('There was a problem transmitting your data.')})
 			
 	else:
 		if name:
@@ -161,9 +162,9 @@ def edit(api, request, name):
 			siteInfo['geolocation_latitude'] = siteInfo['geolocation'].get('latitude',0)
 			del siteInfo['geolocation']
 			form = EditSiteForm(api, name, siteInfo)
-			return render(request, "form.html", {"heading": "Editing Site '"+name+"'", 'form': form, 'message_after':geolocation_script})
+			return render(request, "form.html", {"heading": _("Editing Site '")+name+"'", 'form': form, 'message_after':geolocation_script})
 		else:
-			return render(request, "main/error.html",{'type':'not enough parameters','text':'No site specified. Have you followed a valid link?'})
+			return render(request, "main/error.html",{'type':'not enough parameters','text':_('No site specified. Have you followed a valid link?')})
 
 def get_site_location(site_name,api):
 	geoloc = api.site_info(site_name)['geolocation']

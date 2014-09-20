@@ -28,7 +28,7 @@ import datetime
 
 from tomato.crispy_forms.layout import Layout
 from django.core.urlresolvers import reverse
-
+from django.utils.translation import ugettext_lazy as _
 techs=[
 		{"name": "kvmqm", "label": "KVM"},
 		{"name": "openvz", "label": "OpenVZ"},
@@ -40,23 +40,23 @@ def techs_choices():
 	return append_empty_choice(tdict)
 
 class TemplateForm(BootstrapForm):
-	label = forms.CharField(max_length=255, help_text="The displayed label for this profile")
-	subtype = forms.CharField(max_length=255, required=False)
-	description = forms.CharField(widget = forms.Textarea, required=False)
-	preference = forms.IntegerField(label="Preference", help_text="Sort templates in the editor (higher preference first). The template with highest preference will be the default. Must be an integer number.")
-	restricted = forms.BooleanField(label="Restricted", help_text="Restrict usage of this template to administrators", required=False)
-	nlXTP_installed = forms.BooleanField(label="nlXTP Guest Modules installed", help_text="Ignore this for Repy devices.", required=False)
-	creation_date = forms.DateField(required=False,widget=forms.TextInput(attrs={'class': 'datepicker'}));
-	show_as_common = forms.BooleanField(label="Show in Common Elements", help_text="Show this template in the common elements section in the editor", required=False)
-	icon = forms.URLField(label="Icon", help_text="URL of a 32x32 icon to use for elements of this template, leave empty to use the default icon", required=False)
+	label = forms.CharField(max_length=255, label=_("label"), help_text=_("The displayed label for this profile"))
+	subtype = forms.CharField(max_length=255,label=_("Subtype"), required=False)
+	description = forms.CharField(widget = forms.Textarea,label=_("Description"), required=False)
+	preference = forms.IntegerField(label=_("Preference"), help_text=_("Sort templates in the editor (higher preference first). The template with highest preference will be the default. Must be an integer number."))
+	restricted = forms.BooleanField(label=_("Restricted"), help_text=_("Restrict usage of this template to administrators"), required=False)
+	nlXTP_installed = forms.BooleanField(label=_("nlXTP Guest Modules installed"), help_text=_("Ignore this for Repy devices."), required=False)
+	creation_date = forms.DateField(required=False,label=_("creation date"), widget = forms.TextInput(attrs={'class':'datepicker'}));
+	show_as_common = forms.BooleanField(label=_("Show in Common Elements"), help_text=_("Show this template in the common elements section in the editor"), required=False)
+	icon = forms.URLField(label=_("Icon"), help_text=_("URL of a 32x32 icon to use for elements of this template, leave empty to use the default icon"), required=False)
 	def __init__(self, *args, **kwargs):
 		super(TemplateForm, self).__init__(*args, **kwargs)
 		self.fields['creation_date'].initial=datetime.date.today()
 	
 class AddTemplateForm(TemplateForm):
-	torrentfile  = forms.FileField(label="Torrent:", help_text='<a href="http://tomato.readthedocs.org/en/latest/docs/templates" target="_blank">Help</a>')
-	name = forms.CharField(max_length=50,label="Internal Name", help_text="Must be unique for all profiles. Cannot be changed. Not displayed.")
-	tech = forms.CharField(max_length=255,widget = forms.widgets.Select(choices=techs_choices()))
+	torrentfile  = forms.FileField(label=_("Torrent:"), help_text='<a href="http://tomato.readthedocs.org/en/latest/docs/templates" target="_blank">' + _('Help') + '</a>')
+	name = forms.CharField(max_length=50,label=_("Internal Name"), help_text=_("Must be unique for all profiles. Cannot be changed. Not displayed."))
+	tech = forms.CharField(max_length=255,label= _("Tech"), widget = forms.widgets.Select(choices=techs_choices()))
 	def __init__(self, *args, **kwargs):
 		super(AddTemplateForm, self).__init__(*args, **kwargs)
 		self.helper.form_action = reverse(add)
@@ -97,8 +97,8 @@ class EditTemplateForm(TemplateForm):
 	
 class ChangeTemplateTorrentForm(BootstrapForm):
 	res_id = forms.CharField(max_length=50, widget=forms.HiddenInput)
-	creation_date = forms.DateField(required=False,widget=forms.TextInput(attrs={'class': 'datepicker'}))
-	torrentfile  = forms.FileField(label="Torrent containing image:", help_text='See the <a href="https://tomato.readthedocs.org/en/latest/docs/templates/" target="_blank">template documentation about the torrent file.</a> for more information')	
+	creation_date = forms.DateField(required=False,label=_("created date"), widget=forms.TextInput(attrs={'class': 'datepicker'}))
+	torrentfile  = forms.FileField(label=_("Torrent containing image:"), help_text=_('See the') + '<a href="https://tomato.readthedocs.org/en/latest/docs/templates/" target="_blank">' +_('template documentation about the torrent file.</a> for more information'))	
 	def __init__(self, res_id, *args, **kwargs):
 		super(ChangeTemplateTorrentForm, self).__init__(*args, **kwargs)
 		self.fields['creation_date'].initial=datetime.date.today()
@@ -135,7 +135,7 @@ def info(api, request, res_id):
 
 @wrap_rpc
 def add(api, request, tech=None):
-	message_after = '<h2>Tracker URL</h2>	The torrent tracker of this backend is:	<pre><tt>'+serverInfo()["TEMPLATE_TRACKER_URL"]+'</tt></pre>'
+	message_after = '<h2>' + _('Tracker URL') + '</h2>' + _('	The torrent tracker of this backend is:') +	'<pre><tt>'+serverInfo()["TEMPLATE_TRACKER_URL"]+'</tt></pre>'
 	if request.method == 'POST':
 		form = AddTemplateForm(request.POST, request.FILES)
 		if form.is_valid():
@@ -157,12 +157,12 @@ def add(api, request, tech=None):
 											'show_as_common':formData['show_as_common']})
 			return HttpResponseRedirect(reverse("tomato.template.info", kwargs={"res_id": res["id"]}))
 		else:
-			return render(request, "form.html", {'form': form, "heading":"Add Template", 'message_after':message_after})
+			return render(request, "form.html", {'form': form, "heading":_("Add Template"), 'message_after':message_after})
 	else:
 		form = AddTemplateForm()
 		if tech:
 			form.fields['tech'].initial = tech
-		return render(request, "form.html", {'form': form, "heading":"Add Template", 'hide_errors':True, 'message_after':message_after})
+		return render(request, "form.html", {'form': form, "heading":_("Add Template"), 'hide_errors':True, 'message_after':message_after})
 
 @wrap_rpc
 def remove(api, request, res_id=None):
@@ -173,7 +173,7 @@ def remove(api, request, res_id=None):
 			return HttpResponseRedirect(reverse("template_list"))
 	form = RemoveConfirmForm.build(reverse("tomato.template.remove", kwargs={"res_id": res_id}))
 	res = api.resource_info(res_id)
-	return render(request, "form.html", {"heading": "Remove Template", "message_before": "Are you sure you want to remove the template '"+res["attrs"]["name"]+"'?", 'form': form})	
+	return render(request, "form.html", {"heading": _("Remove Template"), "message_before": _("Are you sure you want to remove the template '")+res["attrs"]["name"]+"'?", 'form': form})	
 
 @wrap_rpc
 def edit_torrent(api, request, res_id=None):
@@ -190,20 +190,20 @@ def edit_torrent(api, request, res_id=None):
 														'creation_date':creation_date})
 				return HttpResponseRedirect(reverse("tomato.template.info", kwargs={"res_id": res_id}))
 			else:
-				return render(request, "main/error.html",{'type':'invalid id','text':'The resource with id '+formData['res_id']+' is no template.'})
+				return render(request, "main/error.html",{'type':'invalid id','text':_('The resource with id ')+formData['res_id']+' is no template.'})
 		else:
 			label = request.POST["label"]
 			if label:
-				return render(request, "form.html", {'form': form, "heading":"Edit Template Torrent for '"+label+"' ("+request.POST["tech"]+")"})
+				return render(request, "form.html", {'form': form, "heading":_("Edit Template Torrent for '")+label+"' ("+request.POST["tech"]+")"})
 			else:
-				return render(request, "main/error.html",{'type':'Transmission Error','text':'There was a problem transmitting your data.'})
+				return render(request, "main/error.html",{'type':'Transmission Error','text':_('There was a problem transmitting your data.')})
 	else:
 		if res_id:
 			res_info = api.resource_info(res_id)
 			form = ChangeTemplateTorrentForm(res_id, {'res_id': res_id})
-			return render(request, "form.html", {'form': form, "heading":"Edit Template Torrent for '"+res_info['attrs']['label']+"' ("+res_info['attrs']['tech']+")"})
+			return render(request, "form.html", {'form': form, "heading":_("Edit Template Torrent for '")+res_info['attrs']['label']+"' ("+res_info['attrs']['tech']+")"})
 		else:
-			return render(request, "main/error.html",{'type':'not enough parameters','text':'No resource specified. Have you followed a valid link?'})
+			return render(request, "main/error.html",{'type':'not enough parameters','text':_('No resource specified. Have you followed a valid link?')})
 
 
 @wrap_rpc
@@ -225,20 +225,20 @@ def edit(api, request, res_id=None):
 														'show_as_common':formData['show_as_common']})
 				return HttpResponseRedirect(reverse("tomato.template.info", kwargs={"res_id": res_id}))
 			else:
-				return render(request, "main/error.html",{'type':'invalid id','text':'The resource with id '+formData['res_id']+' is no template.'})
+				return render(request, "main/error.html",{'type':'invalid id','text':_('The resource with id ')+formData['res_id']+_(' is no template.')})
 		else:
 			label = request.POST["label"]
 			if label:
-				return render(request, "form.html", {'label': label, 'form': form, "heading":"Edit Template Data for '"+label+"' ("+request.POST['tech']+")"})
+				return render(request, "form.html", {'label': label, 'form': form, "heading":_("Edit Template Data for '")+label+"' ("+request.POST['tech']+")"})
 			else:
-				return render(request, "main/error.html",{'type':'Transmission Error','text':'There was a problem transmitting your data.'})
+				return render(request, "main/error.html",{'type':'Transmission Error','text':_('There was a problem transmitting your data.')})
 	else:
 		if res_id:
 			res_info = api.resource_info(res_id)
 			origData = res_info['attrs']
 			origData['res_id'] = res_id
 			form = EditTemplateForm(res_id, origData)
-			return render(request, "form.html", {'label': res_info['attrs']['label'], 'form': form, "heading":"Edit Template Data for '"+res_info['attrs']['label']+"' ("+res_info['attrs']['tech']+")"})
+			return render(request, "form.html", {'label': res_info['attrs']['label'], 'form': form, "heading":_("Edit Template Data for '")+res_info['attrs']['label']+"' ("+res_info['attrs']['tech']+")"})
 		else:
-			return render(request, "main/error.html",{'type':'not enough parameters','text':'No address specified. Have you followed a valid link?'})
+			return render(request, "main/error.html",{'type':'not enough parameters','text':_('No address specified. Have you followed a valid link?')})
 
