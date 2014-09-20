@@ -25,7 +25,7 @@ import json, uuid
 import urllib2, urllib
 from urlparse import urljoin
 from settings import tutorial_list_url
-
+from django.utils.translation import ugettext_lazy as _
 
 
 #This is a list of available tutorials (values should be self-explaining):
@@ -56,7 +56,7 @@ def start(api, request):
 	if token != correct_token:
 		request.session["id"] = session_id
 		form = ConfirmForm.build(reverse("tomato.tutorial.start")+"?"+urllib.urlencode({"token": correct_token, "url": url}))
-		return render(request, "form.html", {"heading": "Load tutorial", "message_before": "Are you sure you want to load the tutorial from the following URL? <pre>"+url+"</pre>", 'form': form})
+		return render(request, "form.html", {"heading": _("Load tutorial"), "message_before": _("Are you sure you want to load the tutorial from the following URL?") + "<pre>"+url+"</pre>", 'form': form})
 	_, _, top_dict = loadTutorial(url)
 	top_dict['topology']['attrs']['_tutorial_url'] = url
 	top_dict['topology']['attrs']['_tutorial_status'] = 0

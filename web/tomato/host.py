@@ -26,13 +26,14 @@ from django.http import HttpResponseRedirect
 from admin_common import BootstrapForm, RemoveConfirmForm, Buttons, append_empty_choice
 from tomato.crispy_forms.layout import Layout
 from django.core.urlresolvers import reverse
+from django.utils.translation import ugettext_lazy as _
 
 class HostForm(BootstrapForm):
-	name = forms.CharField(max_length=255,help_text="The host's name. This is also its unique id.")
-	address = forms.CharField(max_length=255,help_text="The host's IP address.")
-	site = forms.CharField(max_length=50,help_text="The site this host belongs to.")
-	enabled = forms.BooleanField(initial=True, required=False,help_text="Whether this host is enabled.")
-	description_text = forms.CharField(widget = forms.Textarea, label="Description", required=False)
+	name = forms.CharField(max_length=255,label=_("Name"),help_text=_("The host's name. This is also its unique id."))
+	address = forms.CharField(max_length=255,label=_("Address"),help_text=_("The host's IP address."))
+	site = forms.CharField(max_length=50,label=_("Site"),help_text=_("The site this host belongs to."))
+	enabled = forms.BooleanField(initial=True,label=_("Enable"), required=False,help_text=_("Whether this host is enabled."))
+	description_text = forms.CharField(widget = forms.Textarea, label=_("Description"), required=False)
 	buttons = Buttons.cancel_add
 	def __init__(self, api, *args, **kwargs):
 		super(HostForm, self).__init__(*args, **kwargs)
@@ -84,7 +85,7 @@ def info(api, request, name):
 
 @wrap_rpc
 def add(api, request, site=None):
-	message_after = '<h2>Public key</h2>	The public key of this backend is:	<pre><tt>'+serverInfo()['public_key']+'</tt></pre>'
+	message_after = '<h2>' + _('Public key') + '</h2>' + _('	The public key of this backend is:')	+ '<pre><tt>'+serverInfo()['public_key']+'</tt></pre>'
 	if request.method == 'POST':
 		form = HostForm(api, request.POST)
 		if form.is_valid():
@@ -92,15 +93,15 @@ def add(api, request, site=None):
 			api.host_create(formData["name"], formData["site"], {"address": formData["address"], "enabled": formData["enabled"],'description_text':formData['description_text']})
 			return HttpResponseRedirect(reverse("tomato.host.info", kwargs={"name": formData["name"]}))
 		else:
-			return render(request, "form.html", {'form': form, "heading":"Add Host", 'message_after':message_after})
+			return render(request, "form.html", {'form': form, "heading":_("Add Host"), 'message_after':message_after})
 	else:
 		form = HostForm(api)
 		if api.site_list():
 			if site:
 				form.fields['site'].initial=site
-			return render(request, "form.html", {'form': form, "heading":"Add Host", 'message_after':message_after})
+			return render(request, "form.html", {'form': form, "heading":_("Add Host"), 'message_after':message_after})
 		else:
-			return render(request, "main/error.html",{'type':'No site available','text':'You need a site first before you can add hosts.'})
+			return render(request, "main/error.html",{'type':'No site available','text':_('You need a site first before you can add hosts.')})
 
 @wrap_rpc
 def remove(api, request, name=None):
@@ -110,7 +111,7 @@ def remove(api, request, name=None):
 			api.host_remove(name)
 			return HttpResponseRedirect(reverse("host_list"))
 	form = RemoveConfirmForm.build(reverse("tomato.host.remove", kwargs={"name": name}))
-	return render(request, "form.html", {"heading": "Remove Host", "message_before": "Are you sure you want to remove the host '"+name+"'?", 'form': form})
+	return render(request, "form.html", {"heading": _("Remove Host"), "message_before": _("Are you sure you want to remove the host '")+name+"'?", 'form': form})
 
 @wrap_rpc
 def edit(api, request, name=None):
@@ -124,22 +125,22 @@ def edit(api, request, name=None):
 			if not name:
 				name=request.POST["name"]
 			if name:
-				return render(request, "form.html", {"heading": "Editing Host '"+name+"'", 'form': form})
+				return render(request, "form.html", {"heading": _("Editing Host '")+name+"'", 'form': form})
 			else:
-				return render(request, "main/error.html",{'type':'Transmission Error','text':'There was a problem transmitting your data.'})
+				return render(request, "main/error.html",{'type':'Transmission Error','text':_('There was a problem transmitting your data.')})
 	else:
 		if name:
 			hostinfo=api.host_info(name)
 			form = EditHostForm(api, name, hostinfo)
 			form.fields["site"].initial = hostinfo["site"]
 			form.fields["enabled"].initial = hostinfo["enabled"]
-			return render(request, "form.html", {"heading": "Editing Host '"+name+"'", 'form': form})
+			return render(request, "form.html", {"heading": _("Editing Host '")+name+"'", 'form': form})
 		else:
-			return render(request, "main/error.html",{'type':'not enough parameters','text':'No address specified. Have you followed a valid link?'})
+			return render(request, "main/error.html",{'type':'not enough parameters','text':_('No address specified. Have you followed a valid link?')})
 
 @wrap_rpc
 def usage(api, request, name): #@ReservedAssignment
 	if not api.user:
 		raise AuthError()
 	usage=api.host_usage(name)
-	return render(request, "main/usage.html", {'usage': json.dumps(usage), 'name': 'Organization %s' % name})
+	return render(request, "main/usage.html", {'usage': json.dumps(usage), 'name': _('Organization') + '%s' % name})

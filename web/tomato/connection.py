@@ -22,7 +22,9 @@ import json
 
 from lib import wrap_rpc
 
+from django.utils.translation import ugettext_lazy as _
+
 @wrap_rpc
 def usage(api, request, id): #@ReservedAssignment
 	usage=api.connection_usage(id)
-	return render(request, "main/usage.html", {'usage': json.dumps(usage), 'name': 'Connection #%d' % int(id)})
+	return render(request, "main/usage.html", {'usage': json.dumps(usage), 'name': _('Connection') + '#%d' % int(id)})

@@ -25,6 +25,7 @@ from tomato.crispy_forms.layout import Layout
 from tomato.crispy_forms.bootstrap import StrictButton, FormActions
 
 from lib import getapi, getNews, wrap_rpc
+from django.utils.translation import ugettext_lazy as _
 
 def index(request):
 	try:
@@ -38,9 +39,9 @@ def statistics(api, request):
 	return render(request, "main/statistics.html", {"stats": api.statistics()})
 
 class LoginForm(forms.Form):
-	username = forms.CharField(max_length=255)
-	password = forms.CharField(max_length=255, widget=forms.PasswordInput)
-	long_session = forms.BooleanField(required=False, label="Remember me")
+	username = forms.CharField(max_length=255, label=_("Username"))
+	password = forms.CharField(max_length=255, label=_("Password"), widget=forms.PasswordInput)
+	long_session = forms.BooleanField(required=False, label=_("Remember me"))
 	def __init__(self, *args, **kwargs):
 		super(LoginForm, self).__init__(*args, **kwargs)
 		self.helper = FormHelper()
@@ -68,7 +69,7 @@ def login(request):
 		api = getapi(request)
 		if not api.user: #login failed
 			del request.session["auth"]
-			return render(request, "main/login.html", {'form': form, 'message': 'login failed'})
+			return render(request, "main/login.html", {'form': form, 'message': _('login failed')})
 		request.session["user"] = api.user
 		request.session.set_expiry(3600*24*14 if formData["long_session"] else 3600)
 		forward = reverse("tomato.main.index")

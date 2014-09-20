@@ -28,13 +28,14 @@ from lib import wrap_rpc, AuthError
 from admin_common import BootstrapForm, RemoveConfirmForm, Buttons
 from tomato.crispy_forms.layout import Layout
 from django.core.urlresolvers import reverse
+from django.utils.translation import ugettext as _
 
 class OrganizationForm(BootstrapForm):
-	name = forms.CharField(max_length=50, help_text="The name of the organization. Must be unique to all organizations. e.g.: ukl")
-	description = forms.CharField(max_length=255, label="Label", help_text="e.g.: Technische Universit&auml;t Kaiserslautern")
-	homepage_url = forms.CharField(max_length=255, required=False, help_text="must start with protocol, i.e. http://www.tomato-testbed.org")
-	image_url = forms.CharField(max_length=255, required=False, help_text="must start with protocol, i.e. http://www.tomato-testbed.org/logo.png")
-	description_text = forms.CharField(widget = forms.Textarea, label="Description", required=False)
+	name = forms.CharField(max_length=50,label=_("Name"), help_text=_("The name of the organization. Must be unique to all organizations. e.g.: ukl"))
+    description = forms.CharField(max_length=255, label=_("Label"), help_text=_("e.g.: Beijing University of Posts and Commuinications; Beijing"))
+    homepage_url = forms.CharField(max_length=255,label=_("Homepage url"), required=False, help_text=_("must start with protocol, i.e. http://www.cybertestbed.com"))
+    image_url = forms.CharField(max_length=255,label=_("Image url"), required=False, help_text=_("must start with protocol, i.e. http://www.cybertestbed.com/logo.png"))
+    description_text = forms.CharField(widget = forms.Textarea, label=_("Description"), required=False)
 	buttons = Buttons.cancel_add
 	def __init__(self, *args, **kwargs):
 		super(OrganizationForm, self).__init__(*args, **kwargs)
@@ -95,10 +96,10 @@ def add(api, request):
 											  })
 			return HttpResponseRedirect(reverse("tomato.organization.info", kwargs={"name": formData["name"]}))
 		else:
-			return render(request, "form.html", {'form': form, "heading":"Add Organization"})
+			return render(request, "form.html", {'form': form, "heading":_("Add Organization")})
 	else:
 		form = OrganizationForm
-		return render(request, "form.html", {'form': form, "heading":"Add Organization"})
+		return render(request, "form.html", {'form': form, "heading":_("Add Organization")})
 	
 @wrap_rpc
 def remove(api, request, name=None):
@@ -108,7 +109,7 @@ def remove(api, request, name=None):
 			api.organization_remove(name)
 			return HttpResponseRedirect(reverse("tomato.organization.list"))
 	form = RemoveConfirmForm.build(reverse("tomato.organization.remove", kwargs={"name": name}))
-	return render(request, "form.html", {"heading": "Remove Organization", "message_before": "Are you sure you want to remove the organization '"+name+"'?", 'form': form})
+	return render(request, "form.html", {"heading": _("Remove Organization"), "message_before": _("Are you sure you want to remove the organization '")+name+"'?", 'form': form})
 	
 @wrap_rpc
 def edit(api, request, name=None):
@@ -128,21 +129,21 @@ def edit(api, request, name=None):
 			if name:
 				form.fields["name"].widget=forms.TextInput(attrs={'readonly':'readonly'})
 				form.fields["name"].help_text=None
-				return render(request, "form.html", {"heading": "Editing Organization '"+name+"'", 'form': form})
+				return render(request, "form.html", {"heading": _("Editing Organization '")+name+"'", 'form': form})
 			else:
-				return render(request, "main/error.html",{'type':'Transmission Error','text':'There was a problem transmitting your data.'})
+				return render(request, "main/error.html",{'type':'Transmission Error','text':_('There was a problem transmitting your data.')})
 			
 	else:
 		if name:
 			orgaInfo = api.organization_info(name)
 			form = EditOrganizationForm(orgaInfo)
-			return render(request, "form.html", {"heading": "Editing Organization '"+name+"'", 'form': form})
+			return render(request, "form.html", {"heading": _("Editing Organization '")+name+"'", 'form': form})
 		else:
-			return render(request, "main/error.html",{'type':'not enough parameters','text':'No organization specified. Have you followed a valid link?'})
+			return render(request, "main/error.html",{'type':'not enough parameters','text':_('No organization specified. Have you followed a valid link?')})
 
 @wrap_rpc
 def usage(api, request, name): #@ReservedAssignment
 	if not api.user:
 		raise AuthError()
 	usage=api.organization_usage(name)
-	return render(request, "main/usage.html", {'usage': json.dumps(usage), 'name': 'Organization %s' % name})
+	return render(request, "main/usage.html", {'usage': json.dumps(usage), 'name': _('Organization') + '%s' % name})

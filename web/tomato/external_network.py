@@ -24,15 +24,15 @@ from admin_common import RemoveConfirmForm, BootstrapForm, Buttons
 from django.core.urlresolvers import reverse
 
 from tomato.crispy_forms.layout import Layout
-
+from django.utils.translation import ugettext_lazy as _
 
 class NetworkForm(BootstrapForm):
-	kind = forms.CharField(label="Kind",max_length=255)
-	label = forms.CharField(max_length=255,label="Label",help_text="Visible Name")
-	preference = forms.IntegerField(label="Preference", help_text="Sort networks in the editor (higher preference first). The item with the highest preference will be the default one. An integer number.")
-	description = forms.CharField(widget = forms.Textarea, required=False)
-	big_icon = forms.BooleanField(label="Show as a big icon in the editor", required=False)
-	show_as_common = forms.BooleanField(label="Show in Common Elements", help_text="Show this network in the common elements section in the editor", required=False)
+	kind = forms.CharField(label=_("Kind"),max_length=255)
+    label = forms.CharField(max_length=255,label=_("Label"),help_text=_("Visible Name"))
+    preference = forms.IntegerField(label=_("Preference"), help_text=_("Sort networks in the editor (higher preference first). The item with the highest preference will be the default one. An integer number."))
+    description = forms.CharField(widget = forms.Textarea,label=_("Decription"), required=False)
+    big_icon = forms.BooleanField(label=_("Show as a big icon in the editor"), required=False)
+    show_as_common = forms.BooleanField(label=_("Show in Common Elements"), help_text=_("Show this network in the common elements section in the editor"), required=False)
 	def __init__(self, *args, **kwargs):
 		super(NetworkForm, self).__init__(*args, **kwargs)
 		self.helper.form_action = reverse(add)
@@ -83,10 +83,10 @@ def add(api, request):
 										   'show_as_common': formData['show_as_common']})
 			return HttpResponseRedirect(reverse("tomato.external_network.list"))
 		else:
-			return render(request, "form.html", {'form': form, 'heading':"Add External Network"})
+			return render(request, "form.html", {'form': form, 'heading':_("Add External Network")})
 	else:
 		form = NetworkForm
-		return render(request, "form.html", {'form': form, 'heading':"Add External Network"})
+		return render(request, "form.html", {'form': form, 'heading':_("Add External Network")})
 
 @wrap_rpc
 def remove(api, request, res_id=None):
@@ -97,7 +97,7 @@ def remove(api, request, res_id=None):
 			return HttpResponseRedirect(reverse("tomato.external_network.list"))
 	form = RemoveConfirmForm.build(reverse("tomato.external_network.remove", kwargs={"res_id": res_id}))
 	res = api.resource_info(res_id)
-	return render(request, "form.html", {"heading": "Remove External Network", "message_before": "Are you sure you want to remove the external network '"+res["attrs"]["kind"]+"'?", 'form': form})	
+	return render(request, "form.html", {"heading": _("Remove External Network"), "message_before": _("Are you sure you want to remove the external network '")+res["attrs"]["kind"]+"'?", 'form': form})	
 	
 
 @wrap_rpc
@@ -114,19 +114,19 @@ def edit(api, request, res_id = None):
 										   				'show_as_common': formData['show_as_common']})
 				return HttpResponseRedirect(reverse("tomato.external_network.list"))
 			else:
-				return render(request, "main/error.html",{'type':'invalid id','text':'The resource with id '+formData['res_id']+' is no external network.'})
+				return render(request, "main/error.html",{'type':'invalid id','text':_('The resource with id ')+formData['res_id']+_(' is no external network.')})
 		else:
 			kind = request.POST["kind"]
 			if kind:
-				return render(request, "form.html", {'form': form, 'heading':"Edit External Network '"+kind+"'"})
+				return render(request, "form.html", {'form': form, 'heading':_("Edit External Network '")+kind+"'"})
 			else:
-				return render(request, "main/error.html",{'type':'Transmission Error','text':'There was a problem transmitting your data.'})
+				return render(request, "main/error.html",{'type':'Transmission Error','text':_('There was a problem transmitting your data.')})
 	else:
 		if res_id:
 			res_info = api.resource_info(res_id)
 			origData = res_info['attrs']
 			origData['res_id'] = res_id
 			form = EditNetworkForm(res_id, origData)
-			return render(request, "form.html", {'form': form, 'heading':"Edit External Network '"+res_info['attrs']['label']+"'"})
+			return render(request, "form.html", {'form': form, 'heading':_("Edit External Network '")+res_info['attrs']['label']+"'"})
 		else:
-			return render(request, "main/error.html",{'type':'not enough parameters','text':'No address specified. Have you followed a valid link?'})
+			return render(request, "main/error.html",{'type':'not enough parameters','text':_('No address specified. Have you followed a valid link?')})

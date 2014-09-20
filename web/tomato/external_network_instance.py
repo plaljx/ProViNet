@@ -26,10 +26,12 @@ from tomato.crispy_forms.layout import Layout
 
 from django.core.urlresolvers import reverse
 
+from django.utils.translation import ugettext_lazy as _
+
 class NetworkInstanceForm(BootstrapForm):
-	host = forms.CharField(label="Host")
-	bridge = forms.CharField(max_length=255,label="Bridge",help_text="TODO: write a useful help text here...")
-	network = forms.CharField(label="Network")
+	host = forms.CharField(label=_("Host"))
+	bridge = forms.CharField(max_length=255,label=_("Bridge"),help_text=_("TODO: write a useful help text here..."))
+	network = forms.CharField(label=_("Network"))
 	def __init__(self, api, *args, **kwargs):
 		super(NetworkInstanceForm, self).__init__(*args, **kwargs)
 		self.fields["network"].widget = forms.widgets.Select(choices=append_empty_choice(external_network_list(api)))
@@ -126,7 +128,7 @@ def add(api, request, network=None, host=None):
 										   'kind':formData['network']})
 			return HttpResponseRedirect(reverse("external_network_instances", kwargs={"network": network_id(api, formData['network'])}))
 		else:
-			return render(request, "form.html", {'form': form, "heading":"Add External Network Instance"})
+			return render(request, "form.html", {'form': form, "heading":_("Add External Network Instance")})
 	else:
 		form = NetworkInstanceForm(api)
 		if network:
@@ -134,7 +136,7 @@ def add(api, request, network=None, host=None):
 			form.fields["network"].initial=network
 		if host:
 			form.fields['host'].initial=host
-		return render(request, "form.html", {'form': form, "heading":"Add External Network Instance"})
+		return render(request, "form.html", {'form': form, "heading":_("Add External Network Instance")})
 	
 @wrap_rpc
 def remove(api, request, res_id=None):
@@ -146,7 +148,7 @@ def remove(api, request, res_id=None):
 			return HttpResponseRedirect(reverse("external_network_instances", kwargs={"network": network_id(api, res["attrs"]['network'])}))
 	form = RemoveConfirmForm.build(reverse("tomato.external_network_instance.remove", kwargs={"res_id": res_id}))
 	res = api.resource_info(res_id)
-	return render(request, "form.html", {"heading": "Remove External Network Instance", "message_before": "Are you sure you want to remove the external network instance?", 'form': form})	
+	return render(request, "form.html", {"heading": _("Remove External Network Instance"), "message_before": _("Are you sure you want to remove the external network instance?"), 'form': form})	
 	
 
 @wrap_rpc
@@ -162,19 +164,19 @@ def edit(api, request, res_id = None):
 														'kind':formData['network']}) 
 				return HttpResponseRedirect(reverse("external_network_instances", kwargs={"network": network_id(api, formData['network'])}))
 			else:
-				return render(request, "main/error.html",{'type':'invalid id','text':'The resource with id '+formData['res_id']+' is no external network instance.'})
+				return render(request, "main/error.html",{'type':'invalid id','text':_('The resource with id ')+formData['res_id']+_(' is no external network instance.')})
 		else:
 			host = request.POST["host"]
 			if host:
-				return render(request, "form.html", {'form': form, "heading":"Edit External Network Instance on "+host})
+				return render(request, "form.html", {'form': form, "heading":_("Edit External Network Instance on ")+host})
 			else:
-				return render(request, "main/error.html",{'type':'Transmission Error','text':'There was a problem transmitting your data.'})
+				return render(request, "main/error.html",{'type':'Transmission Error','text':_('There was a problem transmitting your data.')})
 	else:
 		if res_id:
 			res_info = api.resource_info(res_id)
 			origData = res_info['attrs']
 			origData['res_id'] = res_id
 			form = EditNetworkInstanceForm(res_id, api, origData)
-			return render(request, "form.html", {'form': form, "heading":"Edit External Network Instance on "+res_info['attrs']['host']})
+			return render(request, "form.html", {'form': form, "heading":_("Edit External Network Instance on ")+res_info['attrs']['host']})
 		else:
-			return render(request, "main/error.html",{'type':'not enough parameters','text':'No address specified. Have you followed a valid link?'})
+			return render(request, "main/error.html",{'type':'not enough parameters','text':_('No address specified. Have you followed a valid link?')})

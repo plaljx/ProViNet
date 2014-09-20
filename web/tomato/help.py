@@ -29,15 +29,16 @@ from admin_common import BootstrapForm, append_empty_choice
 from tomato.crispy_forms.layout import Layout
 from tomato.crispy_forms.bootstrap import FormActions, StrictButton
 from django.core.urlresolvers import reverse
+from django.utils.translation import ugettext_lazy as _
 
 available_issues = [
-                    ('admin', "User Priviliges or General Assistance"),
-                    ('host', "Testbed Misbehavior")
+                    ('admin', _("User Priviliges or General Assistance")),
+                    ('host', _("Testbed Misbehavior"))
                     ]
 
 available_admin_classes = [
-                         ('organization', 'Administrators of my organization (use this if you are unsure)'),
-                         ('global', 'Global administrators')
+                         ('organization', _('Administrators of my organization (use this if you are unsure)')),
+                         ('global', _('Global administrators'))
                          ]
 
 def help(request, page=""):
@@ -53,7 +54,7 @@ class HelpForm(BootstrapForm):
     admin_class = forms.CharField(max_length=50, required=True, widget = forms.widgets.Select(choices=append_empty_choice(available_admin_classes)), label="Who to Contact")
     issue = forms.CharField(max_length=50, required=True, widget = forms.widgets.Select(choices=append_empty_choice(available_issues)))
     subject = forms.CharField(max_length=255, required=True)
-    message = forms.CharField(widget = forms.Textarea, label="Description", required=True)
+    message = forms.CharField(widget = forms.Textarea, label=_("Description"), required=True)
     def __init__(self, *args, **kwargs):
         super(HelpForm, self).__init__(*args, **kwargs)
         self.helper.form_action = reverse(contact_form)
@@ -63,8 +64,8 @@ class HelpForm(BootstrapForm):
             'subject',
             'message',
             FormActions(
-                StrictButton('<span class="glyphicon glyphicon-remove"></span> Cancel', css_class='btn-default backbutton'),
-                StrictButton('<span class="glyphicon glyphicon-send"></span> Send e-mail', css_class='btn-primary', type="submit")
+                StrictButton('<span class="glyphicon glyphicon-remove"></span>' + _('Cancel'), css_class='btn-default backbutton'),
+                StrictButton('<span class="glyphicon glyphicon-send"></span>' + _('Send e-mail'), css_class='btn-primary', type="submit")
             )
         )
 
@@ -84,7 +85,7 @@ def contact_form(api, request, subject=None, message=None, global_contact=False,
                            issue=formData['issue'])
             return render(request, "help/contact_form_success.html")
         else:
-            return render(request, "form.html", {'form': form,"heading":"Contact Administrators"})
+            return render(request, "form.html", {'form': form,"heading":_("Contact Administrators")})
     else:
         form = HelpForm()
         if subject:
@@ -95,4 +96,4 @@ def contact_form(api, request, subject=None, message=None, global_contact=False,
             form.fields['admin_class'].initial = "global"
         if issue:
             form.fields['issue'].initial = issue
-        return render(request, "form.html", {'form': form,"heading":"Contact Administrators"})
+        return render(request, "form.html", {'form': form,"heading":_("Contact Administrators")})
