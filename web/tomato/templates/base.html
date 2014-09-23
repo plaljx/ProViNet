@@ -6,9 +6,9 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /> 
 
 
-<meta name="DESCRIPTION" content="German Lab Webpage" /> 
+<meta name="DESCRIPTION" content="Hoelab Webpage" /> 
 
-<link rel="shortcut icon" type="image/x-icon" href="//www.german-lab.de/favicon.ico" />
+<link rel="shortcut icon" type="image/x-icon" href="//www.cybertestbed.com/favicon.ico" />
 <!-- Bootstrap core CSS -->
 <link href="/style/bootstrap.min.css" rel="stylesheet">
 <link href="/style/bootstrap-multiselect.css" rel="stylesheet">
@@ -31,6 +31,7 @@
 <![endif]-->
 {% load url from future %}
 {% load tomato %}
+{% load i18n %}
 
 <script src="/js/jquery.js"></script>
 <script src="/js/bootstrap.min.js"></script>
@@ -84,7 +85,7 @@ head.appendChild(style);
         <td style="text-align: right;vertical-align:bottom;">
         <small>
         {% if request.session.user %}
-        Logged in as {{request.session.user.realname}} (<a href="{%url "main.logout" %}">logout</a>)
+        Logged in as {{request.session.user.realname}} (<a href="{%url "main.logout" %}">{% trans "logout" %}</a>)
         {% else %}
         &nbsp;
         {% endif %}
