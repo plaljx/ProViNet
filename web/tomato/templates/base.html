@@ -95,7 +95,7 @@ head.appendChild(style);
         </table>
         <ul class="nav nav-justified">
             {% if not request.session.user %}
-				<li><a href="{%url "account.register"%}">Register</a></li>
+				<li><a href="{%url "account.register"%}">{% trans "Register" %}</a></li>
 				<li><a onclick="document.getElementById('loginnavbarform').submit();" href="#">Login</a></li>
             {% endif %}
 			{% if request.session.user %}
