@@ -26,6 +26,8 @@ from tomato.crispy_forms.bootstrap import FormActions, StrictButton
 
 from tomato.crispy_forms.helper import FormHelper
 
+from django.utils.translation import ugettext_lazy as _
+
 class FixedText(forms.HiddenInput):
 	is_hidden = False
 	def render(self, name, value, attrs=None):
@@ -52,7 +54,7 @@ class BootstrapForm(forms.Form):
 		self.helper.label_class = 'col-lg-4 col-sm-4'
 		self.helper.field_class = 'col-lg-6 col-sm-8'
 
-def createButtons(back_icon="remove", back_label="Cancel", back_class="btn-danger backbutton", icon="ok", label="Save", class_="btn-success"):
+def createButtons(back_icon="remove", back_label="Cancel", back_class="btn-danger backbutton", icon="ok", label=_("Save"), class_="btn-success"):
 	return FormActions(
 		StrictButton('<span class="glyphicon glyphicon-%s"></span> %s' % (back_icon, back_label), css_class=back_class),
 		StrictButton('<span class="glyphicon glyphicon-%s"></span> %s' % (icon, label), css_class=class_, type="submit"),
@@ -64,9 +66,9 @@ class Buttons:
 	def default(**kwargs):
 		return createButtons(**kwargs)
 	cancel_save = createButtons()
-	cancel_add = createButtons(label="Add")
-	cancel_continue = createButtons(label="Continue")
-	cancel_remove =	createButtons(icon="trash", label="Remove", class_="btn-warning")
+	cancel_add = createButtons(label=_("Add"))
+	cancel_continue = createButtons(label=_("Continue"))
+	cancel_remove =	createButtons(icon="trash", label=_("Remove"), class_="btn-warning")
 
 class ConfirmForm(BootstrapForm):
 	@classmethod
@@ -95,5 +97,5 @@ def help_url():
 
 def append_empty_choice(choicelist):
 	res = list(choicelist)
-	res.insert(0,("","Please Select:"))
+	res.insert(0,("",_("Please Select:")))
 	return res
