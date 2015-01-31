@@ -1,7 +1,7 @@
 <html>
 <head>
 <link href="/style/style.css" rel="stylesheet" type="text/css" /> 
-<link rel="shortcut icon" type="image/x-icon" href="//www.german-lab.de/favicon.ico" />
+<link rel="shortcut icon" type="image/x-icon" href="//www.cybertestbed.com/favicon.ico" />
 <style type="text/css">
 	body {
 		min-width:0px;
@@ -31,15 +31,15 @@
 </head>
 <body>
 
-<h1 id="heading">Element {{id}}: RexTFV Status</h1>
+<h1 id="heading">{% blocktrans %}Element {{id}}: RexTFV Status{% endblocktrans %}</h1>
 
 <div class="box">
-	<h2>Element Info:</h2>
+	<h2>{% trans "Element Info:" %}</h2>
 	<table>
-		<tr><td>Element Name:</td><td id="element_name" /></tr>
-		<tr><td>Topology:</td><td id="topology_name"></td></tr>
-		<tr><td>Last Update:</td><td id="info_age"></td></tr>
-		<tr><td>RexTFV status available:</td><td id="rextfv_readable" /></tr>
+		<tr><td>{% trans "Element Name:" %}</td><td id="element_name" /></tr>
+		<tr><td>{% trans "Topology:" %}</td><td id="topology_name"></td></tr>
+		<tr><td>{% trans "Last Update:" %}</td><td id="info_age"></td></tr>
+		<tr><td>{% trans "RexTFV status available:" %}</td><td id="rextfv_readable" /></tr>
 	</table>
 </div>
 
