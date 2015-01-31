@@ -1,24 +1,25 @@
 {% extends "base.html" %}
 
 {% load url from future %}
+{% load i18n %}
 
 {% block title %}
-<title>Host {{host.name}} - G-Lab ToMaTo</title> 
+<title>{% transblock %}Host {{host.name}} - Tiandon Hoelab {% endtransblock %}</title> 
 {% endblock %}
 
 {% block content %}
 
 <form>
-  <button type="submit" formaction="{%url "host_list"%}" class="btn btn-primary" style="float:right;"><span class="glyphicon glyphicon-list"></span> All Hosts</button>
+  <button type="submit" formaction="{%url "host_list"%}" class="btn btn-primary" style="float:right;"><span class="glyphicon glyphicon-list"></span> {% trans "All Hosts" %}</button>
 </form>
 
-<h1>Host {{host.name}}</h1>
+<h1>{% trans "Host" %} {{host.name}}</h1>
 
 <div class="skip-sm"></div>
 
 {% if host.problems %}
 	<div class="alert alert-danger">
-	  <b>Host has problems:</b> This host is currently not working properly and is disabled. The details of the problems follow:
+	  <b>{% trans "Host has problems:" %}</b> {% trans "This host is currently not working properly and is disabled. The details of the problems follow:" %}
 	  <ul>
 	  	{% for p in host.problems %}
 	  		<li><b>{{p}}</b></li>
@@ -26,150 +27,150 @@
 	  </ul>
 	</div>
 {% else %}
-	<div class="alert alert-success"><b>No problems:</b> This host is currently working without problems.</div>
+	<div class="alert alert-success"><b>{% trans "No problems:" %}</b> {% trans "This host is currently working without problems." %}</div>
 {% endif %}
 
 {% load tomato %}
 
 <table class="table">
 	<tr>
-		<th>Name:</th>
+		<th>{% trans "Name:" %}</th>
 		<td>{{host.name}}</td>
 	</tr>
 	<tr>
-		<th>Address:</th>
+		<th>{% trans "Address:" %}</th>
 		<td>{{host.address}}</td>
 	</tr>
 	<tr>
-		<th>Site:</th>
+		<th>{% trans "Site:" %}</th>
 		<td><a href="{%url "organization.info" organization.name%}#{{site.name}}">{{site.description}} ({{site.name}})</a></td>
 	</tr>
 	<tr>
-		<th>Organization:</th>
+		<th>{% trans "Organization:" %}</th>
 		<td><a href="{%url "organization.info" organization.name%}">{{organization.description}} ({{organization.name}})</a></td>
 	</tr>
 	<tr>
-		<th>Availability:</th>
+		<th>{% trans "Availability:" %}</th>
 		<td>{{host.availability|percentage}}</td>
 	</tr>
 	<tr>
-		<th>Average load:</th>
+		<th>{% trans "Average load:" %}</th>
 		<td>{{host.load|percentage}}</td>
 	</tr>
 	{% if host.host_info %}
 	<tr>
-		<th>Uptime:</th>
+		<th>{% trans "Uptime:" %}</th>
 		<td>{{host.host_info.uptime|toduration}}</td>
 	</tr>
 	<tr>
-		<th>Information age:</th>
+		<th>{% trans "Information age:" %}</th>
 		<td>{{host.host_info_timestamp|age|toduration}}</td>
 	</tr>
 	<tr>
-		<th>Time difference:</th>
+		<th>{% trans "Time difference:" %}</th>
 		<td>{{host.host_info.time_diff|floatformat:1}} s</td>
 	</tr>
 	<tr>
-		<th>Last query duration:</th>
+		<th>{% trans "Last query duration:" %}</th>
 		<td>{{host.host_info.query_time|mult:1000|floatformat:0}} ms</td>
 	</tr>
 	<tr>
-		<th>Versions:</th>
+		<th>{% trans "Versions:" %}</th>
 		<td>
 			<dl class="dl-horizontal">
-  				<dt>Hostmanager</dt><dd>
+  				<dt>{% trans "Hostmanager" %}</dt><dd>
   					{% if host.host_info.hostmanager.version %}
   						{{host.host_info.hostmanager.version}}
   					{% else %}
-  						devel
+  						{% trans "devel" %}
   					{% endif %}</dd>
-  				<dt>Updater</dt><dt><dd>
+  				<dt>{% trans "Updater" %}</dt><dt><dd>
   					{% if host.host_info.hostmanager.updater %}
 						{{host.host_info.hostmanager.updater}}
 					{% else %}
-						not installed
+						{% trans "not installed" %}
 					{% endif %}
 				</dd>
-			    <dt>Distribution</dt><dd>{{host.host_info.system.distribution|join:" "}}</dd>
-			    <dt>Python</dt><dd>{{host.host_info.system.python}}</dd>
-			    <dt>Kernel</dt><dd>{{host.host_info.system.kernel}}</dd>
+			    <dt>{% trans "Distribution" %}</dt><dd>{{host.host_info.system.distribution|join:" "}}</dd>
+			    <dt>{% trans "Python" %}</dt><dd>{{host.host_info.system.python}}</dd>
+			    <dt>{% trans "Kernel" %}</dt><dd>{{host.host_info.system.kernel}}</dd>
 			</dl>
 		</td>
 	</tr>
 	<tr>
-		<th>Processor:</th>
+		<th>{% trans "Processor:" %}</th>
 		<td>
 			<dl class="dl-horizontal">
-  				<dt>Count</dt><dd>{{host.host_info.resources.cpus_present.count}}</dd>
-  				<dt>Model</dt><dd>{{host.host_info.resources.cpus_present.model}}</dd>
-  				<dt>Architecture</dt><dd>{{host.host_info.system.processor}}</dd>
-  				<dt>Bogomips</dt><dd>{{host.host_info.resources.cpus_present.bogomips_avg|floatformat}}</dd>
-  				<dt>Average load</dt><dd>{{host.host_info.resources.loadavg|slice:"1:2"|first|percentage:host.host_info.resources.cpus_present.count}} {{host.host_info.resources.loadavg}}</dd>
+  				<dt>{% trans "Count" %}</dt><dd>{{host.host_info.resources.cpus_present.count}}</dd>
+  				<dt>{% trans "Model" %}</dt><dd>{{host.host_info.resources.cpus_present.model}}</dd>
+  				<dt>{% trans "Architecture" %}</dt><dd>{{host.host_info.system.processor}}</dd>
+  				<dt>{% trans "Bogomips" %}</dt><dd>{{host.host_info.resources.cpus_present.bogomips_avg|floatformat}}</dd>
+  				<dt>{% trans "Average load" %}</dt><dd>{{host.host_info.resources.loadavg|slice:"1:2"|first|percentage:host.host_info.resources.cpus_present.count}} {{host.host_info.resources.loadavg}}</dd>
 			</dl>			
 		</td>
 	</tr>
 	<tr>
-		<th>Memory:</th>
+		<th>{% trans "Memory:" %}</th>
 		<td>
 			<dl class="dl-horizontal">
-  				<dt>Total</dt><dd>{{host.host_info.resources.memory.total|mult:1024|filesizeformat}}</dd>
-  				<dt>Free</dt><dd>{{host.host_info.resources.memory.total|minus:host.host_info.resources.memory.used|percentage:host.host_info.resources.memory.total}} ({{host.host_info.resources.memory.total|minus:host.host_info.resources.memory.used|mult:1024|filesizeformat}})</dd>
+  				<dt>{% trans "Total" %}</dt><dd>{{host.host_info.resources.memory.total|mult:1024|filesizeformat}}</dd>
+  				<dt>{% trans "Free" %}</dt><dd>{{host.host_info.resources.memory.total|minus:host.host_info.resources.memory.used|percentage:host.host_info.resources.memory.total}} ({{host.host_info.resources.memory.total|minus:host.host_info.resources.memory.used|mult:1024|filesizeformat}})</dd>
 			</dl>			
 		</td>
 	</tr>
 	<tr>
-		<th>Disk space (root):</th>
+		<th>{% trans "Disk space (root):" %}</th>
 		<td>
 			<dl class="dl-horizontal">
-  				<dt>Total</dt><dd>{{host.host_info.resources.diskspace.root.total|mult:1024|filesizeformat}}</dd>
-  				<dt>Free</dt><dd>{{host.host_info.resources.diskspace.root.total|minus:host.host_info.resources.diskspace.root.used|percentage:host.host_info.resources.diskspace.root.total}} ({{host.host_info.resources.diskspace.root.total|minus:host.host_info.resources.diskspace.root.used|mult:1024|filesizeformat}})</dd>
+  				<dt>{% trans "Total" %}</dt><dd>{{host.host_info.resources.diskspace.root.total|mult:1024|filesizeformat}}</dd>
+  				<dt>{% trans "Free" %}</dt><dd>{{host.host_info.resources.diskspace.root.total|minus:host.host_info.resources.diskspace.root.used|percentage:host.host_info.resources.diskspace.root.total}} ({{host.host_info.resources.diskspace.root.total|minus:host.host_info.resources.diskspace.root.used|mult:1024|filesizeformat}})</dd>
 			</dl>			
 		</td>
 	</tr>
 	<tr>
-		<th>Disk space (data):</th>
+		<th>{% trans "Disk space (data):" %}</th>
 		<td>
 			<dl class="dl-horizontal">
-  				<dt>Total</dt><dd>{{host.host_info.resources.diskspace.data.total|mult:1024|filesizeformat}}</dd>
-  				<dt>Free</dt><dd>{{host.host_info.resources.diskspace.data.total|minus:host.host_info.resources.diskspace.data.used|percentage:host.host_info.resources.diskspace.data.total}} ({{host.host_info.resources.diskspace.data.total|minus:host.host_info.resources.diskspace.data.used|mult:1024|filesizeformat}})</dd>
+  				<dt>{% trans "Total" %}</dt><dd>{{host.host_info.resources.diskspace.data.total|mult:1024|filesizeformat}}</dd>
+  				<dt>{% trans "Free" %}</dt><dd>{{host.host_info.resources.diskspace.data.total|minus:host.host_info.resources.diskspace.data.used|percentage:host.host_info.resources.diskspace.data.total}} ({{host.host_info.resources.diskspace.data.total|minus:host.host_info.resources.diskspace.data.used|mult:1024|filesizeformat}})</dd>
 			</dl>			
 		</td>
 	</tr>
 	{% endif %}
 	<tr>
-		<th>Supported types:</th>
+		<th>{% trans "Supported types:" %}</th>
 		<td>
 			<dl class="dl-horizontal">
-  				<dt>Element types</dt><dd>{{host.element_types|join:", "}}</dd>
-  				<dt>Connection types</dt><dd>{{host.connection_types|join:", "}}</dd>
+  				<dt>{% trans "Element types" %}</dt><dd>{{host.element_types|join:", "}}</dd>
+  				<dt>{% trans "Connection types" %}</dt><dd>{{host.connection_types|join:", "}}</dd>
 			</dl>			
 		</td>
 	</tr>
 	<tr>
-		<th>Debug information:</th>
+		<th>{% trans "Debug information:" %}</th>
 		<td>
 			<dl class="dl-horizontal">
-  				<dt>Component errors</dt><dd>{{host.component_errors}}</dd>
-  				<dt>Error dumps</dt><dd>{{host.host_info.dumps}}</dd>
+  				<dt>{% trans "Component errors" %}</dt><dd>{{host.component_errors}}</dd>
+  				<dt>{% trans "Error dumps" %}</dt><dd>{{host.host_info.dumps}}</dd>
 			</dl>			
 		</td>
 	</tr>
 	<tr>
-		<th>External networks:</th>
+		<th>{% trans "External networks:" %}</th>
 		<td>
 			<dl class="dl-horizontal">
 			{% for net in host.networks %}
 				<dt>{{ net.bridge }}</dt>
 				<dd>
-				 	DHCP: {% if net.dhcp_server %}yes ({{net.dhcp_server.ip}}){% else %}no{% endif %}<br/>
-				 	Traffic: {{net.bytes_received|filesizeformat}} since boot
+				 	{% trans "DHCP:" %} {% if net.dhcp_server %}{% trans "yes" %} ({{net.dhcp_server.ip}}){% else %}{% trans "no" %}{% endif %}<br/>
+				 	{% trans "Traffic:" %} {{net.bytes_received|filesizeformat}} {% trans "since boot" %}
 				</dd>
-			{% empty %}<dt>Unknown</dt><dd></dd>{% endfor %}
+			{% empty %}<dt>{% trans "Unknown" %}</dt><dd></dd>{% endfor %}
 			</dl>			
 		</td>
 	</tr>
 	<tr>
-		<th>Description:</th>
+		<th>{% trans "Description:" %}</th>
 		<td>{{ host.description_text|linebreaks|escape|simpletags:"b i em strong"|safe }}</td>
 	</tr>
 </table>
@@ -178,14 +179,14 @@
 
 {% load tomato %}
 <form>
-  <button type="submit" formaction="{%url "host_external_networks" host.name%}" class="btn btn-primary"><span class="glyphicon glyphicon-list"></span> External Networks on This Host</button>
+  <button type="submit" formaction="{%url "host_external_networks" host.name%}" class="btn btn-primary"><span class="glyphicon glyphicon-list"></span> {% trans "External Networks on This Host" %}</button>
   {% if request.session.user|args:organization.name|call:"isAdmin" %}
-  	<button type="submit" formaction="{%url "debug.host_users" host.name%}" class="btn btn-primary"><span class="glyphicon glyphicon-list"></span> Host Users</button>
+  	<button type="submit" formaction="{%url "debug.host_users" host.name%}" class="btn btn-primary"><span class="glyphicon glyphicon-list"></span> {% trans "Host Users" %}</button>
   {% endif %}
   {% if request.session.user|args:organization.name|call:"isHostManager" %}
-  	<a class="btn btn-info" href="javascript:window.open('{%url "host.usage" host.name%}', '_blank', 'innerHeight=450,innerWidth=600,status=no,toolbar=no,menubar=no,location=no,hotkeys=no,scrollbars=no');"><span class="glyphicon glyphicon glyphicon-stats"></span> Resource Usage</a>
-  	<button type="submit" formaction="{%url "host.edit" host.name%}" class="btn btn-warning"><span class="glyphicon glyphicon-pencil"></span> Edit Host</button>
-	<button type="submit" formaction="{%url "host.remove" host.name%}" class="btn btn-danger"><span class="glyphicon glyphicon-trash"></span> Remove Host</button>
+  	<a class="btn btn-info" href="javascript:window.open('{%url "host.usage" host.name%}', '_blank', 'innerHeight=450,innerWidth=600,status=no,toolbar=no,menubar=no,location=no,hotkeys=no,scrollbars=no');"><span class="glyphicon glyphicon glyphicon-stats"></span> {% trans "Resource Usage" %}</a>
+  	<button type="submit" formaction="{%url "host.edit" host.name%}" class="btn btn-warning"><span class="glyphicon glyphicon-pencil"></span> {% trans "Edit Host" %}</button>
+	<button type="submit" formaction="{%url "host.remove" host.name%}" class="btn btn-danger"><span class="glyphicon glyphicon-trash"></span> {% trans "Remove Host" %}</button>
   {% endif %}
 </form>
 

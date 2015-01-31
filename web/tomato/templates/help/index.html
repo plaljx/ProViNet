@@ -1,18 +1,19 @@
 {% extends "help/base.html" %}
 
 {% load url from future %}
+{% load i18n %}
 
 {% block title %}
-<title>Help - G-Lab ToMaTo</title> 
+<title>{% trans "Help - Tiandon Hoelab" %}</title> 
 {% endblock %}
 
 {% block content %}
-<h1>Help</h1>
+<h1>{% trans "Help" %}</h1>
 
-<h2>Project</h2>
-<a href="//tomato-lab.org/">Project Homepage</a>
+<h2>{% trans "Project" %}</h2>
+<a href="//www.tiandon.com/">{% trans "Project Homepage" %}</a>
 
-<h2>Contact</h2>
-<a href="{%url "help.contact_form"%}">Contact Us</a>
+<h2>{% trans "Contact" %}</h2>
+<a href="{%url "help.contact_form"%}">{% trans "Contact Us" %}</a>
 
 {% endblock %}

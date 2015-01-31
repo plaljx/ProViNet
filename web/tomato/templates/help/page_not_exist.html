@@ -1,12 +1,13 @@
 {% extends "help/base.html" %}
+{% load i18n %}
 
 {% block title %}
-<title>Help page does not exist - G-Lab ToMaTo</title> 
+<title>{% trans "Help page does not exist - Tiandon Hoelab" %}</title> 
 {% endblock %}
 
 {% load url from future %}
 
 {% block content %}
-<h1>This help page {{page}} does not exist (404).</h1>
-<p><a href="{%url "main.help" ''%}">Back to help index</a></p>
+<h1>{% blocktrans %}This help page {{page}} does not exist (404).{% endblocktrans %}</h1>
+<p><a href="{%url "main.help" ''%}">{% trans "Back to help index" %}</a></p>
 {% endblock %}
