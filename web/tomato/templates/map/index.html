@@ -2,9 +2,10 @@
 
 {% load url from future %}
 {% load tomato %}
+{% load i18n %}
 
 {% block title %}
-<title>Site Map - G-Lab ToMaTo</title> 
+<title>{% trans "Site Map - Tiandon Hoelab" %}</title> 
 {% endblock %}
 
 {% block header %}
@@ -34,7 +35,7 @@
 
 {% block content %}
 
-    <h1>Site Map</h1>
+    <h1>{% trans "Site Map" %}</h1>
     <div id="map_canvas"></div>
 
 {% endblock %}

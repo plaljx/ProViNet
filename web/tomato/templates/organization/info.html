@@ -1,18 +1,19 @@
 {% extends "base.html" %}
 
 {% load url from future %}
+{% load i18n %}
 
 {% block title %}
-<title>Organization "{{organization.description}}" - G-Lab ToMaTo</title> 
+<title>{% transblock %}Organization "{{organization.description}}" - Tiandon Hoelab{% endtransblock %}</title> 
 {% endblock %}
 
 {% block content %}
 
 <form>
-  <button type="submit" formaction="{%url "organization.list"%}" class="btn btn-primary" style="float:right;"><span class="glyphicon glyphicon-globe"></span> All Organizations</button>
+  <button type="submit" formaction="{%url "organization.list"%}" class="btn btn-primary" style="float:right;"><span class="glyphicon glyphicon-globe"></span> {% trans "All Organizations" %}</button>
 </form>
 
-<h1>Organization "{{organization.description}}"</h1>
+<h1>{% trans "Organization" %} "{{organization.description}}"</h1>
 
 <div class="skip-xs"></div>
 
@@ -20,22 +21,22 @@
 
 <table class="table">
 	<tr>
-		<th>Icon:</th>
+		<th>{% trans "Icon:" %}</th>
 		<td>{% if organization.image_url %}<img class="site" src="{{organization.image_url}}"/>{% endif %}</td>
 	</tr>
 	{% if request.session.user and request.session.user|args:organization.name|call:"isAdmin" %}
 	<tr>
-		<th>Internal name:</th>
+		<th>{% trans "Internal name:" %}</th>
 	    <td>{{organization.name}}</td>
 	</tr>
 	{% endif %}
 	<tr>
-		<th>Homepage:</th>
+		<th>{% trans "Homepage:" %}</th>
 		<td><a href="{{organization.homepage_url}}" target="_blank">{{organization.homepage_url}}</a>
 	</tr>
 	{% if organization.description_text %}
 	<tr>
-		<th>Description:</th>
+		<th>{% trans "Description:" %}</th>
 		<td>{{organization.description_text|linebreaks|escape|simpletags:"b i em strong"|safe}}</td>
 	</tr>
 	{% endif %}
@@ -47,19 +48,19 @@
 
 <form>
   {% if request.session.user and request.session.user|args:organization.name|call:"isAdmin" %}
-  	<button type="submit" formaction="{%url "organization_accounts" organization.name%}" class="btn btn-info"><span class="glyphicon glyphicon-list"></span> Accounts</button>
+  	<button type="submit" formaction="{%url "organization_accounts" organization.name%}" class="btn btn-info"><span class="glyphicon glyphicon-list"></span> {% trans "Accounts" %}</button>
   {%endif%}
   {% if request.session.user and request.session.user|args:organization.name|call:"hasOrgaToplFlags" or request.session.user.hasGlobalToplFlags %}
-  	<button type="submit" formaction="{%url "organization_topologies" organization.name%}" class="btn btn-info"><span class="glyphicon glyphicon-list"></span> Topologies</button>
+  	<button type="submit" formaction="{%url "organization_topologies" organization.name%}" class="btn btn-info"><span class="glyphicon glyphicon-list"></span> {% trans "Topologies" %}</button>
   {%endif%}
-  <button type="submit" formaction="{%url "organization_hosts" organization.name%}" class="btn btn-info"><span class="glyphicon glyphicon-list"></span> Hosts</button>
-  <button type="submit" formaction="{%url "organization_external_networks" organization.name%}" class="btn btn-info"><span class="glyphicon glyphicon-list"></span> External Network Instances</button>
-  <a class="btn btn-info" href="javascript:window.open('{%url "organization.usage" organization.name%}', '_blank', 'innerHeight=450,innerWidth=600,status=no,toolbar=no,menubar=no,location=no,hotkeys=no,scrollbars=no');"><span class="glyphicon glyphicon glyphicon-stats"></span> Resource Usage</a>
+  <button type="submit" formaction="{%url "organization_hosts" organization.name%}" class="btn btn-info"><span class="glyphicon glyphicon-list"></span> {% trans "Hosts" %}</button>
+  <button type="submit" formaction="{%url "organization_external_networks" organization.name%}" class="btn btn-info"><span class="glyphicon glyphicon-list"></span> {% trans "External Network Instances" %}</button>
+  <a class="btn btn-info" href="javascript:window.open('{%url "organization.usage" organization.name%}', '_blank', 'innerHeight=450,innerWidth=600,status=no,toolbar=no,menubar=no,location=no,hotkeys=no,scrollbars=no');"><span class="glyphicon glyphicon glyphicon-stats"></span> {% trans "Resource Usage" %}</a>
   {% if request.session.user and request.session.user|args:organization.name|call:"isHostManager" %}
 	<div class="skip-xs"></div>
-	<button type="submit" formaction="{%url "site.add" organization.name%}" class="btn btn-success"><span class="glyphicon glyphicon-plus"></span> Add Site</button>
-	<button type="submit" formaction="{%url "organization.edit" organization.name%}" class="btn btn-warning"><span class="glyphicon glyphicon-pencil"></span> Edit Organization</button>
-	<button type="submit" formaction="{%url "organization.remove" organization.name%}" class="btn btn-danger"><span class="glyphicon glyphicon-trash"></span> Remove Organization</button>
+	<button type="submit" formaction="{%url "site.add" organization.name%}" class="btn btn-success"><span class="glyphicon glyphicon-plus"></span> {% trans "Add Site" %}</button>
+	<button type="submit" formaction="{%url "organization.edit" organization.name%}" class="btn btn-warning"><span class="glyphicon glyphicon-pencil"></span> {% trans "Edit Organization" %}</button>
+	<button type="submit" formaction="{%url "organization.remove" organization.name%}" class="btn btn-danger"><span class="glyphicon glyphicon-trash"></span> {% trans "Remove Organization" %}</button>
   {% endif %}
 </form>
 
@@ -74,27 +75,27 @@
 <table class="table">
 	{% if request.session.user and request.session.user|args:organization.name|call:"isHostManager" %}
 	<tr>
-		<th>Internal name:</th>
+		<th>{% trans "Internal name:" %}</th>
 	    <td>{{site.name}}</td>
 	</tr>
 	{% endif %}
 	<tr>
-		<th>Location:</th>
+		<th>{% trans "Location:" %}</th>
 		<td>{{site.location}}</td>
 	</tr>
 	<tr>
-		<th>Geolocation:</th>
+		<th>{% trans "Geolocation:" %}</th>
 		<td>{% if site.geolocation %}
-				Longitude: {{site.geolocation.longitude}}, Latitude: {{site.geolocation.latitude}}
-				<a class="btn btn-default btn-xs" target="_blank" href="http://maps.google.com/?ie=UTF8&hq=&ll={{site.geolocation.latitude}},{{site.geolocation.longitude}}&z=13"><span class="glyphicon glyphicon-share-alt"></span> Google Maps</a>
+				{% trans "Longitude:" %} {{site.geolocation.longitude}}, {% trans "Latitude:" %} {{site.geolocation.latitude}}
+				<a class="btn btn-default btn-xs" target="_blank" href="http://maps.google.com/?ie=UTF8&hq=&ll={{site.geolocation.latitude}},{{site.geolocation.longitude}}&z=13"><span class="glyphicon glyphicon-share-alt"></span> {% trans "Google Maps" %}</a>
 			{% else %}
-				unknown
+				{% trans "unknown" %}
 			{% endif %}
 		</td>
 	</tr>
 	{% if site.description_text %}
 	<tr>
-		<th>Description:</th>
+		<th>{% trans "Description:" %}</th>
 	    <td>{{site.description_text|linebreaks|escape|simpletags:"b i em strong"|safe}}</td>
 	</tr>
 	{% endif %}
@@ -103,11 +104,11 @@
 <div class="skip-xs"></div>
 
 <form>
-  <button type="submit" formaction="{%url "site_hosts" site.name%}" class="btn btn-info"><span class="glyphicon glyphicon-list"></span> Hosts</button>
-  <button type="submit" formaction="{%url "site_external_networks" site.name%}" class="btn btn-info"><span class="glyphicon glyphicon-list"></span> External Network Instances</button>
+  <button type="submit" formaction="{%url "site_hosts" site.name%}" class="btn btn-info"><span class="glyphicon glyphicon-list"></span> {% trans "Hosts" %}</button>
+  <button type="submit" formaction="{%url "site_external_networks" site.name%}" class="btn btn-info"><span class="glyphicon glyphicon-list"></span> {% trans "External Network Instances" %}</button>
   {% if request.session.user and request.session.user|args:organization.name|call:"isHostManager" %}
-  <button type="submit" formaction="{%url "site.edit" site.name%}" class="btn btn-warning"><span class="glyphicon glyphicon-pencil"></span> Edit Site</button>
-  <button type="submit" formaction="{%url "site.remove" site.name%}" class="btn btn-danger"><span class="glyphicon glyphicon-trash"></span> Remove Site</button>
+  <button type="submit" formaction="{%url "site.edit" site.name%}" class="btn btn-warning"><span class="glyphicon glyphicon-pencil"></span> {% trans "Edit Site" %}</button>
+  <button type="submit" formaction="{%url "site.remove" site.name%}" class="btn btn-danger"><span class="glyphicon glyphicon-trash"></span> {% trans "Remove Site" %}</button>
   {% endif %}
 </form>
 {% endfor %}

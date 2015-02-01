@@ -2,19 +2,20 @@
 
 {% load url from future %}
 {% load tomato %}
+{% load i18n %}
 
 {% block title %}
-<title>Organization list - G-Lab ToMaTo</title> 
+<title>{% trans "Organization list - Tiandon Hoelab" %}</title> 
 {% endblock %}
 
 {% block content %}
-<h1>Organization list</h1>
+<h1>{% trans "Organization list" %}</h1>
 
 {% if organizations %}
 
 	{% if organizations|length > 10 and request.session.user and request.session.user.isGlobalHostManager %}
       <form>
-    	<button type="submit" formaction="{%url "organization.add"%}" class="btn btn-success"><span class="glyphicon glyphicon-plus"></span> Add organization</button>
+    	<button type="submit" formaction="{%url "organization.add"%}" class="btn btn-success"><span class="glyphicon glyphicon-plus"></span> {% trans "Add organization" %}</button>
       </form>
 	{% endif %}
 
@@ -31,8 +32,8 @@
 					{% endif %}
 					
 					<p><b>
-						{{orga.hosts.count}} hosts
-						{% if orga.hosts.count %}(availability: {{orga.hosts.avg_availability|percentage}}, load: {{orga.hosts.avg_load|percentage}}){% endif %}
+						{{orga.hosts.count}} {% trans "hosts" %}
+						{% if orga.hosts.count %}({% trans "availability:" %} {{orga.hosts.avg_availability|percentage}}, {% trans "load:" %} {{orga.hosts.avg_load|percentage}}){% endif %}
 					</b></p>
 					
 					{% if orga.description_text %}
@@ -48,12 +49,12 @@
 	{% endfor %}
 	</div>
 {% else %}
-	No organizations
+	{% trans "No organizations" %}
 {% endif %}
 
 {% if request.session.user and request.session.user.isGlobalHostManager %}
 	<form>
-	<button type="submit" formaction="{%url "organization.add"%}" class="btn btn-success"><span class="glyphicon glyphicon-plus"></span> Add organization</button>
+	<button type="submit" formaction="{%url "organization.add"%}" class="btn btn-success"><span class="glyphicon glyphicon-plus"></span> {% trans "Add organization" %}</button>
 	</form>
 {% endif %}
 

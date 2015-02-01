@@ -1,14 +1,15 @@
 {% extends "main/base.html" %}
+{% load i18n %}
 
 {% block title %}
-<title>Error page - G-Lab ToMaTo</title> 
+<title>{% trans "Error page - Tiandon Hoelab" %}</title> 
 {% endblock %}
 
 {% block content %}
-<h1>Oops an error occurred !</h1>
+<h1>{% trans "Oops an error occurred !" %}</h1>
 
-<h2>Error Details</h2>
-Type: {{type}}<br/>
-Code: {{code}}<br/>
-Description: {{text}}<br/>
+<h2>{% trans "Error Details" %}</h2>
+{% trans "Type:" %} {{type}}<br/>
+{% trans "Code:" %} {{code}}<br/>
+{% trans "Description:" %} {{text}}<br/>
 {% endblock %}

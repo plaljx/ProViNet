@@ -1,14 +1,15 @@
 {% extends "main/base.html" %}
 
 {% load url from future %}
+{% load i18n %}
 
 {% block title %}
-<title>Login - G-Lab ToMaTo</title> 
+<title>{% trans "Login - Tiandon Hoelab" %}</title> 
 {% endblock %}
 
 {% block content %}
 
-<h1>Login to ToMaTo</h1>
+<h1>{% trans "Login to Hoelab" %}</h1>
 
 {{message}}
 
