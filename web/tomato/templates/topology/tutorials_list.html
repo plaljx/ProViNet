@@ -2,13 +2,14 @@
 
 {% load url from future %}
 {% load tomato %}
+{% load i18n %}
 
 {% block title %}
-<title>Tutorials - G-Lab ToMaTo</title> 
+<title>{% trans "Tutorials - Tiandon Hoelab" %}</title> 
 {% endblock %}
 
 {% block content %}
-<h1>Tutorials</h1>
+<h1>{% trans "Tutorials" %}</h1>
 
 
 <script src="/js/jquery.js"></script>
@@ -56,5 +57,5 @@
 		});
 	}
 </script>
-<button type="button" onclick="customTutorial()" class="btn btn-primary">Load tutorial from URL</button>
+<button type="button" onclick="customTutorial()" class="btn btn-primary">{% trans "Load tutorial from URL" %}</button>
 {% endblock %}
