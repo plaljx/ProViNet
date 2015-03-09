@@ -2321,7 +2321,7 @@ var ConnectionAttributeWindow = AttributeWindow.extend({
 				this.elements.push(el_to);
 				this.emulation_elements.push(el_to);
 				link_emulation_elements.after($('<div class="form-group" />')
-					.append($('<label class="col-sm-2 control-label" style="padding: 0;" />').append(desc))
+					.append($('<label class="col-sm-4 control-label" style="padding: 0;" />').append(desc))
 					.append($('<div class="col-sm-3" style="padding: 0;"/>').append(el_from.getElement()))
 					.append($('<div class="col-sm-3" style="padding: 0;" />').append(el_to.getElement()))
 					.append($('<div class="col-sm-2" style="padding: 0;" />').append(con.caps.attrs[name+"_to"].unit))
@@ -2364,7 +2364,7 @@ var ConnectionAttributeWindow = AttributeWindow.extend({
 				this.capturing_elements.push(el);
 				this.elements.push(el);
 				packet_capturing_elements.after($('<div class="form-group" />')
-					.append($('<label class="col-sm-4 control-label">').append(desc))
+					.append($('<label class="col-sm-6 control-label">').append(desc))
 					.append($('<div class="col-sm-6" />').append(el.getElement()))
 				);
 			}
