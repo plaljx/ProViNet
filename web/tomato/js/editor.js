@@ -5,7 +5,7 @@ var settings = {
 	commonPreferenceThreshold: 100,
 	otherCommonElements: [
 	                      {
-	                  		label: "Switch",
+	                  		label: gettext("Switch"),
 	                		name: "vpn-switch",
 	                		icon: "img/switch32.png",
 	                		type: "tinc_vpn",
@@ -21,7 +21,7 @@ var showError = function(msg) {
 	if (ignoreErrors) return;
 	switch(msg.toLowerCase()) {
 		case "over quota":
-			showError("You are over quota. If you are a newly registered user, please wait until your account has been approved. Otherwise, contact an administrator.");
+			showError(gettext("You are over quota. If you are a newly registered user, please wait until your account has been approved. Otherwise, contact an administrator."));
 			break;
 		default:
 			alert("Error: "+msg);
@@ -37,7 +37,7 @@ var ajax = function(options) {
 	 	data: {data: $.toJSON(options.data || {})},
 	 	complete: function(res) {
 	 		if (res.status == 401 || res.status == 403) {
-	 			showError("Your session has ended, please log in again");
+	 			showError(gettext("Your session has ended, please log in again"));
 	 			ignoreErrors=true;
 	 			window.location.reload();
 	 			return;
@@ -398,7 +398,7 @@ var TemplateElement = FormElement.extend({
 		this.template = template;
 		var t = this;
 		
-		var changebutton = $('&nbsp;<button type="button" class="btn btn-primary"><span class="ui-button-text">Change</span></button>');
+		var changebutton = $('&nbsp;<button type="button" class="btn btn-primary"><span class="ui-button-text">'+gettext('Change')+'</span></button>');
 		changebutton.click(function() {
 			t.call_element.showTemplateWindow(
 				
@@ -642,7 +642,7 @@ var TutorialWindow = Window.extend({
 		this.text.empty();
 		this.text.append(text);
 
-		this.setTitle("Tutorial [" + (this.tutorialStatus+1) + "/" + this.tutorialSteps.length + "]");
+		this.setTitle(gettext("Tutorial") + " [" + (this.tutorialStatus+1) + "/" + this.tutorialSteps.length + "]");
 		
 		//dirty hack: un-set the window's height property
 		this.div[0].style.height = "";
@@ -659,7 +659,7 @@ var TutorialWindow = Window.extend({
 		if (skipButtonText) {
 			this.skipButton[0].value = skipButtonText;
 		} else {
-			this.skipButton[0].value = "Skip";
+			this.skipButton[0].value = gettext("Skip");
 		}
 	},
 	updateStatusToBackend: function() {
@@ -673,7 +673,7 @@ var TutorialWindow = Window.extend({
 	},
 	closeTutorial: function() {
 		var t = this
-		if (confirm("You have completed the tutorial. This topology will now be removed. (Press \"Cancel\" to keep the topology)")) {
+		if (confirm(gettext("You have completed the tutorial. This topology will now be removed. (Press \"Cancel\" to keep the topology)"))) {
 			this.editor.topology.remove();	
 		} else {
 			ajax({
@@ -720,9 +720,20 @@ var AttributeWindow = Window.extend({
 	},
 	autoElement: function(info, value, enabled) {
 		var el;
+		var trans = Array();
+		trans["Keyboard language"] = gettext("Keyboard language");
+		trans["USB tablet mouse mode"] = gettext("USB tablet mouse mode");
+		trans["Root password"] = gettext("Root password");
+		trans["Hostname"] = gettext("Hostname");
+		trans["IPv4 gateway"] = gettext("IPv4 gateway");
+		trans["IPv6 gateway"] = gettext("IPv6 gateway");
+		trans["Single network segment"] = gettext("Single network segment");
+		trans["Mode"] = gettext("Mode");
+		trans["Name"] = gettext("Name");
+		trans["Arguments"] = gettext("Arguments");
 		if (info.options) {
 			el = new ChoiceElement({
-				label: info.desc || info.name,
+				label: trans[info.desc] || info.name,
 				name: info.name,
 				choices: info.options,
 				value: value || info["default"],
@@ -730,7 +741,7 @@ var AttributeWindow = Window.extend({
 			});
 		} else if (info.type == "bool") {
 			el = new CheckboxElement({
-				label: info.desc || info.name,
+				label: trans[info.desc] || info.name,
 				name: info.name,
 				value: value || info["default"],
 				disabled: !enabled
@@ -746,7 +757,7 @@ var AttributeWindow = Window.extend({
 					break;
 			}
 			el = new TextElement({
-				label: info.desc || info.name,
+				label: trans[info.desc] || info.name,
 				name: info.name,
 				value: value || info["default"],
 				disabled: !enabled,
@@ -797,7 +808,7 @@ var TemplateWindow = Window.extend({
 		options.buttons = [ 
 
 		                    {
-		                    	text: "Save",
+		                    	text: gettext("Save"),
 		                    	click: function() {
 		                			t.hide();
 		                    		t.callback_before_finish(t.getValue());
@@ -806,7 +817,7 @@ var TemplateWindow = Window.extend({
 		         
 		                    },
 		                    {
-		                    	text: "Cancel",
+		                    	text: gettext("Cancel"),
 		                    	click: function() {
 		                			t.hide();
 		                		}
@@ -814,7 +825,7 @@ var TemplateWindow = Window.extend({
 		
 		this._super(options);
 		this.element = options.element;
-		var windowTitle = "Change Template for "+this.element.data.attrs.name;
+		var windowTitle = gettext("Change Template for ")+this.element.data.attrs.name;
 		if (editor.options.show_ids) windowTitle = windowTitle + ' (#'+this.element.data.id+')'
 		this.setTitle(windowTitle);
 		if (options.disabled == undefined || options.disabled == null) {
@@ -846,7 +857,7 @@ var TemplateWindow = Window.extend({
 		var table = this.getList();
 		
 		
-		this.div.append($('<div style="margin-bottom:0.5cm; margin-top:0.5cm;"><table style="vertical-align:top;"><tr><th style="vertical-align:top;">Warning:</th><td style="vertical-align:top; font-size: 10pt; white-space:normal; font-style:italic;">You will lose all data on this device if you change the template.</td></tr></table></div>'));
+		this.div.append($('<div style="margin-bottom:0.5cm; margin-top:0.5cm;"><table style="vertical-align:top;"><tr><th style="vertical-align:top;">'+gettext('Warning')+':</th><td style="vertical-align:top; font-size: 10pt; white-space:normal; font-style:italic;">'+ gettext('You will lose all data on this device if you change the template.')+'</td></tr></table></div>'));
 		this.div.append(table);
 	},
 	getValue: function() {
@@ -924,7 +935,7 @@ var PermissionsWindow = Window.extend({
 		
 		
 		var closebutton = {
-		                    	text: "Close",
+		                    	text: gettext("Close"),
 		                    	id: "permwindow-close-button",
 		                    	click: function() {
 		                			t.hide();
@@ -932,7 +943,7 @@ var PermissionsWindow = Window.extend({
 		         
 		                    };
 		var addbutton = {
-		                    	text: "Add User",
+		                    	text: gettext("Add User"),
 		                    	id: "permwindow-add-button",
 		                    	click: function() {
 		                    		t.addNewUser();
@@ -994,7 +1005,7 @@ var PermissionsWindow = Window.extend({
 		}
 		
 		
-		this.userTable = $('<div class="row"><div class="col-sm-4 col-sm-offset-1"><h4>User</h4></div><div class="col-sm-4"><h4>Permission</h4></div></div>');
+		this.userTable = $('<div class="row"><div class="col-sm-4 col-sm-offset-1"><h4>'+gettext('User')+'</h4></div><div class="col-sm-4"><h4>'+gettext('Permission')+'</h4></div></div>');
 		if (this.options.allowChange) this.userTable.append($('<div class="col-sm-3" />'));
 		this.userList.append(this.userTable);
 		var perm = this.topology.data.permissions;
@@ -1018,7 +1029,7 @@ var PermissionsWindow = Window.extend({
 			successFn: function(data) {
 				var s = data.realname+' (<a href="/account/info/'+data.id+'" target="_blank" style="font-size:10pt;">'+data.id+'</a>)'
 				td_name.append($(s));
-				if (data.id == t.options.ownUserId) td_icon.append($('<img src="/img/user.png" title="This is you!" />'));
+				if (data.id == t.options.ownUserId) td_icon.append($('<img src="/img/user.png" title=gettext("This is you!" )/>'));
 			}
 		});
 
@@ -1041,29 +1052,29 @@ var PermissionsWindow = Window.extend({
 	addNewUser: function() {
 		var t = this;
 		this.username = new InputWindow({
-			title: "New User",
+			title: gettext("New User"),
 			width: 550,
 			height: 200,
 			zIndex: 1000,
 			inputname: "newuser",
-			inputlabel: "Username:",
-			infotext: "Please enter the user's username:",
+			inputlabel: gettext("Username:"),
+			infotext: gettext("Please enter the user's username:"),
 			inputvalue: "",
 			buttons: [
 						{ 
-							text: "Add User",
+							text: gettext("Add User"),
 							click: function() {
 								t.username.hide();
 								if (t.username.element.getValue() != '') ajax({
 									url:	'account/'+t.username.element.getValue()+'/info',
 									successFn: function(data) {
 										if (!(data.id in t.userListFinder)) {
-											if (window.confirm("Found the user "+ data.realname + ' (' + data.id +")\nIs this correct?")) {
+											if (window.confirm(gettext("Found the user ")+ data.realname + ' (' + data.id +")\n"+gettext("Is this correct?"))) {
 												t.addUserToList(data.id);
 												t.makePermissionEditable(data.id);
 											}
 										} else
-											showError("This user is already in the list.");
+											showError(gettext("This user is already in the list."));
 									},
 									errorFn: showError
 								});
@@ -1071,7 +1082,7 @@ var PermissionsWindow = Window.extend({
 							}
 						},
 						{
-							text: "Cancel",
+							text: gettext("Cancel"),
 							click: function() {
 								t.username.hide();
 								t.username = null;
@@ -1115,7 +1126,7 @@ var PermissionsWindow = Window.extend({
 		sel.change();
 		td_perm.append(sel);
 		
-		var saveButton = $('<img src="/img/tick.png" title="save" style="cursor:pointer;" />');
+		var saveButton = $('<img src="/img/tick.png" title=gettext("save") style="cursor:pointer;" />');
 		saveButton.click(function() {
 			var sel = document.getElementById(sel_id);
 			var perm = sel.options[sel.selectedIndex].value;
@@ -1123,7 +1134,7 @@ var PermissionsWindow = Window.extend({
 		});
 		td_buttons.append(saveButton);
 		
-		var cancelButton = $('<img src="/img/eraser16.png" title="cancel" style="cursor:pointer;" />');
+		var cancelButton = $('<img src="/img/eraser16.png" title=gettext("cancel") style="cursor:pointer;" />');
 		cancelButton.click(function(){
 			t.backToView(username);
 		});
@@ -1158,7 +1169,7 @@ var PermissionsWindow = Window.extend({
 				}
 			},
 			errorFn: function(msg){
-				showError("Error while setting user permission: "+msg);
+				showError(gettext("Error while setting user permission: ")+msg);
 				t.backToView(username);
 			}
 		})
@@ -1248,7 +1259,7 @@ var Workspace = Class.extend({
     		autoOpen: false,
     		draggable: true,
     		resizable: false,
-    		title: "Permissions",
+    		title: gettext("Permissions"),
     		modal: false,
     		width: 500,
     		topology: this.editor.topology,
@@ -1314,7 +1325,7 @@ var Workspace = Class.extend({
 	
 	updateTopologyTitle: function() {
 		var t = editor.topology;
-		var new_name="Topology '"+t.data.attrs.name+"'"+(editor.options.show_ids ? " [#"+t.id+"]" : "");
+		var new_name=gettext("Topology '")+t.data.attrs.name+"'"+(editor.options.show_ids ? " [#"+t.id+"]" : "");
 		$('#topology_name').text(new_name);
 		document.title = new_name+" - G-Lab ToMaTo";
 	}
@@ -1572,7 +1583,7 @@ var Topology = Class.extend({
 	},
 	action_delegate: function(action, options) {
 		var options = options || {};
-		if ((action=="destroy"||action=="stop") && !options.noask && this.editor.options.safe_mode && ! confirm("Do you want to " + action + " this topology?")) return;
+		if ((action=="destroy"||action=="stop") && !options.noask && this.editor.options.safe_mode && ! confirm(gettext("Do you want to ") + action + gettext(" this topology?"))) return;
 		this.editor.triggerEvent({component: "topology", object: this, operation: "action", phase: "begin", action: action});
 		var ids = 0;
 		var t = this;
@@ -1636,7 +1647,7 @@ var Topology = Class.extend({
 	},
 	action_destroy: function() {
 		var t = this;
-		if (this.editor.options.safe_mode && !confirm("Are you sure you want to completely destroy this topology?")) return;
+		if (this.editor.options.safe_mode && !confirm(gettext("Are you sure you want to completely destroy this topology?"))) return;
 		this.action_delegate("stop", {
 			callback: function(){
 				t.action_delegate("destroy", {noask: true});
@@ -1644,7 +1655,7 @@ var Topology = Class.extend({
 		});
 	},
 	remove: function() {
-		if (this.editor.options.safe_mode && !confirm("Are you sure you want to completely remove this topology?")) return;
+		if (this.editor.options.safe_mode && !confirm(gettext("Are you sure you want to completely remove this topology?"))) return;
 		var t = this;
 		var removeTopology = function() {
 			t.editor.triggerEvent({component: "topology", object: t, operation: "remove", phase: "begin"});
@@ -1702,7 +1713,7 @@ var Topology = Class.extend({
 		var ta = $('<textarea cols=60 rows=20 class="notes"></textarea>');
 		ta.text(this.data.attrs._notes || "");
 		dialog.append(ta);
-		var openWithEditor_html = $('<input type="checkbox" name="openWithEditor">Open Window with Editor</input>');
+		var openWithEditor_html = $('<input type="checkbox" name="openWithEditor">'+gettext('Open Window with Editor')+'</input>');
 		var openWithEditor = openWithEditor_html[0];
 		if (this.data.attrs._notes_autodisplay) {
 			openWithEditor.checked = true;
@@ -1717,29 +1728,35 @@ var Topology = Class.extend({
 			resizable: true,
 			height: "auto",
 			width: 550,
-			title: "Notes for Topology",
+			title: gettext("Notes for Topology"),
 			show: "slide",
 			hide: "slide",
 			modal: true,
-			buttons: {
-				Save: function() {
-		        	dialog.dialog("close");
-			      	t.modify_value("_notes", ta.val());
-			      	t.modify_value("_notes_autodisplay", openWithEditor.checked)
-			    },
-		        Close: function() {
-		        	dialog.dialog("close");
-		        }				
-			}
+			buttons:  [
+					{
+						text: gettext("Save"),
+						click: function() {
+		        				dialog.dialog("close");
+			      				t.modify_value("_notes", ta.val());
+			      				t.modify_value("_notes_autodisplay", openWithEditor.checked)
+			    			}
+					},
+					{
+						text: gettext("Close"),
+		        			click: function() {
+		        			dialog.dialog("close");
+		       				}		
+					}		
+			]
 		});
 	},
 	renameDialog: function() {
 		var t = this;
 		windowOptions = {
-			title: "Rename Topology",
+			title: gettext("Rename Topology"),
 			width: 550,
 			inputname: "newname",
-			inputlabel: "New Name:",
+			inputlabel: gettext("New Name:"),
 			inputvalue: t.data.attrs.name,
 			onChangeFct: function () {
 				if(this.value == '') { 
@@ -1750,7 +1767,7 @@ var Topology = Class.extend({
 			},
 			buttons: [
 				{ 
-					text: "Save",
+					text: gettext("Save"),
 					id: "rename_topology_window_save",
 					click: function() {
 						t.rename.hide();
@@ -1762,7 +1779,7 @@ var Topology = Class.extend({
 					}
 				},
 				{
-					text: "Cancel",
+					text: gettext("Cancel"),
 					click: function() {
 						t.rename.hide();
 						t.rename = null;
@@ -1777,11 +1794,11 @@ var Topology = Class.extend({
 		var t = this;
 		var dialog, timeout;
 		dialog = new AttributeWindow({
-			title: "Topology Timeout",
+			title: gettext("Topology Timeout"),
 			width: 500,
 			buttons: [
 						{ 
-							text: "Save",
+							text: gettext("Save"),
 							click: function() {
 								t.action("renew", {params:{
 									"timeout": timeout.getValue()
@@ -1790,7 +1807,7 @@ var Topology = Class.extend({
 							}
 						},
 						{
-							text: "Close",
+							text: gettext("Close"),
 							click: function() {
 								dialog.remove();
 							}
@@ -1801,15 +1818,15 @@ var Topology = Class.extend({
 		var timeout_settings = t.editor.options.timeout_settings;
 		for (var i = 0; i < timeout_settings.options.length; i++) choices[timeout_settings.options[i]] = formatDuration(timeout_settings.options[i]);
 		var timeout_val = t.data.timeout - new Date().getTime()/1000.0;
-		var text = timeout_val > 0 ? ("Your topology will time out in " + formatDuration(timeout_val)) : "Your topology has timed out. You must renew it to use it.";
+		var text = timeout_val > 0 ? ("Your topology will time out in " + formatDuration(timeout_val)) : gettext("Your topology has timed out. You must renew it to use it.");
 		if (timeout_val < timeout_settings.warning) text = '<b style="color:red">' + text + '</b>';
 		dialog.addText("<center>"  + text + "</center>");
 		timeout = dialog.add(new ChoiceElement({
 			name: "timeout",
-			label: "New timeout",
+			label: gettext("New timeout"),
 			choices: choices,
 			value: timeout_settings["default"],
-			help_text: "After this time, your topology will automatically be stopped. Timeouts can be extended arbitrarily."
+			help_text: gettext("After this time, your topology will automatically be stopped. Timeouts can be extended arbitrarily.")
 		}));
 		dialog.show();		
 	},
@@ -1817,12 +1834,12 @@ var Topology = Class.extend({
 		var t = this;
 		var dialog, name, description, timeout;
 		dialog = new AttributeWindow({
-			title: "New Topology",
+			title: gettext("New Topology"),
 			width: 500,
 			closable: false,
 			buttons: [
 						{ 
-							text: "Save",
+							text: gettext("Save"),
 							disabled: true,
 							id: "new_topology_window_save",
 							click: function() {
@@ -1845,8 +1862,8 @@ var Topology = Class.extend({
 		});
 		name = dialog.add(new TextElement({
 			name: "name",
-			label: "Name",
-			help_text: "The name for your topology",
+			label: gettext("Name"),
+			help_text: gettext("The name for your topology"),
 			onChangeFct:  function () {
 				if(this.value == '') { 
 					$('#new_topology_window_save').button('disable');
@@ -1863,12 +1880,12 @@ var Topology = Class.extend({
 			label: "Timeout",
 			choices: choices,
 			value: timeout_settings["default"],
-			help_text: "After this time, your topology will automatically be stopped. Timeouts can be extended arbitrarily."
+			help_text: gettext("After this time, your topology will automatically be stopped. Timeouts can be extended arbitrarily.")
 		}));
 		description = dialog.add(new TextAreaElement({
 			name: "description",
-			label: "Description",
-			help_text: "Description of the experiment. (Optional)",
+			label: gettext("Description"),
+			help_text: gettext("Description of the experiment. (Optional)"),
 			value: t.data.attrs._notes
 		}));
 		dialog.show();
@@ -1910,7 +1927,7 @@ var Topology = Class.extend({
 			}
 			maxCount = Math.max(maxCount, count);
 		}
-		if (maxCount > this.loop_last_warn) showError("Network segments must not contain multiple external network exits! This could lead to loops in the network and result in a total network crash.");
+		if (maxCount > this.loop_last_warn) showError(gettext("Network segments must not contain multiple external network exits! This could lead to loops in the network and result in a total network crash."));
 		this.loop_last_warn = maxCount;
 	},
 	colorNetworkSegments: function(segments) {
@@ -1933,36 +1950,36 @@ var createTopologyMenu = function(obj) {
 		callback: function(key, options) {},
 		items: {
 			"header": {
-				html:"<span>"+obj.name()+"<small><br />Topology "+(editor.options.show_ids ? ' #'+obj.id : "")+'</small></span>',
+				html:"<span>"+obj.name()+"<small><br />"+gettext("Topology ")+(editor.options.show_ids ? ' #'+obj.id : "")+'</small></span>',
 				type:"html"
 			},
 			"actions": {
-				name:'Global actions',
+				name:gettext('Global actions'),
 				icon:'control',
 				items: {
 					"start": {
-						name:'Start',
+						name:gettext('Start'),
 						icon:'start',
 						callback: function(){
 							obj.action_start();
 						}
 					},
 					"stop": {
-						name:"Stop",
+						name:gettext("Stop"),
 						icon:"stop",
 						callback: function(){
 							obj.action_stop();
 						}
 					},
 					"prepare": {
-						name:"Prepare",
+						name:gettext("Prepare"),
 						icon:"prepare",
 						callback: function(){
 							obj.action_prepare();
 						}
 					},
 					"destroy": {
-						name:"Destroy",
+						name:gettext("Destroy"),
 						icon:"destroy",
 						callback:function(){
 							obj.action_destroy();
@@ -1972,21 +1989,21 @@ var createTopologyMenu = function(obj) {
 			},
 			"sep1": "---",
 			"notes": {
-				name:"Notes",
+				name:gettext("Notes"),
 				icon:"notes",
 				callback: function(){
 					obj.notesDialog();
 				}
 			},
 			"usage": {
-				name:"Resource usage",
+				name:gettext("Resource usage"),
 				icon:"usage",
 				callback: function(){
 					obj.showUsage();
 				}
 			},
 			"debug": obj.editor.options.debug_mode ? {
-				name:'Debug',
+				name:gettext('Debug'),
 				icon:'debug',
 				callback: function(){
 					obj.showDebugInfo();
@@ -1994,7 +2011,7 @@ var createTopologyMenu = function(obj) {
 			} : null,
 			"sep2": "---",
 			"remove": {
-				name:'Delete',
+				name:gettext('Delete'),
 				icon:'remove',
 				callback: function(){
 					obj.remove();
@@ -2062,7 +2079,7 @@ var Component = Class.extend({
 		 	data: {},
 		 	successFn: function(result) {
 		 		var win = new Window({
-		 			title: "Debug info",
+		 			title: gettext("Debug info"),
 		 			position: "center top",
 		 			width: 800,
 		 			buttons: {
@@ -2109,32 +2126,33 @@ var Component = Class.extend({
 		console.log('opening config window for type '+this.data.type);
 		
 		this.configWindow = new AttributeWindow({
-			title: "Attributes",
+			title: gettext("Attributes"),
 			width: "600",
 			helpTarget:helpTarget,
-			buttons: {
-				Save: function() {
-					t.configWindow.hide();
-					var values = t.configWindow.getValues();
-					for (var name in values) {
-						if (values[name] === t.data.attrs[name]) delete values[name];
-						// Tread "" like null
-						if (values[name] === "" && t.data.attrs[name] === null) delete values[name];
+			buttons: [
+					{
+						text: gettext("Save"),
+						click: function() {
+							t.configWindow.hide();
+							var values = t.configWindow.getValues();
+							for (var name in values) {
+								if (values[name] === t.data.attrs[name]) delete values[name];
+								// Tread "" like null
+								if (values[name] === "" && t.data.attrs[name] === null) delete values[name];
+							}
+							t.modify(values);	
+							t.configWindow.remove();
+							t.configWindow = null;
+						}
+					},
+					{
+						text: gettext("Cancel"),	
+						click: function() {
+							t.configWindow.remove();
+							t.configWindow = null;
+						} 
 					}
-					t.modify(values);	
-					t.configWindow.remove();
-					t.configWindow = null;
-					
-					
-					if(callback != null) {
-						callback(t);
-					}
-				},
-				Cancel: function() {
-					t.configWindow.remove();
-					t.configWindow = null;
-				} 
-			}
+				]
 		});
 		for (var i=0; i<settings.order.length; i++) {
 			var name = settings.order[i];
@@ -2236,8 +2254,8 @@ var ConnectionAttributeWindow = AttributeWindow.extend({
 		this._super(options);
 		
 		this.table.append($('<div class="form-group" />').append($('<ul class="nav nav-tabs" style="margin-bottom: 1pt;">\
-				<li class="active"><a href="#Link_Emulation" data-toggle="tab">Link Emulation</a></li>\
-				  <li><a href="#Packet_capturing" data-toggle="tab">Packet capturing</a></li>\
+				<li class="active"><a href="#Link_Emulation" data-toggle="tab">'+gettext('Link Emulation')+'</a></li>\
+				  <li><a href="#Packet_capturing" data-toggle="tab">'+gettext('Packet capturing')+'</a></li>\
 				</ul>')));
 		
 		var tab_content = $('<div class="tab-content" />');
@@ -2257,7 +2275,7 @@ var ConnectionAttributeWindow = AttributeWindow.extend({
 			this.elements.push(el);
 			var link_emulation = $('<div class="tab-pane active" id="Link_Emulation" />');
 			var link_emulation_elements = $('<div class="form-group" />')
-						.append($('<label class="col-sm-4 control-label">Enabled</label>'))
+						.append($('<label class="col-sm-4 control-label">'+gettext('Enabled')+'</label>'))
 						.append($('<div class="col-sm-8" style="padding: 0px" />')
 						.append(el.getElement()));
 			
@@ -2283,17 +2301,19 @@ var ConnectionAttributeWindow = AttributeWindow.extend({
 				name1 = name2;
 				name2 = t;
 			}
-			var fromDir = $("<div>From " + name1 + "<br/>to " + name2 + "</div>");
-			var toDir = $("<div>From " + name2 + " <br/>to " + name1 + "</div>");
+			var fromDir = $("<div>"+gettext("From ") + name1 + "<br/>"+gettext("to ") + name2 + "</div>");
+			var toDir = $("<div>"+gettext("From ") + name2 + " <br/>"+gettext("to ") + name1 + "</div>");
 			link_emulation_elements.after($('<div class="form-group" />')
-				.append($('<label class="col-sm-4 control-label">Direction</label>'))
+				.append($('<label class="col-sm-4 control-label">'+gettext('Direction')+'</label>'))
 				.append($('<div class="col-sm-4" />').append(fromDir).append(dir1))
 				.append($('<div class="col-sm-4" />').append(toDir).append(dir2))
 			);
 			//simple fields
 			var order = ["bandwidth", "delay", "jitter", "distribution", "lossratio", "duplicate", "corrupt"];
+			var order_desc = [gettext("Bandwidth"), gettext("Delay"), gettext("Jitter"), gettext("Distribution"), gettext("Loss ratio"), gettext("Duplication ratio"), gettext("Corruption ratio")];
 			for (var i = 0; i < order.length; i++) {
 				var name = order[i];
+				var desc = order_desc[i];
 				var el_from = this.autoElement(con.caps.attrs[name+"_from"], con.data.attrs[name+"_from"], true)
 				this.elements.push(el_from);
 				this.emulation_elements.push(el_from);
@@ -2301,7 +2321,7 @@ var ConnectionAttributeWindow = AttributeWindow.extend({
 				this.elements.push(el_to);
 				this.emulation_elements.push(el_to);
 				link_emulation_elements.after($('<div class="form-group" />')
-					.append($('<label class="col-sm-4 control-label" style="padding: 0;" />').append(con.caps.attrs[name+"_to"].desc))
+					.append($('<label class="col-sm-2 control-label" style="padding: 0;" />').append(desc))
 					.append($('<div class="col-sm-3" style="padding: 0;"/>').append(el_from.getElement()))
 					.append($('<div class="col-sm-3" style="padding: 0;" />').append(el_to.getElement()))
 					.append($('<div class="col-sm-2" style="padding: 0;" />').append(con.caps.attrs[name+"_to"].unit))
@@ -2330,19 +2350,21 @@ var ConnectionAttributeWindow = AttributeWindow.extend({
 			});
 			this.elements.push(el);
 			var packet_capturing_elements = $('<div class="form-group" />')
-			.append($('<label class="col-sm-6 control-label">Enabled</label>'))
+			.append($('<label class="col-sm-6 control-label">'+gettext('Enabled')+'</label>'))
 			.append($('<div class="col-sm-6" />')
 			.append(el.getElement()));
 		
 			
 			var order = ["capture_mode", "capture_filter"];
+			var order_desc=[gettext("Capture mode"),gettext("Packet filter expression")];
 			for (var i = 0; i < order.length; i++) {
 				var name = order[i];
+				var desc = order_desc[i];
 				var el = this.autoElement(con.caps.attrs[name], con.data.attrs[name], con.attrEnabled(name));
 				this.capturing_elements.push(el);
 				this.elements.push(el);
 				packet_capturing_elements.after($('<div class="form-group" />')
-					.append($('<label class="col-sm-6 control-label">').append(con.caps.attrs[name].desc))
+					.append($('<label class="col-sm-4 control-label">').append(desc))
 					.append($('<div class="col-sm-6" />').append(el.getElement()))
 				);
 			}
@@ -2501,8 +2523,8 @@ var Connection = Component.extend({
 		var port = this.data.attrs.capture_port;
 		var cmd = "wireshark -k -i <( nc "+host+" "+port+" )";
 		new Window({
-			title: "Live capture Information", 
-			content: '<p>Host: '+host+'<br />Port: '+port+"</p><p>Start live capture via: <pre>"+cmd+"</pre></p>", 
+			title: gettext("Live capture Information"), 
+			content: '<p>'+gettext('Host')+': '+host+'<br />'+gettext('Port')+': '+port+"</p><p>"+gettext("Start live capture via")+": <pre>"+cmd+"</pre></p>", 
 			autoShow: true,
 			width: 600
 		});
@@ -2512,7 +2534,7 @@ var Connection = Component.extend({
 		var wsPos = this.editor.workspace.container.position();
 		var t = this;
 		this.configWindow = new ConnectionAttributeWindow({
-			title: "Attributes",
+			title: gettext("Attributes"),
 			width: 500,
 			buttons: {
 				Save: function() {
@@ -2534,7 +2556,7 @@ var Connection = Component.extend({
 	},
 	remove: function(callback, ask) {
 		if (this.busy) return;
-		if (ask && this.editor.options.safe_mode && ! confirm("Do you want to delete this connection?")) return;
+		if (ask && this.editor.options.safe_mode && ! confirm(gettext("Do you want to delete this connection?"))) return;
 		this.setBusy(true);
 		this.triggerEvent({operation: "remove", phase: "begin"});
 		var t = this;
@@ -2572,10 +2594,10 @@ var createConnectionMenu = function(obj) {
 		callback: function(key, options) {},
 		items: {
 			"header": {
-				html:'<span>'+obj.name_vertical()+"<small><br>Connection"+(editor.options.show_ids ? " #"+obj.id : "")+'</small></span>', type:"html"
+				html:'<span>'+obj.name_vertical()+"<small><br>"+gettext("Connection")+(editor.options.show_ids ? " #"+obj.id : "")+'</small></span>', type:"html"
 			},
 			"usage": {
-				name:"Resource usage",
+				name:gettext("Resource usage"),
 				icon:"usage",
 				callback: function(){
 					obj.showUsage();
@@ -2583,40 +2605,40 @@ var createConnectionMenu = function(obj) {
 			},
 			"sep1": "---",
 			"cloudshark_capture": obj.captureDownloadable() ? {
-				name:"View capture in Cloudshark",
+				name:gettext("View capture in Cloudshark"),
 				icon:"cloudshark",
 				callback: function(){
 					obj.viewCapture();
 				}
 			} : null,
 			"download_capture": obj.captureDownloadable() ? {
-				name:"Download capture",
+				name:gettext("Download capture"),
 				icon:"download-capture",
 				callback: function(){
 					obj.downloadCapture();
 				}
 			} : null,
 			"live_capture": obj.liveCaptureEnabled() ? {
-				name:"Live capture info",
+				name:gettext("Live capture info"),
 				icon:"live-capture",
 				callback: function(){
 					obj.liveCaptureInfo();
 				}
 			} : null,
 			"no_capture": (! obj.liveCaptureEnabled() && ! obj.captureDownloadable()) ? {
-				name:"No captures",
+				name:gettext("No captures"),
 				icon:"no-capture"
 			} : null,
 			"sep2": "---",
 			"configure": {
-				name:'Configure',
+				name:gettext('Configure'),
 				icon:'configure',
 				callback: function(){
 					obj.showConfigWindow();
 				}
 			},
 			"debug": obj.editor.options.debug_mode ? {
-				name:'Debug',
+				name:gettext('Debug'),
 				icon:'debug',
 				callback: function(){
 					obj.showDebugInfo();
@@ -2624,7 +2646,7 @@ var createConnectionMenu = function(obj) {
 			} : null,
 			"sep3": "---",
 			"remove": obj.isRemovable() ? {
-				name:'Delete',
+				name:gettext('Delete'),
 				icon:'remove',
 				callback: function(){
 					obj.remove(null, true);
@@ -2836,8 +2858,8 @@ var Element = Component.extend({
 		var passwd = this.data.attrs.vncpassword;
 		var link = "vnc://:" + passwd + "@" + host + ":" + port;
  		var win = new Window({
- 			title: "VNC info",
- 			content: '<p>Link: <a href="'+link+'">'+link+'</a><p>Host: '+host+"</p><p>Port: "+port+"</p><p>Websocket-Port: "+wport+"</p><p>Password: <pre>"+passwd+"</pre></p>",
+ 			title: gettext("VNC info"),
+ 			content: '<p>'+gettext('Link')+': <a href="'+link+'">'+link+'</a><p>'+gettext('Host')+': '+host+"</p><p>"+gettext("Port")+": "+port+"</p><p>"+gettext("Websocket-Port")+": "+wport+"</p><p>"+gettext("Password")+": <pre>"+passwd+"</pre></p>",
  			autoShow: true,
  			width: 500,
  		});
@@ -2883,12 +2905,12 @@ var Element = Component.extend({
 	},
 	uploadFile: function(window_title, grant_action, use_action) {
 		if (window.location.protocol == 'https:') { //TODO: fix this.
-			showError("Upload is currently not available over HTTPS. Load this page via HTTP to do uploads.");
+			showError(gettext("Upload is currently not available over HTTPS. Load this page via HTTP to do uploads."));
 			return;
 		}
 		this.action(grant_action, {callback: function(el, res) {
 			var url = "http://" + el.data.attrs.host_info.address + ":" + el.data.attrs.host_info.fileserver_port + "/" + res + "/upload";
-			var iframe = $('<iframe id="upload_target" name="upload_target">Test</iframe>');
+			var iframe = $('<iframe id="upload_target" name="upload_target">'+gettext('Test')+'</iframe>');
 			// iframe.load will be triggered a moment after iframe is added to body
 			// this happens in a seperate thread so we cant simply wait for it (esp. on slow Firefox)
 			iframe.load(function(){ 
@@ -2911,7 +2933,7 @@ var Element = Component.extend({
 					autoShow: true, 
 					width:300,
 					buttons: [{
-						text: "Upload",
+						text: gettext("Upload"),
 						id: "upload_window_upload",
 						disabled: true,
 						click: function() {		
@@ -2923,7 +2945,7 @@ var Element = Component.extend({
 						},
 					},
 					{
-						text: "Cancel",
+						text: gettext("Cancel"),
 						id: "upload_window_cancel",
 						click: function() {
 							t.info.hide();
@@ -2938,10 +2960,10 @@ var Element = Component.extend({
 		}});
 	},
 	uploadImage: function() {
-		this.uploadFile("Upload Image","upload_grant","upload_use");	
+		this.uploadFile(gettext("Upload Image"),"upload_grant","upload_use");	
 	},
 	uploadRexTFV: function() {
-		this.uploadFile("Upload Executable Archive","rextfv_upload_grant","rextfv_upload_use");
+		this.uploadFile(gettext("Upload Executable Archive"),"rextfv_upload_grant","rextfv_upload_use");
 	},
 	action_start: function() {
 		this.action("start");
@@ -2972,7 +2994,7 @@ var Element = Component.extend({
 	},
 	remove: function(callback, ask) {
 		if (this.busy) return;
-		if (ask && this.editor.options.safe_mode && ! confirm("Do you want to delete this element?")) return;
+		if (ask && this.editor.options.safe_mode && ! confirm(gettext("Do you want to delete this element?"))) return;
 		this.setBusy(true);
 		this.triggerEvent({operation: "remove", phase: "begin"});
 		var t = this;
@@ -3035,7 +3057,7 @@ var createElementMenu = function(obj) {
 			items: {
 				"header": header,
 				"busy_indicator": {
-					name:'Please wait for the current action to finish and re-open this menu.',
+					name:gettext('Please wait for the current action to finish and re-open this menu.'),
 					icon:'loading'
 				}
 			}
@@ -3046,35 +3068,35 @@ var createElementMenu = function(obj) {
 			items: {
 				"header": header,
 				"connect": obj.isConnectable() ? {
-					name:'Connect',
+					name:gettext('Connect'),
 					icon:'connect',
 					callback: function(){
 						obj.editor.onElementConnectTo(obj);
 					}
 				} : null,
 				"start": obj.actionEnabled("start") ? {
-					name:'Start',
+					name:gettext('Start'),
 					icon:'start',
 					callback: function(){
 						obj.action_start();
 					}
 				} : null,
 				"stop": obj.actionEnabled("stop") ? {
-					name:"Stop",
+					name:gettext("Stop"),
 					icon:"stop",
 					callback: function(){
 						obj.action_stop();
 					}
 				} : null,
 				"prepare": obj.actionEnabled("prepare") ? {
-					name:"Prepare",
+					name:gettext("Prepare"),
 					icon:"prepare",
 					callback: function(){
 						obj.action_prepare();
 					}
 				} : null,
 				"destroy": obj.actionEnabled("destroy") ? {
-					name:"Destroy",
+					name:gettext("Destroy"),
 					icon:"destroy",
 					callback: function(){
 						obj.action_destroy();
@@ -3082,32 +3104,32 @@ var createElementMenu = function(obj) {
 				} : null,
 				"sep2": "---",
 				"console": obj.consoleAvailable() ? {
-					name:"Console",
+					name:gettext("Console"),
 					icon:"console",
 					items: {
 						"console_novnc": obj.data.attrs.websocket_pid ? {
-							name:"NoVNC (HTML5+JS)",
+							name:gettext("NoVNC (HTML5+JS)"),
 							icon:"novnc",
 							callback: function(){
 								obj.openConsoleNoVNC();
 							}
 						} : null,
 						"console_java": {
-							name: "Java applet",
+							name: gettext("Java applet"),
 							icon: "java-applet",
 							callback: function(){
 								obj.openConsole();
 							}
 						}, 
 						"console_link": {
-							name:"vnc:// link",
+							name:gettext("vnc:// link"),
 							icon:"console",
 							callback: function(){
 								obj.openVNCurl();
 							}
 						},
 						"console_info": {
-							name:"VNC Information",
+							name:gettext("VNC Information"),
 							icon:"info",
 							callback: function(){
 								obj.showVNCinfo();
@@ -3116,39 +3138,39 @@ var createElementMenu = function(obj) {
 					}
 				} : null,
 				"used_addresses": obj.data.attrs.used_addresses ? {
-					name:"Used addresses",
+					name:gettext("Used addresses"),
 					icon:"info",
 					callback: function(){
 						obj.showUsedAddresses();
 					}
 				} : null,
 				"usage": {
-					name:"Resource usage",
+					name:gettext("Resource usage"),
 					icon:"usage",
 					callback: function(){
 						obj.showUsage();
 					}
 				},
 				"disk_image": (obj.actionEnabled("download_grant") || obj.actionEnabled("upload_grant")) || obj.actionEnabled("change_template") ? { 
-					name: "Disk image",
+					name: gettext("Disk image"),
 					icon: "drive",
 					items: {
 						"change_template": obj.actionEnabled("change_template") ? {
-							name:"Change Template",
+							name:gettext("Change Template"),
 							icon:"edit",
 							callback: function() {
 								obj.showTemplateWindow();
 							}
 						} : null,
 						"download_image": obj.actionEnabled("download_grant") ? {
-							name:"Download image",
+							name:gettext("Download image"),
 							icon:"download",
 							callback: function(){
 								obj.downloadImage();
 							}
 						} : null,
 						"upload_image": obj.actionEnabled("upload_grant") ? {
-							name:"Upload custom image",
+							name:gettext("Upload custom image"),
 							icon:"upload",
 							callback: function(){
 								obj.uploadImage();
@@ -3157,25 +3179,25 @@ var createElementMenu = function(obj) {
 					}
 				} : null,
 				"rextfv": obj.actionEnabled("rextfv_download_grant") || obj.actionEnabled("rextfv_upload_grant") || obj.rextfvStatusSupport() ? {
-					name:"Executable archive",
+					name:gettext("Executable archive"),
 					icon:"rextfv",
 					items: {
 						"download_rextfv": obj.actionEnabled("rextfv_download_grant") ? {
-							name:"Download Archive",
+							name:gettext("Download Archive"),
 							icon:"download",
 							callback: function(){
 								obj.downloadRexTFV();
 							}
 						} : null,
 						"upload_rextfv": obj.actionEnabled("rextfv_upload_grant") ? {
-							name:"Upload Archive",
+							name:gettext("Upload Archive"),
 							icon:"upload",
 							callback: function(){
 								obj.uploadRexTFV();
 							}
 						} : null,
 						"rextfv_status": obj.rextfvStatusSupport() ? {
-							name:"Status",
+							name:gettext("Status"),
 							icon:"info",
 							callback: function(){
 								obj.openRexTFVStatusWindow();
@@ -3185,14 +3207,14 @@ var createElementMenu = function(obj) {
 				} : null,
 				"sep3": "---",
 				"configure": {
-					name:'Configure',
+					name:gettext('Configure'),
 					icon:'configure',
 					callback:function(){
 					obj.showConfigWindow(true);
 					}
 				},
 				"debug": obj.editor.options.debug_mode ? {
-					name:'Debug',
+					name:gettext('Debug'),
 					icon:'debug',
 					callback: function(){
 						obj.showDebugInfo();
@@ -3200,7 +3222,7 @@ var createElementMenu = function(obj) {
 				} : null,
 				"sep4": "---",
 				"remove": obj.isRemovable() ? {
-					name:'Delete',
+					name:gettext('Delete'),
 					icon:'remove',
 					callback: function(){
 						obj.remove(null, true);
@@ -3286,7 +3308,7 @@ var IconElement = Element.extend({
 		
 		//set 'host has problems' icon if host has problems
 		if (this.data.attrs.host_info && this.data.attrs.host_info.problems && this.data.attrs.host_info.problems.length != 0) {
-			this.errIcon.attr({'title':'The Host for this device has problems. Contact an Administrator.'});
+			this.errIcon.attr({'title':gettext('The Host for this device has problems. Contact an Administrator.')});
 			this.errIcon.attr({'src':'/img/error.png'});
 		} else {
 			this.errIcon.attr({'title':''});
@@ -3414,7 +3436,7 @@ var ExternalNetworkElement = IconElement.extend({
 		}
 		
 		config.special.kind = new ChoiceElement({
-			label: "Network kind",
+			label: gettext("Network kind"),
 			name: "kind",
 			info: networkInfo,
 			choices: createMap(this.editor.networks.getAll(), "kind", "label"),
@@ -3483,7 +3505,7 @@ var VMElement = IconElement.extend({
 		var profiles = this.editor.profiles.getAllowed(this.data.type);
 		var profile_helptext = null;
 		if (!editor.allowRestrictedProfiles)
-			profile_helptext = 'If you need more performance, contact your administrator.';
+			profile_helptext = gettext('If you need more performance, contact your administrator.');
 		
 		for (var i=0; i<profiles.length; i++) {
 			var info = $('<div class="hoverdescription" style="display: inline;"></div>');
@@ -3502,20 +3524,20 @@ var VMElement = IconElement.extend({
 			}
 			
 			if (prof.cpus) {
-				desc.append($('<tr><td style="background:white;">CPUs</td><td style="background:white;">'+prof.cpus+'</td></tr>'));
+				desc.append($('<tr><td style="background:white;">'+gettext('CPUs')+'</td><td style="background:white;">'+prof.cpus+'</td></tr>'));
 			}
 			
 			if (prof.ram) {
-				desc.append($('<tr><td style="background:white;">RAM</td><td style="background:white;">'+prof.ram+' MB</td></tr>'));
+				desc.append($('<tr><td style="background:white;">'+gettext('RAM')+'</td><td style="background:white;">'+prof.ram+' MB</td></tr>'));
 			}
 			
 			if (prof.diskspace) {
-				desc.append($('<tr><td style="background:white;">Disk</td><td style="background:white;">'+prof.diskspace+' MB</td></tr>'));
+				desc.append($('<tr><td style="background:white;">'+gettext('Disk')+'</td><td style="background:white;">'+prof.diskspace+' MB</td></tr>'));
 			}
 			
 			if (prof.restricted) {
 				info.append('<img src="/img/lock_open.png" />');
-				desc.append($('<tr><td style="background:white;"><img src="/img/lock_open.png" /></td><td>This profile is restricted; you have access to restricted profiles.</td></tr>'));
+				desc.append($('<tr><td style="background:white;"><img src="/img/lock_open.png" /></td><td>'+gettext('This profile is restricted; you have access to restricted profiles.')+'</td></tr>'));
 			}
 			
 			info.append(d);
@@ -3540,14 +3562,14 @@ var VMElement = IconElement.extend({
 			
 			if (this.data.attrs.host_info.site && (this.data.attrs.site == null)) {
 				info.append('<img src="/img/automatic.png" />'); //TODO: insert a useful symbol for "automatic" here and on the left column one line below
-				desc.append($('<tr><td><img src="/img/automatic.png" /></td><td>This site has been automatically selected by the backend.</td></tr>'))
+				desc.append($('<tr><td><img src="/img/automatic.png" /></td><td>'+gettext('This site has been automatically selected by the backend.')+'</td></tr>'))
 			}
 
 			if (site.description_text) {
 				desc.append($('<tr><td style="background:white;"><img src="/img/info.png" /></td><td style="background:white;">'+site.description_text+'</td></tr>'));
 			}
 			
-			var hostinfo_l = '<tr><td style="background:white;"><img src="/img/server.png" /></td><td style="background:white;"><h3>Hosted By:</h3>';
+			var hostinfo_l = '<tr><td style="background:white;"><img src="/img/server.png" /></td><td style="background:white;"><h3>'+gettext('Hosted By')+':</h3>';
 			var hostinfo_r = '</td></tr>';
 			if (site.organization.homepage_url) {
 				hostinfo_l = hostinfo_l + '<a href="' + site.organization.homepage_url + '">';
@@ -3565,7 +3587,7 @@ var VMElement = IconElement.extend({
 		}
 		
 		config.special.template = new TemplateElement({
-			label: "Template",
+			label: gettext("Template"),
 			name: "template",
 			value: this.data.attrs.template || this.caps.attrs.template["default"],
 			custom_template: this.data.attrs.custom_template,
@@ -3574,7 +3596,7 @@ var VMElement = IconElement.extend({
 			call_element: this
 		});
 		config.special.site = new ChoiceElement({
-			label: "Site",
+			label: gettext("Site"),
 			name: "site",
 			info: siteInfo,
 			choices: createMap(this.editor.sites, "name", function(site) {
@@ -3584,7 +3606,7 @@ var VMElement = IconElement.extend({
 			disabled: !this.attrEnabled("site")
 		});
 		config.special.profile = new ChoiceElement({
-			label: "Performance Profile",
+			label: gettext("Performance Profile"),
 			name: "profile",
 			info: profileInfo,
 			choices: createMap(this.editor.profiles.getAll(this.data.type), "name", "label"),
@@ -3593,9 +3615,9 @@ var VMElement = IconElement.extend({
 			help_text: profile_helptext
 		});
 		config.special._endpoint = new ChoiceElement({
-			label: "Segment seperation",
+			label: gettext("Segment seperation"),
 			name: "_endpoint",
-			choices: {true: "Seperates segments", false: "Connects segments"},
+			choices: {true: gettext("Seperates segments"), false: gettext("Connects segments")},
 			value: this.isEndpoint(),
 			inputConverter: Boolean.parse
 		}); 
@@ -3650,7 +3672,7 @@ var VMInterfaceElement = ChildElement.extend({
 		var t = this;
 		this.update(true, function() {
 	 		var win = new Window({
-	 			title: "Used addresses on " + t.name(),
+	 			title: gettext("Used addresses on ") + t.name(),
 	 			content: '<p>'+t.data.attrs.used_addresses.join('<br/>')+'</p>',
 	 			autoShow: true
 	 		});			
@@ -3690,7 +3712,7 @@ var Template = Class.extend({
 		this.subtype = options.subtype;
 		this.name = options.name;
 		this.label = options.label || options.name;
-		this.description = options.description || "no description available";
+		this.description = options.description || gettext("no description available");
 		this.nlXTP_installed = options.nlXTP_installed || false;
 		this.creation_date = options.creation_date;
 		this.restricted = options.restricted;
@@ -3706,8 +3728,8 @@ var Template = Class.extend({
 					'<tr><td><img src="/img/info.png"></td><td>'+this.description+'</td></tr>';
 		if (!this.nlXTP_installed) {
 			hb = hb + '<tr><td><img src="/img/error.png" /></td>'+
-				'<td>No nlXTP guest modules are installed. Executable archives will not auto-execute and status '+
-				'will be unavailable. <a href="'+help_baseUrl+'/rextfv/guestmodules" target="_help">More Info</a></td></tr>';
+				'<td>'+gettext('No nlXTP guest modules are installed. Executable archives will not auto-execute and status ')+
+				gettext('will be unavailable.')+' <a href="'+help_baseUrl+'/rextfv/guestmodules" target="_help">'+gettext('More Info')+'</a></td></tr>';
 		}
 		hb = hb + "</tbody></table></p>";
 		return Menu.button({
@@ -3738,10 +3760,10 @@ var Template = Class.extend({
 	},
 	infobox: function() {
 		var restricted_icon = "/img/lock_open.png";
-		var restricted_text = "You have the permission to use this restricted template.";
+		var restricted_text = gettext("You have the permission to use this restricted template.");
 		if (!editor.allowRestrictedTemplates) {
 			restricted_icon = "/img/lock.png";
-			restricted_text = "This template is restricted. Contact an administrator if you want to get access to restricted templates.";
+			restricted_text = gettext("This template is restricted. Contact an administrator if you want to get access to restricted templates.");
 		}
 		
 		var info = $('<div class="hoverdescription" style="display: inline;"></div>');
@@ -3768,7 +3790,7 @@ var Template = Class.extend({
 		}
 		
 		if (!this.nlXTP_installed) {
-			desc.append($('<tr><td style="background:white;"><img src="/img/warning16.png" /></td><td style="background:white;">No nlXTP guest modules are installed. Executable archives will not auto-execute and status will be unavailable. <a href="'+help_baseUrl+'/rextfv/guestmodules" target="_help">More Info</a></td></tr>'));
+			desc.append($('<tr><td style="background:white;"><img src="/img/warning16.png" /></td><td style="background:white;">'+gettext('No nlXTP guest modules are installed. Executable archives will not auto-execute and status will be unavailable.')+' <a href="'+help_baseUrl+'/rextfv/guestmodules" target="_help">'+gettext('More Info')+'</a></td></tr>'));
 			info.append('<img src="/img/warning16.png" />');
 		} else {
 			info.append('<img src="/img/invisible16.png" />');
@@ -3791,8 +3813,8 @@ var DummyForCustomTemplate = Template.extend({
 	init:function(original) {
 		this._super(original.classoptions);
 		this.subtype = "customimage";
-		this.label = "Custom Image";
-		this.description = "You have uploaded an own image. We cannot know anything about this. NlXTP modules may be missing.";
+		this.label = gettext("Custom Image");
+		this.description = gettext("You have uploaded an own image. We cannot know anything about this. NlXTP modules may be missing.");
 		this.nlXTP_installed = true;
 		this.creation_date = undefined;
 		this.restricted = false;
@@ -4137,11 +4159,11 @@ var Editor = Class.extend({
 
 		var toggleGroup = new ToggleGroup();
 	
-		var tab = this.menu.addTab("Home");
+		var tab = this.menu.addTab(gettext("Home"));
 
-		var group = tab.addGroup("Modes");
+		var group = tab.addGroup(gettext("Modes"));
 		this.selectBtn = Menu.button({
-			label: "Select & Move",
+			label: gettext("Select & Move"),
 			icon: "img/select32.png",
 			toggle: true,
 			toggleGroup: toggleGroup,
@@ -4152,7 +4174,7 @@ var Editor = Class.extend({
 		group.addElement(this.selectBtn);
 		group.addStackedElements([
 			Menu.button({
-				label: "Connect",
+				label: gettext("Connect"),
 				icon: "img/connect16.png",
 				toggle: true,
 				toggleGroup: toggleGroup,
@@ -4160,7 +4182,7 @@ var Editor = Class.extend({
 				func: this.createModeFunc(Mode.connect)
 			}),
 			Menu.button({
-				label: "Delete",
+				label: gettext("Delete"),
 				name: "mode-remove",
 				icon: "img/eraser16.png",
 				toggle: true,
@@ -4170,9 +4192,9 @@ var Editor = Class.extend({
 			})
 		]);
 
-		var group = tab.addGroup("Topology control");
+		var group = tab.addGroup(gettext("Topology control"));
 		group.addElement(Menu.button({
-			label: "Start",
+			label: gettext("Start"),
 			icon: "img/start32.png",
 			toggle: false,
 			small: false,
@@ -4181,7 +4203,7 @@ var Editor = Class.extend({
 			}
 		}));
 		group.addElement(Menu.button({
-			label: "Stop",
+			label: gettext("Stop"),
 			icon: "img/stop32.png",
 			toggle: false,
 			small: false,
@@ -4191,7 +4213,7 @@ var Editor = Class.extend({
 		}));
 		group.addStackedElements([
 			Menu.button({
-				label: "Prepare",
+				label: gettext("Prepare"),
 				icon: "img/prepare16.png",
 				toggle: false,
 				small: true,
@@ -4200,7 +4222,7 @@ var Editor = Class.extend({
 				}
 			}),
 			Menu.button({
-				label: "Destroy",
+				label: gettext("Destroy"),
 				icon: "img/destroy16.png",
 				toggle: false,
 				small: true,
@@ -4210,7 +4232,7 @@ var Editor = Class.extend({
 			})
 		]);
 		
-		var group = tab.addGroup("Common elements");
+		var group = tab.addGroup(gettext("Common elements"));
 		var common = t.templates.getCommon();
 		for (var i=0; i < common.length; i++) {
 			var tmpl = common[i];
@@ -4252,9 +4274,9 @@ var Editor = Class.extend({
 			}));
 		}
 
-		var tab = this.menu.addTab("Devices");
+		var tab = this.menu.addTab(gettext("Devices"));
 
-		var group = tab.addGroup("Linux (OpenVZ)");
+		var group = tab.addGroup(gettext("Linux (OpenVZ)"));
 		var tmpls = t.templates.getAllowed("openvz");
 		var btns = [];
 		for (var i=0; i<tmpls.length; i++)
@@ -4265,7 +4287,7 @@ var Editor = Class.extend({
 		})); 
 		group.addStackedElements(btns);
 
-		var group = tab.addGroup("Linux (KVM)");
+		var group = tab.addGroup(gettext("Linux (KVM)"));
 		var tmpls = t.templates.getAllowed("kvmqm", "linux");
 		var btns = [];
 		for (var i=0; i<tmpls.length; i++)
@@ -4277,7 +4299,7 @@ var Editor = Class.extend({
 		})); 
 		group.addStackedElements(btns);
 
-		var group = tab.addGroup("Other (KVM)");
+		var group = tab.addGroup(gettext("Other (KVM)"));
 		var tmpls = t.templates.getAllowed("kvmqm");
 		var btns = [];
 		for (var i=0; i<tmpls.length; i++)
@@ -4289,7 +4311,7 @@ var Editor = Class.extend({
 		})); 
 		group.addStackedElements(btns);
 
-		var group = tab.addGroup("Scripts (Repy)");
+		var group = tab.addGroup(gettext("Scripts (Repy)"));
 		var tmpls = t.templates.getAllowed("repy");
 		var btns = [];
 		for (var i=0; i<tmpls.length; i++)
@@ -4301,10 +4323,10 @@ var Editor = Class.extend({
 		})); 
 		group.addStackedElements(btns);
 
-		var group = tab.addGroup("Upload own images");
+		var group = tab.addGroup(gettext("Upload own images"));
 		group.addStackedElements([
 			Menu.button({
-				label: "KVM image",
+				label: gettext("KVM image"),
 				name: "kvm-custom",
 				icon: "img/kvm32.png",
 				toggle: true,
@@ -4313,7 +4335,7 @@ var Editor = Class.extend({
 				func: this.createPositionElementFunc(this.createUploadFunc("kvmqm"))
 			}),
 			Menu.button({
-				label: "OpenVZ image",
+				label: gettext("OpenVZ image"),
 				name: "openvz-custom",
 				icon: "img/openvz32.png",
 				toggle: true,
@@ -4322,7 +4344,7 @@ var Editor = Class.extend({
 				func: this.createPositionElementFunc(this.createUploadFunc("openvz"))
 			}),
 			Menu.button({
-				label: "Repy script",
+				label: gettext("Repy script"),
 				name: "repy-custom",
 				icon: "img/repy32.png",
 				toggle: true,
@@ -4333,11 +4355,11 @@ var Editor = Class.extend({
 		]);
 
 
-		var tab = this.menu.addTab("Network");
+		var tab = this.menu.addTab(gettext("Network"));
 
-		var group = tab.addGroup("VPN Elements");
+		var group = tab.addGroup(gettext("VPN Elements"));
 		group.addElement(Menu.button({
-			label: "Switch",
+			label: gettext("Switch"),
 			name: "vpn-switch",
 			icon: "img/switch32.png",
 			toggle: true,
@@ -4349,7 +4371,7 @@ var Editor = Class.extend({
 			}))
 		}));
 		group.addElement(Menu.button({
-			label: "Hub",
+			label: gettext("Hub"),
 			name: "vpn-hub",
 			icon: "img/hub32.png",
 			toggle: true,
@@ -4361,9 +4383,9 @@ var Editor = Class.extend({
 			}))
 		}));
 
-		var group = tab.addGroup("Scripts (Repy)");
+		var group = tab.addGroup(gettext("Scripts (Repy)"));
 		group.addElement(Menu.button({
-			label: "Custom script",
+			label: gettext("Custom script"),
 			name: "repy-custom",
 			icon: "img/repy32.png",
 			toggle: true,
@@ -4382,7 +4404,7 @@ var Editor = Class.extend({
 		})); 
 		group.addStackedElements(btns);
 
-		var group = tab.addGroup("Networks");
+		var group = tab.addGroup(gettext("Networks"));
 		var common = t.networks.getAllowed();
 		var buttonstack = [];
 		for (var i=0; i < common.length; i++) {
@@ -4414,11 +4436,11 @@ var Editor = Class.extend({
 		
 		
 		
-		var tab = this.menu.addTab("Topology");
+		var tab = this.menu.addTab(gettext("Topology"));
 
 		var group = tab.addGroup("");
 		group.addElement(Menu.button({
-			label: "Renew",
+			label: gettext("Renew"),
 			icon: "img/renew.png",
 			toggle: false,
 			small: false,
@@ -4427,7 +4449,7 @@ var Editor = Class.extend({
 			}
 		}));
 		group.addElement(Menu.button({
-			label: "Notes",
+			label: gettext("Notes"),
 			icon: "img/notes32.png",
 			toggle: false,
 			small: false,
@@ -4436,7 +4458,7 @@ var Editor = Class.extend({
 			}
 		}));
 		group.addElement(Menu.button({
-			label: "Resource usage",
+			label: gettext("Resource usage"),
 			icon: "img/office-chart-bar.png",
 			toggle: false,
 			small: false,
@@ -4446,7 +4468,7 @@ var Editor = Class.extend({
 		}));
 		group.addStackedElements([
 			Menu.button({
-				label: "Rename",
+				label: gettext("Rename"),
 				icon: "img/rename.png",
 				toggle: false,
 				small: true,
@@ -4455,7 +4477,7 @@ var Editor = Class.extend({
 				}
 			}),
 			Menu.button({
-				label: "Export",
+				label: gettext("Export"),
 				icon: "img/export16.png",
 				toggle: false,
 				small: true,
@@ -4464,7 +4486,7 @@ var Editor = Class.extend({
 				}
 			}),
 			Menu.button({
-				label: "Delete",
+				label: gettext("Delete"),
 				name: "topology-remove",
 				icon: "img/cross.png",
 				toggle: false,
@@ -4475,7 +4497,7 @@ var Editor = Class.extend({
 			})
 		]);
 		group.addElement(Menu.button({
-			label: "Users & Permissions",
+			label: gettext("Users & Permissions"),
 			icon: "img/user32.png",
 			toggle: false,
 			small: false,
@@ -4486,48 +4508,48 @@ var Editor = Class.extend({
 		}));
 
 
-		var tab = this.menu.addTab("Options");
+		var tab = this.menu.addTab(gettext("Options"));
 
-		var group = tab.addGroup("Editor");
+		var group = tab.addGroup(gettext("Editor"));
 		this.optionCheckboxes = {
 			safe_mode: this.optionMenuItem({
 				name:"safe_mode",
-   				label:"Safe mode",
-   				tooltip:"Asks before all destructive actions"
+   				label:gettext("Safe mode"),
+   				tooltip:gettext("Asks before all destructive actions")
    			}),
    			snap_to_grid: this.optionMenuItem({
    				name:"snap_to_grid",
-   				label:"Snap to grid",
-   				tooltip:"All elements snap to an invisible "+this.options.grid_size+" pixel grid"
+   				label:gettext("Snap to grid"),
+   				tooltip:gettext("All elements snap to an invisible ")+this.options.grid_size+gettext(" pixel grid")
    			}),
    			fixed_pos: this.optionMenuItem({
 		        name:"fixed_pos",
-		        label:"Fixed positions",
-		        tooltip:"Elements can not be moved"
+		        label:gettext("Fixed positions"),
+		        tooltip:gettext("Elements can not be moved")
 		    }),
 
 		    colorify_segments: this.optionMenuItem({
 		        name:"colorify_segments",
-		        label:"Colorify segments",
-		        tooltip:"Paint different network segments with different colors"
+		        label:gettext("Colorify segments"),
+		        tooltip:gettext("Paint different network segments with different colors")
 		    }),
 		    
 		    show_ids: this.optionMenuItem({
 		        name:"show_ids",
-		        label:"Show IDs",
-		        tooltip:"Show IDs in right-click menus"
+		        label:gettext("Show IDs"),
+		        tooltip:gettext("Show IDs in right-click menus")
 		    }),
 		    
 		    show_sites_on_elements: this.optionMenuItem({
 		        name:"show_sites_on_elements",
-		        label:"Show Element Sites",
-		        tooltip:"Show the site an element is located at in its right-click menu"
+		        label:gettext("Show Element Sites"),
+		        tooltip:gettext("Show the site an element is located at in its right-click menu")
 		    }),
 		    
 		    debug_mode: this.optionMenuItem({
 		        name:"debug_mode",
-		        label:"Debug mode",
-		        tooltip:"Displays debug messages"
+		        label:gettext("Debug mode"),
+		        tooltip:gettext("Displays debug messages")
 		    })
 		};
 
