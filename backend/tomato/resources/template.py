@@ -16,10 +16,24 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from django.db import models
-from .. import resources, fault, config
+from .. import resources, config
 from ..lib import attributes #@UnresolvedImport
-from ..lib.cmd import path, bittorrent #@UnresolvedImport
-import os.path, base64, hashlib
+from ..lib.cmd import bittorrent #@UnresolvedImport
+from ..lib.error import UserError, InternalError #@UnresolvedImport
+import os, os.path, base64, hashlib, shutil
+from tomato import currentUser
+from ..auth import Flags
+
+
+
+
+kblang_options = {"en-us": "English (US)", 
+					"en-gb": "English (GB)", 
+					"de": "German", 
+					"fr": "French", 
+					"ja": "Japanese"
+					}
+
 
 PATTERNS = {
 	"kvmqm": "%s.qcow2",
@@ -35,6 +49,7 @@ class Template(resources.Resource):
 	subtype = attributes.attribute("subtype", str)
 	torrent_data = attributes.attribute("torrent_data", str)
 	restricted = attributes.attribute("restricted", bool)
+	kblang = attributes.attribute("kblang",str,null=False,default="en-us")
 	# hosts: [TemplateOnHost]
 	
 	TYPE = "template"
@@ -47,8 +62,16 @@ class Template(resources.Resource):
 		self.type = self.TYPE
 		attrs = args[0]
 		for attr in ["name", "tech", "torrent_data"]:
-			fault.check(attr in attrs, "Template needs attribute %s", attr) 
+			UserError.check(attr in attrs, code=UserError.INVALID_CONFIGURATION, message="Template needs attribute",
+				data={"attribute": attr})
+		if 'kblang' in attrs:
+			kblang = attrs['kblang']
+			del attrs['kblang']
+		else:
+			kblang=None
 		resources.Resource.init(self, *args, **kwargs)
+		if kblang:
+			self.modify({'kblang':kblang})
 		self.modify_torrent_data(self.torrent_data) #might have been set before name or tech 
 				
 	def upcast(self):
@@ -62,9 +85,14 @@ class Template(resources.Resource):
 
 	def modify_name(self, val):
 		self.name = val
+		
+	def modify_kblang(self, val):
+		UserError.check(self.tech == "kvmqm", UserError.UNSUPPORTED_ATTRIBUTE, "Unsupported attribute for %s template: kblang" % (self.tech), data={"tech":self.tech,"attr_name":"kblang","attr_val":val})
+		UserError.check(val in kblang_options, UserError.UNSUPPORTED_TYPE, "Unsupported value for kblang: %s" % val, data={"kblang":val})
+		self.kblang = val
 
 	def modify_tech(self, val):
-		fault.check(val in PATTERNS.keys(), "Unsupported template tech: %s", val)
+		UserError.check(val in PATTERNS.keys(), code=UserError.INVALID_VALUE, message="Unsupported template tech", data={"value": val})
 		self.tech = val
 	
 	def modify_preference(self, val):
@@ -75,12 +103,14 @@ class Template(resources.Resource):
 		try:
 			info = bittorrent.torrentInfo(raw)
 		except:
-			fault.raise_("Invalid torrent file", fault.USER_ERROR)
-		fault.check(not "files" in info or len(info["files"]) == 1, "Torrent must contain exactly one file")
+			raise UserError(code=UserError.INVALID_VALUE, message="Invalid torrent file")
+		UserError.check(not "files" in info or len(info["files"]) == 1, code=UserError.INVALID_VALUE,
+			message="Torrent must contain exactly one file")
 		self.torrent_data = val
 		if self.name and self.tech:
 			shouldName = PATTERNS[self.tech] % self.name
-			fault.check(info["name"] == shouldName, "Torrent content must be named %s" % shouldName)
+			UserError.check(info["name"] == shouldName, code=UserError.INVALID_VALUE,
+				message="Torrent content must be named like the template", data={"expected_name": shouldName})
 			with open(self.getTorrentPath(), "w") as fp:
 				fp.write(raw)
 
@@ -88,7 +118,10 @@ class Template(resources.Resource):
 		if self.tech and os.path.exists(self.getTorrentPath()):
 			os.remove(self.getTorrentPath())
 		if self.tech and os.path.exists(self.getPath()):
-			path.remove(self.getPath(), recursive=True)
+			if os.path.isdir(self.getPath()):
+				shutil.rmtree(self.getPath())
+			else:
+				os.remove(self.getPath())
 		resources.Resource.remove(self)
 
 	def isReady(self):
@@ -99,10 +132,15 @@ class Template(resources.Resource):
 		except:
 			return False
 
-	def info(self):
+	def info(self, include_torrent_data = False):
 		info = resources.Resource.info(self)
-		if self.torrent_data:
-			del info["attrs"]["torrent_data"]
+		
+		if include_torrent_data:
+			if self.restricted:
+				UserError.check(currentUser().hasFlag(Flags.RestrictedTemplates), UserError.DENIED, "You need access to restricted templates in order to access this one.", data={'id':self.id})
+		else:
+			if self.torrent_data:
+				del info["attrs"]["torrent_data"]
 		info["attrs"]["ready"] = {
 			"backend": self.isReady(),
 			"hosts": {
@@ -114,6 +152,8 @@ class Template(resources.Resource):
 		info["attrs"]["tech"] = self.tech
 		info["attrs"]["preference"] = self.preference
 		info["attrs"]["torrent_data_hash"] = hashlib.md5(self.torrent_data).hexdigest() if self.torrent_data else None
+		if self.tech == "kvmqm":
+			info["attrs"]["kblang"] = self.kblang
 		return info
 
 def get(tech, name):
@@ -124,7 +164,7 @@ def get(tech, name):
 	
 def getPreferred(tech):
 	tmpls = Template.objects.filter(tech=tech).order_by("-preference")
-	fault.check(tmpls, "No template of type %s registered", tech) 
+	InternalError.check(tmpls, code=InternalError.CONFIGURATION_ERROR, message="No template for this type registered", data={"tech": tech})
 	return tmpls[0]
 
 resources.TYPES[Template.TYPE] = Template

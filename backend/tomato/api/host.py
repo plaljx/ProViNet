@@ -20,20 +20,20 @@ from ..lib.cache import cached #@UnresolvedImport
 
 def _getOrganization(name):
 	o = host.getOrganization(name)
-	fault.check(o, "Organization with name %s does not exist", name)
+	UserError.check(o, code=UserError.ENTITY_DOES_NOT_EXIST, message="Organization with that name does not exist", data={"name": name})
 	return o
 
 def _getSite(name):
 	s = host.getSite(name)
-	fault.check(s, "Site with name %s does not exist", name)
+	UserError.check(s, code=UserError.ENTITY_DOES_NOT_EXIST, message="Site with that name does not exist", data={"name": name})
 	return s
 
 def _getHost(name):
 	h = host.get(name=name)
-	fault.check(h, "Host with name %s does not exist", name)
+	UserError.check(h, code=UserError.ENTITY_DOES_NOT_EXIST, message="Host with that name does not exist", data={"name": name})
 	return h
 
-@cached(timeout=6*3600)
+@cached(timeout=6*3600, autoupdate=True)
 def organization_list():
 	"""
 	undocumented
@@ -80,7 +80,7 @@ def organization_usage(name): #@ReservedAssignment
 	orga = _getOrganization(name)
 	return orga.totalUsage.info()	
 
-@cached(timeout=6*3600)
+@cached(timeout=6*3600, autoupdate=True)
 def site_list(organization=None):
 	"""
 	undocumented
@@ -127,7 +127,7 @@ def site_remove(name):
 	site.remove()
 	site_list.invalidate()
 
-@cached(timeout=300)
+@cached(timeout=300, maxSize=1000, autoupdate=True)
 def host_list(site=None, organization=None):
 	"""
 	undocumented
@@ -141,10 +141,11 @@ def host_list(site=None, organization=None):
 	return [h.info() for h in hosts]
 
 @checkauth
-def host_create(name, site, attrs={}):
+def host_create(name, site, attrs=None):
 	"""
 	undocumented
 	"""
+	if not attrs: attrs = {}
 	site = _getSite(site)
 	h = host.create(name, site, attrs)
 	host_list.invalidate()
@@ -190,4 +191,5 @@ def host_usage(name): #@ReservedAssignment
 	h = _getHost(name)
 	return h.totalUsage.info()	
 
-from .. import host, fault
+from .. import host
+from ..lib.error import UserError

@@ -70,8 +70,8 @@ def errordump_remove(source, dump_id):
     Parameter *dump_id*: 
       The unique identifier of the dump to be removed.
     """
-    from ..dumpmanager import remove_dump
-    remove_dump(source, dump_id)
+    from ..dumpmanager import api_errordump_remove
+    api_errordump_remove(source, dump_id)
 
 def errorgroup_info(group_id, include_dumps=False):
     """
@@ -89,12 +89,12 @@ def errorgroup_info(group_id, include_dumps=False):
     from ..dumpmanager import api_errorgroup_info
     return api_errorgroup_info(group_id, include_dumps)
 
-def errorgroup_list():
+def errorgroup_list(show_empty=False):
     """
     Returns a list of all error groups.
     """
     from ..dumpmanager import api_errorgroup_list
-    return api_errorgroup_list()
+    return api_errorgroup_list(show_empty)
 
 def errorgroup_modify(group_id, attrs):
     """
@@ -120,5 +120,17 @@ def errorgroup_remove(group_id):
     Parameter *dump_id*: 
       The unique identifier of the group to be removed.
     """
-    from ..dumpmanager import remove_group
-    remove_group(group_id)
+    from ..dumpmanager import api_errorgroup_remove
+    api_errorgroup_remove(group_id)
+    
+def errordumps_force_refresh():
+    """
+    Force a refresh of dumps.
+    This is done automatically in a longer interval.
+    To get instant access to all dumps, call this function.
+    
+    Return value:
+      The time in seconds it takes until all dumps should be collected.
+    """
+    from ..dumpmanager import api_force_refresh
+    return api_force_refresh()

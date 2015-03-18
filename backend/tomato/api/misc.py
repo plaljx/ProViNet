@@ -16,8 +16,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from ..lib.cache import cached #@UnresolvedImport
+import time
 
-@cached(timeout=300)
+@cached(timeout=3600, autoupdate=True)
 def server_info():
 	"""
 	undocumented
@@ -40,13 +41,11 @@ def link_statistics(siteA, siteB, type=None, after=None, before=None): #@Reserve
 	return link.getStatistics(siteA, siteB, type, after, before)
 
 def mailAdmins(subject, text, global_contact = True, issue="admin"):
-	if not currentUser():
-		raise ErrorUnauthorized()
+	UserError.check(currentUser(), code=UserError.NOT_LOGGED_IN, message="Unauthorized")
 	auth.mailAdmins(subject, text, global_contact, issue)
 	
 def mailUser(user, subject, text):
-	if not currentUser():
-		raise ErrorUnauthorized()
+	UserError.check(currentUser(), code=UserError.NOT_LOGGED_IN, message="Unauthorized")
 	auth.mailUser(user, subject, text)
 
 @cached(timeout=3600)
@@ -78,25 +77,35 @@ def statistics():
 		resources[k] = str(resources[k])
 	usage = {}
 	stats['usage'] = usage
-	usage['topologies'] = topology.Topology.objects.count()
+	usage['topologies'] = 0
+	
+	usage['topologies_active'] = 0
+	for top in list(topology.Topology.objects.all()):
+		usage['topologies'] += 1
+		topUsage = top.info()['usage']['usage']
+		if topUsage['memory']>0 or topUsage['cputime']>0 or topUsage['traffic']>0:
+			usage['topologies_active'] += 1
+	
 	usage['elements'] = elements.Element.objects.count()
 	usage['connections'] = connections.Connection.objects.count()
 	types = elements.Element.objects.values('type').order_by().annotate(models.Count('type'))
 	usage['element_types'] = dict([(t['type'], t['type__count']) for t in types])
+	
 	usage['users'] = auth.User.objects.count()
+	usage['users_active_30days'] = auth.User.objects.filter(last_login__gte = time.time() - 30*24*60*60).count()
+	
+	
 	return stats
 
 def task_list():
-	if not currentUser():
-		raise ErrorUnauthorized()
+	UserError.check(currentUser(), code=UserError.NOT_LOGGED_IN, message="Unauthorized")
 	return scheduler.info()
 
 def task_execute(id):
-	if not currentUser():
-		raise ErrorUnauthorized()
-	fault.check(currentUser().hasFlag(auth.Flags.GlobalAdmin), "Not enough permissions")
+	UserError.check(currentUser(), code=UserError.NOT_LOGGED_IN, message="Unauthorized")
+	UserError.check(currentUser().hasFlag(auth.Flags.GlobalAdmin), code=UserError.DENIED, message="Not enough permissions")
 	return scheduler.executeTask(id, force=True)
 
 from django.db import models
-from .. import misc, config, link, currentUser, host, topology, auth, elements, connections, scheduler, fault
-from ..lib.rpc import ErrorUnauthorized  #@UnresolvedImport
+from .. import misc, config, link, currentUser, host, topology, auth, elements, connections, scheduler
+from ..lib.error import UserError

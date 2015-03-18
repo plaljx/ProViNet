@@ -16,10 +16,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from django.db import models
-import random, sys
+import sys
 
-from .. import fault
-from ..lib import db, attributes, util #@UnresolvedImport
+from ..lib import db, attributes #@UnresolvedImport
+from ..lib.error import UserError, InternalError
 
 TYPES = {}
 
@@ -37,9 +37,12 @@ class Resource(db.ChangesetMixin, attributes.Mixin, models.Model):
 		self.save()
 		try:
 			self.modify(attrs)
-		except:
-			self.remove()
-			raise
+		except Exception, e:
+			try:
+				self.remove()
+			except:
+				pass
+			raise e
 		
 	def upcast(self):
 		if not self.type in TYPES:
@@ -52,11 +55,13 @@ class Resource(db.ChangesetMixin, attributes.Mixin, models.Model):
 			traceback.print_exc()
 		id, type = self.id, self.type
 		self.remove()
-		fault.raise_("Failed to cast resource #%d to type %s" % (id, type), code=fault.INTERNAL_ERROR)
+		raise InternalError(code=InternalError.UPCAST, message="Failed to cast resource to its type",
+			  data={"id": id, "type": type})
 	
 	def modify(self, attrs):
 		if not _initPhase:
-			fault.check(currentUser().hasFlag(Flags.GlobalHostManager) or currentUser().hasFlag(Flags.GlobalAdmin), "Method only allowed for admin users")		
+			UserError.check(currentUser().hasFlag(Flags.GlobalHostManager) or currentUser().hasFlag(Flags.GlobalAdmin),
+				code=UserError.DENIED, message="Method only allowed for admin users")
 		for key, value in attrs.iteritems():
 			if hasattr(self, "modify_%s" % key):
 				getattr(self, "modify_%s" % key)(value)
@@ -65,8 +70,9 @@ class Resource(db.ChangesetMixin, attributes.Mixin, models.Model):
 		self.save()
 	
 	def remove(self):
-		fault.check(currentUser().hasFlag(Flags.GlobalHostManager) or currentUser().hasFlag(Flags.GlobalAdmin), "Method only allowed for admin users")
-		self.delete()	
+		UserError.check(currentUser().hasFlag(Flags.GlobalHostManager) or currentUser().hasFlag(Flags.GlobalAdmin),
+			code=UserError.DENIED, message="Method only allowed for admin users")
+		self.delete()
 	
 	def info(self):
 		return {
@@ -92,9 +98,11 @@ def getByType(type_, **kwargs):
 def getAll(**kwargs):
 	return (res.upcast() for res in Resource.objects.filter(**kwargs))
 
-def create(type_, attrs={}):
+def create(type_, attrs=None):
+	if not attrs: attrs = {}
 	if not _initPhase:
-		fault.check(currentUser().hasFlag(Flags.GlobalHostManager) or currentUser().hasFlag(Flags.GlobalAdmin), "Method only allowed for admin users")	
+		UserError.check(currentUser().hasFlag(Flags.GlobalHostManager) or currentUser().hasFlag(Flags.GlobalAdmin),
+			code=UserError.DENIED, message="Method only allowed for admin users")
 	if type_ in TYPES:
 		res = TYPES[type_]()
 	else:
@@ -102,10 +110,13 @@ def create(type_, attrs={}):
 	try:
 		res.init(attrs)
 		res.save()
-	except:
+	except Exception, e:
 		if res.id:
-			res.remove()
-		raise
+			try:
+				res.remove()
+			except:
+				pass
+		raise e
 	return res
 
 def init():

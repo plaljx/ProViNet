@@ -22,12 +22,19 @@ if DJANGO_VERSION < (1,6):
 else:
     from django.conf.urls import patterns, url, include
 
+# Support javascript i18n
+from django.views.i18n import javascript_catalog
+js_info_dict = {
+    'packages': ('tomato',),
+}
+
 # Uncomment the next two lines to enable the admin:
 # from django.contrib import admin
 # admin.autodiscover()
 
 urlpatterns = patterns('',
 	(r'^$', 'tomato.main.index'),
+    url(r'^jsi18n/$', 'django.views.i18n.javascript_catalog', js_info_dict, name="js_catalog"),
 	(r'^fonts/(?P<path>.*)$', 'django.views.static.serve', {'document_root': 'tomato/fonts'}),
 	(r'^img/(?P<path>.*)$', 'django.views.static.serve', {'document_root': 'tomato/img'}),
 	(r'^js/(?P<path>.*)$', 'django.views.static.serve', {'document_root': 'tomato/js'}),

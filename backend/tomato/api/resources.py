@@ -20,7 +20,7 @@ from ..lib.cache import cached #@UnresolvedImport
 
 def _getResource(id_):
 	res = resources.get(id_)
-	fault.check(res, "No such resource: id=%d", id_, code=fault.UNKNOWN_OBJECT)
+	UserError.check(res, code=UserError.ENTITY_DOES_NOT_EXIST, message="Resource with that id does not exist", data={"id": id_})
 	return res
 
 @cached(timeout=6*3600)
@@ -41,7 +41,7 @@ def resource_list(type_filter=None):
 	return [r.info() for r in res]
 
 @checkauth
-def resource_create(type, attrs={}): #@ReservedAssignment
+def resource_create(type, attrs=None): #@ReservedAssignment
 	"""
 	Creates a resource of given type, configuring it with the given attributes
 	by the way.
@@ -67,6 +67,7 @@ def resource_create(type, attrs={}): #@ReservedAssignment
 	Exceptions:
 	  Various other exceptions can be raised, depending on the given type.
 	"""
+	if not attrs: attrs = {}
 	attrs = dict(attrs)
 	res = resources.create(type, attrs)
 	resource_list.invalidate()
@@ -124,12 +125,17 @@ def resource_remove(id): #@ReservedAssignment
 	return {}
 
 @checkauth
-def resource_info(id): #@ReservedAssignment
+def resource_info(id, include_torrent_data=False): #@ReservedAssignment
 	"""
 	Retrieves information about a resource.
 	
 	Parameter *id*:
 	  The parameter *id* identifies the resource by giving its unique id.
+	  
+	Parameter *include_torrent_data*:
+	  boolean, only useful for templates.
+	  if true, the return value includes the base64-encoded torrent file.
+	  This may throw an error when a user without access to it tries to access a restricted template.
 
 	Return value:
 	  The return value of this method is a dict containing information
@@ -146,12 +152,20 @@ def resource_info(id): #@ReservedAssignment
 	  A dict of attributes of this resource. The contents of this field depend
 	  on the *type* of the resource. If this resource does not have attributes,
 	  this field is ``{}``.	
+	  
+	``torrent_data``
+	  base64-encoded torrent file to access the template's image file.
+	  Only used for templates if this is requested by these arguments
 
 	Exceptions:
 	  If the given resource does not exist an exception *resource does not
 	  exist* is raised.
 	"""
 	res = _getResource(int(id))
-	return res.info()
+	kwargs = {}
+	if res.type=="template":
+		kwargs['include_torrent_data'] = include_torrent_data
+	return res.info(**kwargs)
 	
-from .. import fault, resources
+from .. import resources
+from ..lib.error import UserError

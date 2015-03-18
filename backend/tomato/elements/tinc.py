@@ -15,11 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+import threading
 import random, math
 from django.db import models
-from .. import elements, host, fault
+from .. import elements, host
 from ..lib.attributes import Attr #@UnresolvedImport
 from generic import ST_CREATED, ST_PREPARED, ST_STARTED
+from ..lib.error import UserError, assert_
 
 class Tinc_VPN(elements.generic.ConnectingElement, elements.Element):
 	name_attr = Attr("name", desc="Name", type="str")
@@ -135,7 +137,7 @@ class Tinc_VPN(elements.generic.ConnectingElement, elements.Element):
 					cons.append((r2, r1))
 			return cons
 		def _check(nodes, connections):
-			fault.check(len(cons)/2 <= len(nodes) * len(nodes), "Tinc clustering resulted in too many connections", code=fault.INTERNAL_ERROR)
+			assert_(len(cons)/2 <= len(nodes) * len(nodes), "Tinc clustering resulted in too many connections")
 			if not nodes:
 				return
 			connected = set()
@@ -149,8 +151,8 @@ class Tinc_VPN(elements.generic.ConnectingElement, elements.Element):
 						connected.add(dst.id)
 						changed = True
 				iterations += 1
-			fault.check(len(connected) == len(nodes), "Tinc clustering resulted in disconnected nodes", code=fault.INTERNAL_ERROR)
-			fault.check(iterations <= math.ceil(math.log(len(nodes), 5)), "Tinc clustering resulted in too many hops", code=fault.INTERNAL_ERROR)					
+			assert_(len(connected) == len(nodes), "Tinc clustering resulted in disconnected nodes")
+			assert_(iterations <= math.ceil(math.log(len(nodes), 5)), "Tinc clustering resulted in too many hops")
 		assert self.state == ST_PREPARED
 		children = self.getChildren()
 		peerInfo = {}
@@ -173,10 +175,35 @@ class Tinc_VPN(elements.generic.ConnectingElement, elements.Element):
 			info = ch.info()
 			ch.modify({"peers": peers[ch.id]})
 
-	def action_prepare(self):
+	def _parallelChildActions(self, childList, action, params=None, maxThreads=10):
+		if not params: params = {}
+		lock = threading.RLock()
+		user = currentUser()
+		class WorkerThread(threading.Thread):
+			def run(self):
+				setCurrentUser(user)
+				while True:
+					with lock:
+						if not childList:
+							return
+						ch = childList.pop()
+					ch.action(action, params)
+		threads = []
+		for _ in xrange(0, min(len(childList), maxThreads)):
+			thread = WorkerThread()
+			threads.append(thread)
+			thread.start()
+		for thread in threads:
+			thread.join()
+
+	def _childsByState(self):
+		childs = {ST_CREATED:[], ST_PREPARED:[], ST_STARTED:[]}
 		for ch in self.getChildren():
-			if ch.state == ST_CREATED:
-				ch.action("prepare", {})
+			childs[ch.state].append(ch)
+		return childs
+
+	def action_prepare(self):
+		self._parallelChildActions(self._childsByState()[ST_CREATED], "prepare")
 		self.setState(ST_PREPARED)
 		try:
 			self._crossConnect()
@@ -185,25 +212,17 @@ class Tinc_VPN(elements.generic.ConnectingElement, elements.Element):
 			raise
 		
 	def action_destroy(self):
-		for ch in self.getChildren():
-			if ch.state == ST_STARTED:
-				ch.action("stop", {})
-			if ch.state == ST_PREPARED:
-				ch.action("destroy", {})
+		self._parallelChildActions(self._childsByState()[ST_STARTED], "stop")
+		self._parallelChildActions(self._childsByState()[ST_PREPARED], "destroy")
 		self.setState(ST_CREATED)
 
 	def action_stop(self):
-		for ch in self.getChildren():
-			if ch.state == ST_STARTED:
-				ch.action("stop", {})
+		self._parallelChildActions(self._childsByState()[ST_STARTED], "stop")
 		self.setState(ST_PREPARED)
 
 	def action_start(self):
-		for ch in self.getChildren():
-			if ch.state == ST_CREATED:
-				ch.action("prepare", {})
-			if ch.state == ST_PREPARED:
-				ch.action("start", {})
+		self._parallelChildActions(self._childsByState()[ST_CREATED], "prepare")
+		self._parallelChildActions(self._childsByState()[ST_PREPARED], "start")
 		self.setState(ST_STARTED)
 
 	def upcast(self):
@@ -280,8 +299,8 @@ class Tinc_Endpoint(elements.generic.ConnectingElement, elements.Element):
 		if self.element:
 			try:
 				self.element.updateInfo()
-			except fault.XMLRPCError, exc:
-				if exc.faultCode == fault.UNKNOWN_OBJECT:
+			except UserError, err:
+				if err.code == UserError.ENTITY_DOES_NOT_EXIST:
 					self.element.state = ST_CREATED
 			self.setState(self.element.state, True)
 			if self.state == ST_CREATED:
@@ -295,7 +314,7 @@ class Tinc_Endpoint(elements.generic.ConnectingElement, elements.Element):
 	def action_prepare(self):
 		hPref, sPref = self.getLocationPrefs()
 		_host = host.select(elementTypes=["tinc"], hostPrefs=hPref, sitePrefs=sPref)
-		fault.check(_host, "No matching host found for element %s", self.TYPE)
+		UserError.check(_host, code=UserError.NO_RESOURCES, message="No matching host found for element", data={"type": self.TYPE})
 		attrs = self._remoteAttrs()
 		attrs.update({
 			"mode": self.mode,
@@ -336,3 +355,5 @@ class Tinc_Endpoint(elements.generic.ConnectingElement, elements.Element):
 	
 elements.TYPES[Tinc_VPN.TYPE] = Tinc_VPN	
 elements.TYPES[Tinc_Endpoint.TYPE] = Tinc_Endpoint
+
+from .. import currentUser, setCurrentUser
