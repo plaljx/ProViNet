@@ -29,6 +29,8 @@ import datetime
 from tomato.crispy_forms.layout import Layout
 from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import string_concat
+
 techs=[
 		{"name": "kvmqm", "label": "KVM"},
 		{"name": "openvz", "label": "OpenVZ"},
@@ -54,7 +56,7 @@ class TemplateForm(BootstrapForm):
 		self.fields['creation_date'].initial=datetime.date.today()
 	
 class AddTemplateForm(TemplateForm):
-	torrentfile  = forms.FileField(label=_("Torrent:"), help_text='<a href="http://tomato.readthedocs.org/en/latest/docs/templates" target="_blank">' + _('Help') + '</a>')
+	torrentfile  = forms.FileField(label=_("Torrent:"), help_text=string_concat('<a href="http://tomato.readthedocs.org/en/latest/docs/templates" target="_blank">', _('Help'), '</a>'))
 	name = forms.CharField(max_length=50,label=_("Internal Name"), help_text=_("Must be unique for all profiles. Cannot be changed. Not displayed."))
 	tech = forms.CharField(max_length=255,label= _("Tech"), widget = forms.widgets.Select(choices=techs_choices()))
 	def __init__(self, *args, **kwargs):
@@ -98,7 +100,7 @@ class EditTemplateForm(TemplateForm):
 class ChangeTemplateTorrentForm(BootstrapForm):
 	res_id = forms.CharField(max_length=50, widget=forms.HiddenInput)
 	creation_date = forms.DateField(required=False,label=_("created date"), widget=forms.TextInput(attrs={'class': 'datepicker'}))
-	torrentfile  = forms.FileField(label=_("Torrent containing image:"), help_text=_('See the') + '<a href="https://tomato.readthedocs.org/en/latest/docs/templates/" target="_blank">' +_('template documentation about the torrent file.</a> for more information'))	
+	torrentfile  = forms.FileField(label=_("Torrent containing image:"), help_text=string_concat(_('See the'), '<a href="https://tomato.readthedocs.org/en/latest/docs/templates/" target="_blank">', _('template documentation about the torrent file.'), '</a>', _('for more information')))	
 	def __init__(self, res_id, *args, **kwargs):
 		super(ChangeTemplateTorrentForm, self).__init__(*args, **kwargs)
 		self.fields['creation_date'].initial=datetime.date.today()

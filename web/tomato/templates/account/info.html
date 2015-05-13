@@ -5,7 +5,7 @@
 {% load i18n %}
 
 {% block title %}
-<title>{% blocktrans %} Account {{account.name}} - Tiandon Hoelab{% endblocktrans %}</title> 
+<title>{% blocktrans %} "Account {{account.name}} - Tiandon Hoelab"{% endblocktrans %}</title> 
 {% endblock %}
 
 {% block content %}
@@ -22,7 +22,7 @@
 
 {% if 'new_account' in request.session.user.flags and request.session.user.id == account.id %}
 <div class="alert alert-warning">
-<strong>{% trans "Note:</strong> {% trans "Your account is new and needs to be activated first." %}
+<strong>{% trans "Note:" %}</strong> {% trans "Your account is new and needs to be activated first." %}
 {% trans "Administrators have been informed about your pending registration and will handle it soon. You will be informed when your registration has been processed." %}
 <br/>
 {% trans "While waiting for the account activation you can create and design topologies but not prepare or start them. (Most tutorials will not work.)" %}
@@ -97,7 +97,7 @@
   <button type="submit" formaction="{%url "account.edit" id=account.id%}" class="btn btn-warning"><span class="glyphicon glyphicon-pencil"></span> {% trans "Edit Account" %}</button>
 {% endif %}
 {% if request.session.user|args:account.organization|call:"isAdmin" %}
-  <button type="submit" formaction="{%url "account.reset_password" id=account.id%}" class="btn btn-warning"><span class="glyphicon glyphicon-wrench"></span> reset password" %}</button>
+  <button type="submit" formaction="{%url "account.reset_password" id=account.id%}" class="btn btn-warning"><span class="glyphicon glyphicon-wrench"></span> {% trans "reset password" %}</button>
   <button type="submit" formaction="{%url "account.remove" id=account.id%}" class="btn btn-danger"><span class="glyphicon glyphicon-trash"></span> {% trans "Remove Account" %}</button>
 {% endif %}
 </form>

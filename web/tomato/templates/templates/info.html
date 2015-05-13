@@ -8,7 +8,7 @@
 {% endblock %}
 
 {% block title %}
-<title>{% transblock %}Template {{template.attrs.name}} - Tiandon Hoelab{% endtransblock %}</title> 
+<title>{% blocktrans %}"Template {{template.attrs.name}} - Tiandon Hoelab"{% endblocktrans %}</title> 
 {% endblock %}
 
 {% block content %}
@@ -95,7 +95,7 @@
 		<th>{% trans "Availability:" %}</th>
 		<td>
 			<dl class="dl-horizontal">
-  				<dt>{% trans "Backend</dt><dd>
+  				<dt>{% trans "Backend" %}</dt><dd>
 				    {% if template.attrs.ready.backend %}
 				    	<img src="/img/tick.png"/> yes
 		    		{% else %}

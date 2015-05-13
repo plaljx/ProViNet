@@ -121,6 +121,7 @@ def create(api, request):
 
 @wrap_rpc
 def import_(api, request):
+	from django.utils.translation import ugettext_lazy as _
 	if not api.user:
 		raise AuthError()
 	if request.method=='POST':
@@ -139,10 +140,10 @@ def import_(api, request):
 				api.topology_modify(id_,{'_notes':note,'_notes_autodisplay':True})				
 			return redirect("tomato.topology.info", id=id_)
 		else:
-			return render(request, "form.html", {'form': form, "heading":_("Import Topology"), 'message_before': _("Here you can import a topology file which you have previously exported from the Editor.")})
+			return render(request, "form.html", {'form': form, "heading": _("Import Topology"), 'message_before': _("Here you can import a topology file which you have previously exported from the Editor.")})
 	else:
 		form = ImportTopologyForm()
-		return render(request, "form.html", {'form': form, "heading":_("Import Topology"), 'message_before': _("Here you can import a topology file which you have previously exported from the Editor.")})
+		return render(request, "form.html", {'heading': _("Import Topology"), 'message_before': _("Here you can import a topology file which you have previously exported from the Editor."), 'form': form})
 		
 @wrap_rpc
 def export(api, request, id):

@@ -29,6 +29,7 @@ from template import techs_dict,techs_choices
 
 from tomato.crispy_forms.layout import Layout
 from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import string_concat
 
 class ProfileForm(BootstrapForm):
 	label = forms.CharField(max_length=255,label=_("label"), help_text=_("The displayed label for this template"))
@@ -230,6 +231,6 @@ def edit(api, request, res_id=None):
 				form = EditOpenVZForm(res_id, origData)
 			else:
 				form = EditKVMqmForm(res_id, origData)
-			return render(request, "form.html", {'form': form, "heading":_("Edit ")+res_info['attrs']['tech']+_(" Device Profile '")+res_info['attrs']['label']+"'"})
+			return render(request, "form.html", {'form': form, "heading":string_concat(_("Edit "), res_info['attrs']['tech'], _(" Device Profile '"), res_info['attrs']['label'], "'")})
 		else:
 			return render(request, "main/error.html",{'type':'not enough parameters','text':_('No resource specified. Have you followed a valid link?')})
