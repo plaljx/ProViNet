@@ -28,7 +28,7 @@ from lib import wrap_rpc, AuthError
 from admin_common import BootstrapForm, RemoveConfirmForm, Buttons
 from tomato.crispy_forms.layout import Layout
 from django.core.urlresolvers import reverse
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _
 
 class OrganizationForm(BootstrapForm):
 	name = forms.CharField(max_length=50,label=_("Name"), help_text=_("The name of the organization. Must be unique to all organizations. e.g.: ukl"))

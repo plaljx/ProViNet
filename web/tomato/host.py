@@ -27,6 +27,7 @@ from admin_common import BootstrapForm, RemoveConfirmForm, Buttons, append_empty
 from tomato.crispy_forms.layout import Layout
 from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import string_concat
 
 class HostForm(BootstrapForm):
 	name = forms.CharField(max_length=255,label=_("Name"),help_text=_("The host's name. This is also its unique id."))
@@ -85,7 +86,7 @@ def info(api, request, name):
 
 @wrap_rpc
 def add(api, request, site=None):
-	message_after = '<h2>' + _('Public key') + '</h2>' + _('	The public key of this backend is:')	+ '<pre><tt>'+serverInfo()['public_key']+'</tt></pre>'
+	message_after = string_concat('<h2>',  _('Public key'), '</h2>', _('	The public key of this backend is:'), '<pre><tt>', serverInfo()['public_key'], '</tt></pre>')
 	if request.method == 'POST':
 		form = HostForm(api, request.POST)
 		if form.is_valid():

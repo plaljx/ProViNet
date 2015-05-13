@@ -20,6 +20,7 @@ from django.http import HttpResponse
 from django.shortcuts import render, redirect
 import xmlrpclib, json, urllib, socket, hashlib
 import settings 
+import platform
 
 def getauth(request):
 	auth = request.session.get("auth")
@@ -149,7 +150,12 @@ class wrap_json:
 		except xmlrpclib.Fault, f:
 			return HttpResponse(json.dumps({"success": False, "error": 'Error %s' % f}))
 
-DEVNULL = open("/dev/null", "w")
+OPERATING_SYSTEM = platform.system()
+if OPERATING_SYSTEM == "Windows":
+	DEVNULL = open("nul", "w")
+else:
+	DEVNULL = open("/dev/null", "w")
+
 
 def runUnchecked(cmd, shell=False, ignoreErr=False, input=None, cwd=None): #@ReservedAssignment
 	import subprocess

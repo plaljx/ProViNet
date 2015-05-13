@@ -3,12 +3,21 @@
 
 from django import VERSION as DJANGO_VERSION
 from django.utils.translation import ugettext_lazy as _
+import platform 
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
+OPERATING_SYSTEM = platform.system()
 
+if OPERATING_SYSTEM == "Windows":
+	MY_LOCALE_PATH = "D:\ProViNet\web\tomato\locale"
+	MY_SYSCONF_PATH = "D:\ProViNet\conf\web.conf"
+else:
+	MY_LOCALE_PATH = "/usr/share/tomato/web/tomato/locale"
+	MY_SYSCONF_PATH = "/etc/tomato/web.conf"
+	
 LOCALE_PATHS = (
-    '/usr/share/tomato/web/tomato/locale'
+    MY_LOCALE_PATH
 )
 
 ADMINS = (
@@ -120,7 +129,7 @@ if DJANGO_VERSION < (1,4):
 
 try:
     import sys
-    for path in filter(os.path.exists, ["/etc/tomato/web.conf", os.path.expanduser("~/.tomato/web.conf"), "web.conf"]):
+    for path in filter(os.path.exists, [MY_SYSCONF_PATH, os.path.expanduser("~/.tomato/web.conf"), "web.conf"]):
         try:
             execfile(path)
             print >>sys.stderr, "Loaded config from %s" % path

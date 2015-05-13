@@ -31,12 +31,12 @@ from django.utils.translation import ugettext_lazy as _
 
 class SiteForm(BootstrapForm):
 	name = forms.CharField(max_length=50,label=_("name"), help_text=_("The name of the site. Must be unique to all sites. e.g.: ukl"))
-    description = forms.CharField(max_length=255, label=_("Label"), help_text=_("e.g.: Technische Universit&auml;t Kaiserslautern"))
-    description_text = forms.CharField(widget = forms.Textarea, label=_("Description"), required=False)
-    organization = forms.CharField(max_length=50,label=_("organization"))
-    location = forms.CharField(max_length=255,label=_("location"), help_text=_("e.g.: China"))
-    geolocation_longitude = forms.FloatField(help_text=_("Float Number. >0 if East, <0 if West"),label=_("Geolocation: Longitude"))
-    geolocation_latitude = forms.FloatField(help_text=_("Float Number. >0 if North, <0 if South"),label=_("Geolocation: Latitude"))
+	description = forms.CharField(max_length=255, label=_("Label"), help_text=_("e.g.: Technische Universit&auml;t Kaiserslautern"))
+	description_text = forms.CharField(widget = forms.Textarea, label=_("Description"), required=False)
+	organization = forms.CharField(max_length=50,label=_("organization"))
+	location = forms.CharField(max_length=255,label=_("location"), help_text=_("e.g.: China"))
+	geolocation_longitude = forms.FloatField(help_text=_("Float Number. >0 if East, <0 if West"),label=_("Geolocation: Longitude"))
+	geolocation_latitude = forms.FloatField(help_text=_("Float Number. >0 if North, <0 if South"),label=_("Geolocation: Latitude"))
 	def __init__(self, api, *args, **kwargs):
 		super(SiteForm, self).__init__(*args, **kwargs)
 		self.fields["organization"].widget = forms.widgets.Select(choices=append_empty_choice(organization_name_list(api)))
