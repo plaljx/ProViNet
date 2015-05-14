@@ -1,0 +1,161 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="{{ LANGUAGE_CODE }}" lang="{{ LANGUAGE_CODE }}">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+ {% load i18n %}
+
+    <title>{% trans "ProViNet: Programmable Virtual Network Laboratory" %}</title>
+    <link rel="stylesheet" type="text/css" media="screen" href="style/reset.css">
+    <link rel="stylesheet" type="text/css" media="screen" href="style/style_home.css">
+    <script src="js/jquery-1.7.min.js"></script>
+    <script src="js/jquery.easing.1.3.js"></script>
+    <script src="js/FF-cash.js"></script>
+
+	<script type="text/javascript">
+		$(document).ready(function(){
+			jQuery.navlevel2 = function(level1,dytime) {
+		
+			$(level1).mouseenter(function(){
+				varthis = $(this);
+				delytime=setTimeout(function(){
+				varthis.find('ul').slideDown();
+			},dytime);
+		
+			});
+			$(level1).mouseleave(function(){
+			clearTimeout(delytime);
+			$(this).find('ul').slideUp();
+			});
+	  
+			};
+			$.navlevel2("li.current",200);
+		});
+	</script>
+	<style type="text/css">
+		ul.menu li.current a {color:#000;}
+		ul.menu li.current a:hover {color:#844c01;}
+
+	  #nav {height:60px;padding:0px,0,0,0; margin-top:0px;}
+		#nav .current ul {display:none; position:absolute;width:110px;}
+		#nav .current li {border-top:1px solid #e57c00; background:#f0a401; width:110px;/*IE6 only*/margin:0;padding:0}
+	</style>
+</head>
+<body>
+
+
+<!--==============================header=================================-->
+  <header>
+  	<div class="main">
+      <div class="wrap">
+          <h1><a href="index.html"><img src="/img/provinet-title.png" alt=""></a></h1>
+      </div>
+
+	  
+      <div class="nav-shadow">
+      	<div>
+          <nav>
+              <ul class="menu" id="nav">
+                  <li class="current"><a href="/introduction">{% trans "Introduction" %}</a></li>
+                  {% if  request.session.user %}
+                  	<li class="current"><a href="/panel">{% trans "Control Panel" %}</a></li>
+                  {% endif %}
+                  <li class="current"><a href="/orgnization">{% trans "Orgnization" %}</a></li>
+                  <li class="current"><a href="/map">{% trans "Site Map" %}</a></li>
+                  <li class="current"><a href="/contact">{% trans "Contact Us" %}</a></li>
+		    <li class="current"><a href="/links">{% trans "Links" %}</a></li>
+		    <li class="current"><a href="/login">{% trans "Log In" %}</a></li>
+              </ul>    
+          </nav>
+         </div> 
+      </div> <!--end:nav-shadow-->
+
+    </div> <!--end:main-->
+    <div class="header-content">
+      <div class="wrap main">
+      	<div class="block-1">
+        	<img src="img/page1-img1.jpg" alt="" class="img-radius" style="width:280px; height:119px">
+            <div class="border-1">
+            	<p class="color-1 p2">平台简介</p>
+					     <p>“可编程虚拟网络试验平台ProViNet”是在国家863等项目的支持下，由以博士硕士为主的团队历经四年研发而成功，已在国家重大科研项目验收和网络技术研究测试方面发挥了重要作用。ProViNet已通过国家信息技术安全研究中心组织的第三方认证测试,已在北京邮电大学网络技术研究院等单位试运行1年，为国家973、863相关项目提供了有效的平台支撑，并积累了丰富的平台管理和运营经验。</p>
+      
+      <a href="#" class="button top-1">更多...</a>
+            </div>
+        </div>
+        <div class="block-1">
+        	<img src="img/page1-img2.jpg" alt="" class="img-radius" style="width:280px; height:119px">
+            <div class="border-1">
+            	<p class="color-1 p2">平台拓扑管理</p>
+                <p>平台拓扑管理用于管理用户创建的网络拓扑，用户以可视化的方式快速、便捷的在网络试验平台上创建需要的拓扑，甚至可以创建复杂的网络环境，利用该拓扑进行网络实验，或邀请他人一同进行网络攻防娱乐活动...</p>
+                <a href="#" class="button top-1">更多...</a>
+            </div>
+        </div>
+        <div class="block-1">
+        	<img src="img/page1-img3.jpg" alt="" class="img-radius" style="width:280px; height:119px">
+            <div>
+            	<p class="color-1 p2">平台实验</p>
+                <p>互联网本身就起源于试验网，针对目前的互联网现状，研究人员提出了许多新的网络架构、概念、服务、协议和算法，以构建不同于现有互联网的新型未来互联网。构建网络试验平台，既是未来互联网研究的基础，也是研究的主要内容之一...</p>
+                <a href="#" class="button top-1">更多...</a>
+            </div>
+        </div>
+      </div>
+    </div>
+  </header><div class="ic">More Website Templates @ <a href="http://www.mycodes.net/" >网页模板</a> - March 12, 2012!</div>
+<!--==============================content================================-->
+  <section id="content">
+      <div>
+      	<div class="wrap">
+        	<div class="col-1 border-2" style="height:430px">
+            	<h2 class="p3">网络试验平台能给你带来什么?</h2>
+                <div class="wrap">
+                	<img src="img/page1-img4.jpg" alt="" class="img-indent img-radius" style="width:240px; height:151px">
+                    <p class="extra-wrap">网络试验平台是一个 <a href="http://blog.templatemonster.com/free-website-templates/" class="link" target="_blank">网络安全实验的理想平台</a> 
+                    在它上面，你能以可视化的形式定义大型的网络拓扑和布局专业的网络环境，并在其上 <a href="http://blog.templatemonster.com/2012/03/12/free-website-template-security-project/" class="link">进行大型的网络实验</a>
+                    。利用网络试验平台提供的便捷实验平台快速搭建需要的网络拓扑，并进行<a href="http://blog.templatemonster.com/free-website-templates/" class="link" target="_blank"> 网络安全游戏</a>
+                    ，不仅成本低、效率高，还可以方便的与其它人合作进行网络游戏。它还可以是网络安全知识<a href="http://blog.templatemonster.com/free-website-templates/" class="link" target="_blank">学习平台</a>，
+                    网络安全专业人员和爱好者可以利用该平台了解和学习更多的网络安全知识。
+                    </p>
+                </div>
+                <div class="wrap top-2">
+                	<ul class="list-1 fleft">
+                    	<li><a href="#">论证信息作战理论或假设</a></li>
+                        <li><a href="#">网络攻防作战训练</a></li>
+                        <li><a href="#">探索未来互联网构建方式</a></li>
+                        <li><a href="#">测试新的网络架构、服务、协议和算法</a></li>
+                    </ul>
+                    <ul class="list-1 fleft">
+                    	<li><a href="#">大型试验平台</a></li>
+                        <li><a href="#">网络安全和网络攻防娱乐平台</a></li>
+                        <li><a href="#">网络安全和网络攻防学习交流平台</a></li>
+                        <li><a href="#">网络安全竞赛和演习平台</a></li>
+                    </ul>
+                </div>
+                <a href="#" class="button-1 top-3" style="margin-bottom:10px">更多...</a>
+            </div>
+            <div class="col-2" style="height:430px; position: relative;">
+            	<h2 class="p2">平台动态</h2>
+				<a href="#" class="link-2">通知</a>
+                <p class="p4">资源下载内容近期开通，课程所有资源可在网站下载</p>
+                <a href="#" class="link-2">18.06.2014</a>
+                <p class="p4">红山网络试验平台 HSCR0.8 上线</p>
+                <a href="#" class="link-2">15.07.2014</a>
+                <p class="p4">红山网络试验平台 HSCR0.9 上线</p>
+                <a href="#" class="link-2">01.08.2014</a>
+                <p>红山网络试验平台 HSCR0.9 上线</p>
+                <a href="#" class="link-2">25.09.2014</a>
+                <p>红山网络试验平台 HSCR1.0 上线</p>
+                <a href="#" class="button-1 top-1" style="position:absolute; bottom:10px">更多...</a>
+            </div>    
+        </div>
+      </div>
+  </section> 
+<!--==============================footer=================================-->
+  <footer>
+      <p>
+		(c) 2014 
+		<a href="#" class="link">{% trans "ProViNet is developed by the" %}</a>  
+		<a rel="nofollow" href="http://niclab.bupt.edu.cn" class="link" target="_blank">{% trans "BUPT NIC" %}</a>
+		    <p>Phone: 010-xxxxxxxx &nbsp; Email: <a href="#" class="link">xxxxxxxx@xx.com</a></p>
+  </footer>	
+</body>
+</html>
