@@ -28,12 +28,11 @@ from lib import getapi, getNews, wrap_rpc
 from django.utils.translation import ugettext_lazy as _
 
 def index(request):
-	try:
-		news = getNews()
-	except:
-		news = {}
-	return render(request, "main/start.html", {"news": news})
+	return render(request, "index.html")
 
+def start(request):
+	return render(request, "main/start.html")
+		
 @wrap_rpc
 def statistics(api, request):
 	return render(request, "main/statistics.html", {"stats": api.statistics()})
@@ -55,7 +54,7 @@ class LoginForm(forms.Form):
 		    'password',
 		    'long_session',
 		    FormActions(
-		    	StrictButton('Log in', css_class='col-sm-offset-2 btn-primary', type="submit")
+		    	StrictButton(_('Log in'), css_class='col-sm-offset-12 btn-primary', type="submit")
 		    )
 		)
 
@@ -72,7 +71,7 @@ def login(request):
 			return render(request, "main/login.html", {'form': form, 'message': _('login failed')})
 		request.session["user"] = api.user
 		request.session.set_expiry(3600*24*14 if formData["long_session"] else 3600)
-		forward = reverse("tomato.main.index")
+		forward = reverse("tomato.main.start")
 		if "forward_url" in request.session:
 			forward = request.session["forward_url"]
 			del request.session["forward_url"]

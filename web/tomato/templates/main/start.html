@@ -18,73 +18,43 @@
 {% endblock %}
 
 {% block content %}
-<div class="row"><div class="col-md-8 col-md-offset-2">
-
-<h1>{% trans "Welcome to BUPT ProViNet" %}</h1>
-<p>{% trans "BUPT ProViNet" %} (<b>P</b>rogrammable <b>V</b>irtual <b>N</b>etwork lab) {% trans "gives researchers the possibility to design and use virtual networking topologies consisting of devices and connectors." %}</p>
-
-
-
-<div class="skip-xs" style="height:1cm;"></div>
-
-<div class="row">
-<div class="alert alert-info col-xs-8 col-xs-offset-2 text-center" style="background-color:#eeeeee !important; color:black !important; border-color:grey !important;">
-	<p>
-	{% if request.session.user %}
-		<a href="{%url "topology_list"%}" class="btn btn-primary btn-lg">{% trans "My Topologies" %}</a>
-		
-		{% if request.session.user.isAdmin or request.session.user.isHostManager %}
-		
-			{% if request.session.user.isAdmin and request.session.user.isHostManager %}
-				<div class="skip-xs""></div>
-			{% else %}
-				<span style="margin-left:0.3cm; margin-right:0.3cm;"></span>
-			{%endif%}
+<div id="right">
+	<div id="topcontent">
+		<h1>{% trans "Welcome to BUPT Programmable Virtual Network test platform" %}</h1>
+		<p>{% trans "Programmable Virtual Network ProViNet" %} (<b>P</b>rogrammable <b>V</b>irtual <b>N</b>etwork lab){% trans " is developed  by Network Information Center, Institute of Network Technology, Beijing University of Posts and Telecommunications Institute. It gives researchers the possibility to design and use virtual networking topologies to test their new network architectures, protocols, applications and algorithems, etc." %}</p>
+	</div><!--end: topcontent-->
+	<div id="bar">
+		{% if request.session.user %}
+			<a href="{%url "topology_list"%}" class="btn btn-primary btn-lg">{% trans "My Topologies" %}</a>
+			{% if request.session.user.isAdmin or request.session.user.isHostManager %}
 			
-			{% if request.session.user.isAdmin %}
-				<a href="{%url "account.list"%}" class="btn btn-default btn-lg">{% trans "Manage Users" %}</a>
-			{% endif %}
-			
-			{% if request.session.user.isAdmin and request.session.user.isHostManager %}
-				<span style="margin-left:0.3cm; margin-right:0.3cm;"></span>
+				{% if request.session.user.isAdmin %}
+					<a href="{%url "account.list"%}" class="btn btn-primary btn-lg">{% trans "Manage Users" %}</a>
+				{% endif %}
+												
+				{% if request.session.user.isHostManager %}
+					<a href="{%url "host.list"%}" class="btn btn-primary btn-lg">{% trans "Manage Hosts" %}</a>
+				{%endif%}
+			{%else%}
+				<a href="{%url "topology.create"%}" class="btn btn-primary btn-lg">{% trans "Create New Topology" %}</a>
 			{%endif%}
-			
-			{% if request.session.user.isHostManager %}
-				<a href="{%url "host.list"%}" class="btn btn-default btn-lg">{% trans "Manage Hosts" %}</a>
-			{%endif%}
-		{%else%}
-			<span style="margin-left:0.3cm; margin-right:0.3cm;"></span>
-			<a href="{%url "topology.create"%}" class="btn btn-default btn-lg">{% trans "Create New Topology" %}</a>
-		{%endif%}
-		
-		
-	{% else %}
-		<a href="{%url "topology_list"%}" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-user"></span> {% trans "Login" %}</a>
-		<span style="margin-left:0.3cm; margin-right:0.3cm;">or</span>
-		<a href="{%url "account.register"%}" class="btn btn-default btn-lg">{% trans "Register" %}</a>
-	{% endif %}
-	</p>
-	<div class="skip-xs""></div>
-	<p>
-		<a href="{%externalurl 'project' %}" class="btn btn-primary"><span class="glyphicon glyphicon-globe"></span> {% trans "Visit our Homepage" %}</a>
-	</p>
-</div>
-</div>
+		{% else %}
+			<a href="{%url "topology_list"%}" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-user"></span> {% trans "Login" %}</a>
+			<a href="{%url "account.register"%}" class="btn btn-primary btn-lg">{% trans "Register" %}</a>	
+		{% endif %}
+			<a href="http://niclab.bupt.edu.cn" class="btn btn-primary"><span class="glyphicon glyphicon-globe"></span>{% trans " Visit our Homepage" %}</a>
+	</div><!--end: bar-->
 
-
-<div class="skip-xs" style="height:0.7cm;"></div>
-
-<div class="panel-group">
-  <div class="panel panel-default">
-  
+  <div class="panel-group">
+    <div class="panel panel-default">
   	<div class="panel-heading">
-      <h4 class="panel-title">
-        <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">
-          <span class="glyphicon glyphicon-info-sign"></span> {% trans "Features" %} <small>{% trans "(click to expand)" %}</small>
-        </a>
-      </h4>
-    </div>
-    <div id="collapseOne" class="panel-collapse collapse" style="padding:0.2cm;">
+		<h4 class="panel-title">
+        		<a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">
+				<span class="glyphicon glyphicon-info-sign"></span> {% trans "Features" %} <small>{% trans "(click to expand)" %}</small>
+        		</a>
+      		</h4>
+	</div><!--end: panel- heading-->
+	<div id="collapseOne" class="panel-collapse collapse" style="padding:0.2cm;">
   
 		<div class="features">
 		    <div id="carousel-features-captions" class="carousel slide" data-ride="carousel">
@@ -242,41 +212,17 @@
 		            <p>{% trans "Observe the resource usage of a whole topology or individual components." %}</p>
 		          </div>
 		        </div>
-		
-		      </div>
+		      </div><!--end: carousel-inner-->
 		      <a class="left carousel-control" href="#carousel-features-captions" data-slide="prev">
 		        <span class="glyphicon glyphicon-chevron-left"></span>
 		      </a>
 		      <a class="right carousel-control" href="#carousel-features-captions" data-slide="next">
 		        <span class="glyphicon glyphicon-chevron-right"></span>
 		      </a>
-		    </div>
-		  </div>
-</div></div></div>
-
-
-
-
-
-
-<div class="skip-sm"></div> 
-
-{% if news %}
-<h2>Latest news <a href="{%externalurl 'rss_feed'%}" class="btn btn-warning btn-sm pull-right"><span class="icomoon-rss"></span> {% trans "RSS Feed" %}</a></h2>
-{% for item in news.items %}
-<div class="panel panel-default">
-  <div class="panel-heading">
-    <h3 class="panel-title">{{item.title|safe}}</h3>
-  </div>
-  <div class="panel-body">
-  	{{item.description|safe}}
-  </div>
-  <div class="panel-footer">{{item.pubDate|newsitem_bettertime}}</div>
-</div>
-{% endfor %}
-{% else %}
-<div class="alert alert-danger"><b>{% trans "Failed to load news feed!" %}</b></div>
-{% endif %}
-
-</div></div>
+		    </div><!--end: carousel-features-captions-->
+		  </div><!--end: features-->
+		</div><!--end: collapseOne-->
+	   </div><!--end: panel panel-default-->
+  </div><!--end: panel-group-->
+</div><!--end: right-->
 {% endblock %}

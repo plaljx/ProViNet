@@ -4,13 +4,11 @@
 {% load tomato %}
 {% load i18n %}
 
-{% block title %}
-<title>{{heading}} {% trans "- BUPT ProViNet" %}</title> 
-{% endblock %}
 {% block header %}
-<script language="JavaScript" type="text/javascript" src="/js/jquery.js"></script>
-<script language="JavaScript" type="text/javascript" src="/js/jquery-ui.js"></script>
-<link type="text/css" href="/style/jquery-ui.css" rel="stylesheet" />
+<script language="JavaScript" type="text/javascript" src="js/jquery.js"></script>
+<script language="JavaScript" type="text/javascript" src="js/jquery-ui.js"></script>
+<link type="text/css" href="style/jquery-ui.css" rel="stylesheet" />
+<link type="text/css" href="style/panel.css" rel="stylesheet" />
 <script>
   $(function() {
     $( ".datepicker" ).datepicker();
@@ -19,17 +17,23 @@
 {% endblock %}
 
 {% block content %}
-	<h1>{{heading}}</h1>
-	{%if message_before%}
-		{{message_before|safe}}
-		<div class="skip-xs"></div>
-	{%endif%}
-	{% load crispy_forms_tags %}
-	{% crispy form %}
-	{{message_after|safe}}
-<script>
-$('form .backbutton').live('click', function(e) {
-	history.back();
-});
-</script>
+<div id="right">
+	<div id="topcontent">
+		<h1>{{heading}}</h1>
+	</div>
+	<div id="content">
+		{%if message_before%}
+			{{message_before|safe}}
+			<div class="skip-xs" style="height:0.5cm;"></div>
+		{%endif%}
+		{% load crispy_forms_tags %}
+		{% crispy form %}
+		{{message_after|safe}}
+		<script>
+		$('form .backbutton').live('click', function(e) {
+			history.back();
+		});
+		</script>
+	</div><!--end: content-->
+</div><!--end: right-->
 {% endblock %}

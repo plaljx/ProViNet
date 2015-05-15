@@ -1,19 +1,29 @@
 {% extends "main/base.html" %}
+<!DOCTYPE html        PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="{{ LANGUAGE_CODE }}" lang="{{ LANGUAGE_CODE }}">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
 {% load url from future %}
 {% load i18n %}
 
-{% block title %}
-<title>{% trans "Login - BUPT ProViNet" %}</title> 
-{% endblock %}
-
 {% block content %}
 
-<h1>{% trans "Login to ProViNet" %}</h1>
-
-{{message}}
-
-{% load crispy_forms_tags %}
-{% crispy form %}
+<div id="right">
+	<div id="topcontent">
+		<h1>{% trans "Login to ProViNet" %}</h1>
+	</div>
+	<div id="content">
+		{{message}}
+		<div id="bar">
+			{% load crispy_forms_tags %}
+			{% crispy form %}
+			{% if not request.session.user %}
+				<a href="{%url "account.register"%}" class="btn btn-primary">{% trans "Register" %}</a>
+				<a href="http://niclab.bupt.edu.cn" class="btn btn-primary"><span class="glyphicon glyphicon-globe"></span>{% trans " Visit our Homepage" %}</a>
+			{% endif %}
+		<div>
+	</div>
+</div>
 
 {% endblock %}
