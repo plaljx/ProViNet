@@ -27,6 +27,7 @@ from lib import wrap_rpc, AuthError, serverInfo
 
 from admin_common import BootstrapForm, Buttons
 from tomato.crispy_forms.layout import Layout
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.utils.translation import ugettext_lazy as _
 
 class ImportTopologyForm(BootstrapForm):
@@ -42,6 +43,14 @@ def list(api, request, show_all=False, organization=None):
 	if not api.user:
 		raise AuthError()
 	toplist=api.topology_list(showAll=show_all, organization=organization)
+	paginator = Paginator(toplist,20)
+	page_num = request.GET.get('page')
+	try:
+		toplist = paginator.page(page_num)
+	except PageNotAnInteger:
+		toplist = paginator.page(1)
+	except EmptyPage:
+		toplist = paginator.page(paginator.num_page)
 	orgas=api.organization_list()
 	tut_in_top_list = False
 	for top in toplist:
@@ -61,6 +70,9 @@ def _display(api, request, info, tut_url, tut_stat):
 	res = api.resource_list()
 	sites = api.site_list()
 	permission_list = api.topology_permissions()
+	show_all=False
+	organization=None
+	toplist=api.topology_list(showAll=show_all, organization=organization)
 	orgas = dict([(o["name"], o) for o in api.organization_list()])
 	for s in sites:
 		orga = orgas[s['organization']]
@@ -73,8 +85,8 @@ def _display(api, request, info, tut_url, tut_stat):
 			tut_data, tut_steps, _ = loadTutorial(tut_url)
 	except:
 		pass
-
 	res = render(request, "topology/info.html", {
+		'to_list':toplist, 
 		'top': info,
 		'timeout_settings': serverInfo()["topology_timeout"],
 		'res_json': json.dumps(res),
@@ -154,3 +166,15 @@ def export(api, request, id):
 	response = HttpResponse(json.dumps(top, indent = 2), content_type="application/json")
 	response['Content-Disposition'] = 'attachment; filename="' + filename + '"'
 	return response
+
+@wrap_rpc
+def remove(api, request, id):
+	if not api.user:
+		raise AuthError()
+	if request.method == 'POST':
+		form = RemoveConfirmForm(request.POST)
+		if form.is_valid():
+			api.topology_remove(id)
+			return HttpResponseRedirect(reverse("tomato.topology.list"))
+	form = RemoveConfirmForm.build(reverse("tomato.topology.remove", kwargs={"id": id}))
+	return render(request, "form.html", {"heading":_("Remove topology"), "message_before":_("Are you sure you want to remove the topology")+id+"?", 'form': form})

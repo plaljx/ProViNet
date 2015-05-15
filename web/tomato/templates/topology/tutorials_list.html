@@ -1,18 +1,21 @@
 {% extends "topology/base.html" %}
+     <!DOCTYPE html
+        PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="{{ LANGUAGE_CODE }}" lang="{{ LANGUAGE_CODE }}">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-{% load url from future %}
-{% load tomato %}
 {% load i18n %}
 
-{% block title %}
-<title>{% trans "Tutorials - BUPT ProViNet" %}</title> 
-{% endblock %}
+{% load tomato %}
 
 {% block content %}
+<div id="right">
+<div id="topcontent">
 <h1>{% trans "Tutorials" %}</h1>
-
-
-<script src="/js/jquery.js"></script>
+</div>
+<div id="content">
+<script src="/static/js/jquery.js"></script>
 
 
 <table class="sortable" style="vertical-align:middle;">
@@ -25,37 +28,13 @@
   </tr>
 {% endfor %}
 </table>
-
+</div>
+<div id="bar">
 <link href="/style/jquery-ui.css" rel="stylesheet">
 <script src="/js/jquery.js"></script>
 <script src="/js/jquery-ui.js"></script>
-<script language="JavaScript" type="text/javascript">
-	function customTutorial() {
-		var dialog = $("<div/>");
-		var ta = $('<input type="text" name="tutorial_url" style="width: 100%" />');
-		dialog.append(ta);
-		var t = this;
-		dialog.dialog({
-			autoOpen: true,
-			draggable: true,
-			resizable: false,
-			height: "auto",
-			width: 400,
-			title: "Tutorial URL",
-			show: "slide",
-			hide: "slide",
-			modal: true,
-			buttons: {
-				Open: function() {
-		        	dialog.dialog("close");
-			      	window.location = "{%url "tutorial.start" %}?url="+ta.val();
-			    },
-		        Cancel: function() {
-		        	dialog.dialog("close");
-		        }				
-			},
-		});
-	}
-</script>
-<button type="button" onclick="customTutorial()" class="btn btn-primary">{% trans "Load tutorial from URL" %}</button>
+<script src="/js/custom-tutorial.js"></script>
+<button type="button" onClick="customTutorial()" class="btn btn-primary">{% trans "Load tutorial from URL" %}</button>
+</div>
+</div>
 {% endblock %}

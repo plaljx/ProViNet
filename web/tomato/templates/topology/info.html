@@ -9,7 +9,8 @@
 <link type="text/css" href="style/jquery-ui.css" rel="stylesheet" />
 <link type="text/css" href="style/ui.ribbon.css" rel="stylesheet" />
 <link type="text/css" href="style/jquery.contextMenu.css" rel="stylesheet" />
-<link type="text/css" href="style/editor.css" rel="stylesheet" />
+<link type="text/css" href="style/editor.css" rel="stylesheet" />  
+<script type="text/javascript" src="{% url "js_catalog" %}"></script>
 <script language="JavaScript" type="text/javascript" src="js/jquery-ui.js"></script>
 <script language="JavaScript" type="text/javascript" src="js/ui.ribbon.js"></script>
 <script language="JavaScript" type="text/javascript" src="js/jquery.contextMenu.js"></script>
@@ -39,12 +40,25 @@
 
 {% block content %}
 
-
-<div id="editor" style="width: 800px; padding: 0px; border:0px; margin-left: auto; margin-right:auto;">
+<div id="right">
+<div id="editor" style="width: 100%; padding: 0px; border:0px; margin-left: 0px; margin-right:0px">
 	<div id="browser_issues"></div>
-	<h1 id="topology_name">{% trans "Topology: %} '{{top.attrs.name}}'</h1>
-	<div id="menu" style="width:800px;"></div>
-	<div id="workspace" style="width:800px; height:600px;"></div>
+<div id="topcontent">
+  <div class="btn-group" style="float:right;margin-top:20px;" >
+  <button  type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+      {% trans "Showing user topologies" %}
+      <span class="caret"></span>
+  </button>
+  <ul class="dropdown-menu" style="width:100px;" role="menu">
+      {% for t in to_list %}
+        <li><a href="{%url "topology.info" t.id %}">{{t.attrs.name}}</a></li>
+      {% endfor %}
+  </ul>
+</div>
+	<h1 id="topology_name"> {% trans "Topology" %} '{{top.attrs.name}}'</h1>
+</div>
+	<div id="menu" style="width:800px;margin:0px auto;"></div>
+	<div id="workspace" style="width:800px; height:600px;margin:0px auto;"></div>
 </div>
 
 <script language="JavaScript" type="text/javascript">
@@ -59,7 +73,7 @@
   {% endif %}
   
   var editor = new Editor({
-  	menu_container: $('#menu'),
+ 	menu_container: $('#menu'),
   	workspace_container: $('#workspace'),
   	{% if tutorial_data %}
   		tutorial: true,
@@ -67,8 +81,8 @@
   	{% else %}
   		tutorial:false,
   	{% endif %}
-  	
-  	safe_mode: true,
+	  	
+    	safe_mode: true,
   	timeout_settings: {{timeout_settings|jsonify}},
   	sites: {{sites_json|safe}},
   	resources: {{res_json|safe}},
@@ -80,5 +94,5 @@
   	
   });
 </script>
-
+</div>
 {% endblock %}
