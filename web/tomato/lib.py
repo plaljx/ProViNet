@@ -150,8 +150,7 @@ class wrap_json:
 		except xmlrpclib.Fault, f:
 			return HttpResponse(json.dumps({"success": False, "error": 'Error %s' % f}))
 
-OPERATING_SYSTEM = platform.system()
-if OPERATING_SYSTEM == "Windows":
+if settings.OPERATING_SYSTEM == "Windows":
 	DEVNULL = open("nul", "w")
 else:
 	DEVNULL = open("/dev/null", "w")

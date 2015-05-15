@@ -1,4 +1,4 @@
-#left {
+#left_panel {
 	background-color: #333;
 	float: left;
 	height:100%;
@@ -6,7 +6,7 @@
        overflow-y:auto;
        overflow-x:hidden;
 }
-#left td {
+#left_panel td {
 	vertical-align: bottom;
 }
 #logo{
@@ -28,11 +28,11 @@ font-size:18px;
 	float:left;
 	margin-top:45px;
 }
-#left a {
+#left_panel a {
 	color:#fff;
 	list-style-type:none;
 }
-#left a:focus {
+#left_panel a:focus {
 	outline: thin dotted;
 	text-decoration:none;
 }
@@ -42,15 +42,15 @@ a:hover {
 	outline: 0;
 	text-decoration:none;
 }
-#right_list li:hover{
+#panel_menu li:hover{
 	background:#999;
 }
-#right_list {
+#panel_menu {
 	margin-top:10px;
 	width:240px;
 	height:auto;
 }
-#right_list li {	
+#panel_menu li {	
 	margin:8px auto; 
 	font-style: normal;
 	color: #FFF;
@@ -65,11 +65,11 @@ a:hover {
 }
 
 
-#left .t{
+#left_panel .t{
 	background:#333;
 	font-size:19px;
 }
-#left .t:hover{
+#left_panel .t:hover{
 	background:#333;
 }
 #right {
