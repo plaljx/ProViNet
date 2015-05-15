@@ -401,7 +401,7 @@ var TemplateElement = FormElement.extend({
 		this.template = template;
 		var t = this;
 		
-       	var changebutton = $('&nbsp;<button type="button" class="btn btn-primary"><span class="ui-button-text">'+gettext('Change')+'</span></button>');
+       	var changebutton = $('&nbsp;<button type="button" class="btn btn-primary"><span class="ui-button-text">'+gettext("Change")+'</span></button>');
 		changebutton.click(function() {
 			t.call_element.showTemplateWindow(
 		          	function(value) {
@@ -852,7 +852,7 @@ var TemplateWindow = Window.extend({
 		var table = this.getList();
 		
 		
-		this.div.append($('<div style="margin-bottom:0.5cm; margin-top:0.5cm;"><table style="vertical-align:top;"><tr><th style="vertical-align:top;">'+gettext('Warning')+':</th><td style="vertical-align:top; font-size: 10pt; white-space:normal; font-style:italic;">'+ gettext('You will lose all data on this device if you change the template.')+'</td></tr></table></div>'));
+		this.div.append($('<div style="margin-bottom:0.5cm; margin-top:0.5cm;"><table style="vertical-align:top;"><tr><th style="vertical-align:top;">'+gettext("Warning")+':</th><td style="vertical-align:top; font-size: 10pt; white-space:normal; font-style:italic;">'+ gettext("You will lose all data on this device if you change the template.")+'</td></tr></table></div>'));
 		this.div.append(table);
 	},
 	getValue: function() {
@@ -1001,7 +1001,7 @@ var PermissionsWindow = Window.extend({
 		}
 		
 		
-		this.userTable = $('<div class="row"><div class="col-sm-4 col-sm-offset-1"><h4>'+gettext('User')+'</h4></div><div class="col-sm-4"><h4>'+gettext('Permission')+'</h4></div></div>');
+		this.userTable = $('<div class="row"><div class="col-sm-4 col-sm-offset-1"><h4>'+gettext("User")+'</h4></div><div class="col-sm-4"><h4>'+gettext("Permission")+'</h4></div></div>');
 		if (this.options.allowChange) this.userTable.append($('<div class="col-sm-3" />'));
 		this.userList.append(this.userTable);
 		var perm = this.topology.data.permissions;
@@ -1122,7 +1122,7 @@ var PermissionsWindow = Window.extend({
 		sel.change();
 		td_perm.append(sel);
 		
-		if (window.confirm(gettext("Found the user ")+ data.realname + ' (' + data.id +")\n"+gettext("Is this correct?"))) {
+		var saveButton = $('<img src="/img/tick.png" title=' + gettext("save") + ' style="cursor:pointer;" />');
 		saveButton.click(function() {
 			var sel = document.getElementById(sel_id);
 			var perm = sel.options[sel.selectedIndex].value;
@@ -1130,7 +1130,7 @@ var PermissionsWindow = Window.extend({
 		});
 		td_buttons.append(saveButton);
 		
-		var cancelButton = $('<img src="/img/eraser16.png" title=gettext("cancel") style="cursor:pointer;" />');
+		var cancelButton = $('<img src="/img/eraser16.png" title=' + gettext("cancel") + 'style="cursor:pointer;" />');
 		cancelButton.click(function(){
 			t.backToView(username);
 		});
@@ -1707,7 +1707,7 @@ var Topology = Class.extend({
 		var ta = $('<textarea cols=60 rows=20 class="notes"></textarea>');
 		ta.text(this.data.attrs._notes || "");
 		dialog.append(ta);
-		var openWithEditor_html = $('<input type="checkbox" name="openWithEditor">'+gettext('Open Window with Editor')+'</input>');
+		var openWithEditor_html = $('<input type="checkbox" name="openWithEditor">'+ gettext("Open Window with Editor")+'</input>');
 		var openWithEditor = openWithEditor_html[0];
 		if (this.data.attrs._notes_autodisplay) {
 			openWithEditor.checked = true;
@@ -1737,7 +1737,7 @@ var Topology = Class.extend({
 					},
 					{
 						text: gettext("Close"),
-		        			click: function() {
+		        click: function() {
 		        			dialog.dialog("close");
 		       				}		
 					}		
@@ -1945,6 +1945,7 @@ var createTopologyMenu = function(obj) {
 		items: {
 			"header": {
 				html:"<span>"+obj.name()+"<small><br />"+gettext("Topology ")+(editor.options.show_ids ? ' #'+obj.id : "")+'</small></span>',
+				html:'<span>'+obj.name()+'<br />' + gettext("Topology") + '#' + obj.id+'</span>',
 				type:"html"
 			},
 			"actions": {
@@ -2246,8 +2247,8 @@ var ConnectionAttributeWindow = AttributeWindow.extend({
 		this._super(options);
 		
 		this.table.append($('<div class="form-group" />').append($('<ul class="nav nav-tabs" style="margin-bottom: 1pt;">\
-				<li class="active"><a href="#Link_Emulation" data-toggle="tab">'+gettext('Link Emulation')+'</a></li>\
-				  <li><a href="#Packet_capturing" data-toggle="tab">'+gettext('Packet capturing')+'</a></li>\
+				<li class="active"><a href="#Link_Emulation" data-toggle="tab">'+gettext("Link Emulation")+'</a></li>\
+				  <li><a href="#Packet_capturing" data-toggle="tab">'+gettext("Packet capturing")+'</a></li>\
 				</ul>')));
 		
 		var tab_content = $('<div class="tab-content" />');
@@ -2267,7 +2268,7 @@ var ConnectionAttributeWindow = AttributeWindow.extend({
 			this.elements.push(el);
 			var link_emulation = $('<div class="tab-pane active" id="Link_Emulation" />');
 			var link_emulation_elements = $('<div class="form-group" />')
-						.append($('<label class="col-sm-4 control-label">'+gettext('Enabled')+'</label>'))
+						.append($('<label class="col-sm-4 control-label">'+gettext("Enabled")+'</label>'))
 						.append($('<div class="col-sm-8">').append(el.getElement()));
 			
 			//direction arrows
@@ -2292,10 +2293,10 @@ var ConnectionAttributeWindow = AttributeWindow.extend({
 				name1 = name2;
 				name2 = t;
 			}
-			var fromDir = $("<div>"+gettext("From ") + name1 + "<br/>"+gettext("to ") + name2 + "</div>");
-			var toDir = $("<div>"+gettext("From ") + name2 + " <br/>"+gettext("to ") + name1 + "</div>");
+			var fromDir = $('<div>'+gettext("From ") + name1 + ' <br/>'+gettext("to ") + name2 + '</div>');
+			var toDir = $('<div>'+gettext("From ") + name2 + ' <br/>'+gettext("to ") + name1 + '</div>');
 			link_emulation_elements.after($('<div class="form-group" />')
-				.append($('<label class="col-sm-4 control-label">'+gettext('Direction')+'</label>'))
+				.append($('<label class="col-sm-4 control-label">'+gettext("Direction")+'</label>'))
 				.append($('<div class="col-sm-4" />').append(fromDir).append(dir1))
 				.append($('<div class="col-sm-4" />').append(toDir).append(dir2))
 			);
@@ -2341,7 +2342,7 @@ var ConnectionAttributeWindow = AttributeWindow.extend({
 			});
 			this.elements.push(el);
 			var packet_capturing_elements = $('<div class="form-group" />')
-					.append($('<label class="col-sm-6 control-label">'+gettext('Enabled')+'</label>'))
+					.append($('<label class="col-sm-6 control-label">'+gettext("Enabled")+'</label>'))
 					.after($('<div class="col-sm-6" />')
 					.append($('<div class="col-sm-12" />')
 					.append(el.getElement()))));
@@ -2515,7 +2516,7 @@ var Connection = Component.extend({
 		var cmd = "wireshark -k -i <( nc "+host+" "+port+" )";
 		new Window({
 			title: gettext("Live capture Information"), 
-			content: '<p>'+gettext('Host')+': '+host+'<br />'+gettext('Port')+': '+port+"</p><p>"+gettext("Start live capture via")+": <pre>"+cmd+"</pre></p>",
+			content: '<p>'+gettext("Host")+': '+host+'<br />'+gettext("Port")+': '+port+'</p><p>'+gettext("Start live capture via")+': <pre>'+cmd+'</pre></p>',
 			autoShow: true,
 			width: 600
 		});
@@ -2591,7 +2592,7 @@ var createConnectionMenu = function(obj) {
 		callback: function(key, options) {},
 		items: {
 			"header": {
-				html:'<span>'+obj.name_vertical()+"<small><br>"+gettext("Connection")+(editor.options.show_ids ? " #"+obj.id : "")+'</small></span>', type:"html"
+				html:'<span>'+obj.name()+'<br />' + gettext("Connection") + '#'+obj.id+'</span>', type:"html"
 			},
 			"usage": {
 				name: gettext("Resource usage"),
@@ -2856,7 +2857,7 @@ var Element = Component.extend({
 		var link = "vnc://:" + passwd + "@" + host + ":" + port;
  		var win = new Window({
  			title: gettext("VNC info"),
- 			content: '<p>'+gettext('Link')+': <a href="'+link+'">'+link+'</a><p>'+gettext('Host')+': '+host+"</p><p>"+gettext("Port")+": "+port+"</p><p>"+gettext("Websocket-Port")+": "+wport+"</p><p>"+gettext("Password")+": <pre>"+passwd+"</pre></p>",
+ 			content: '<p>'+gettext("Link")+': <a href="'+link+'">'+link+'</a><p>'+gettext("Host")+': '+host+'</p><p>'+gettext("Port")+': '+port+'</p><p>'+gettext("Websocket-Port")+': '+wport+'</p><p>'+gettext("Password")+': <pre>'+passwd+'</pre></p>',
  			autoShow: true,
  			width: 500,
  		});
@@ -2907,7 +2908,7 @@ var Element = Component.extend({
 		}
 		this.action(grant_action, {callback: function(el, res) {
 			var url = "http://" + el.data.attrs.host_info.address + ":" + el.data.attrs.host_info.fileserver_port + "/" + res + "/upload";
-			var iframe = $('<iframe id="upload_target" name="upload_target">'+gettext('Test')+'</iframe>');
+			var iframe = $('<iframe id="upload_target" name="upload_target">'+gettext("Test")+'</iframe>');
 			// iframe.load will be triggered a moment after iframe is added to body
 			// this happens in a seperate thread so we cant simply wait for it (esp. on slow Firefox)
 			iframe.load(function(){ 
