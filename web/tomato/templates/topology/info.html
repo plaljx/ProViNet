@@ -45,62 +45,61 @@
 {% block content %}
 
 <div id="right">
-<div id="editor" style="width: 100%; padding: 0px; border:0px; margin-left: 0px; margin-right:0px">
-	<div id="browser_issues"></div>
-<div id="topcontent">
-  <div class="btn-group" style="float:right;margin-top:20px;" >
-  <button  type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-      {% trans "Showing user topologies" %}
-      <span class="caret"></span>
-  </button>
-  <ul class="dropdown-menu" style="width:100px;" role="menu">
-      {% for t in to_list %}
-        <li><a href="{%url "topology.info" t.id %}">{{t.attrs.name}}</a></li>
-      {% endfor %}
-  </ul>
-</div><!--end: topcontent-->
-	<h1 id="topology_name"> {% trans "Topology" %} '{{top.attrs.name}}'</h1>
-</div><!--end: editor-->
-	<div id="menu" style="width:800px;margin:0px auto;"></div>
-	<div id="workspace" style="width:800px; height:600px;margin:0px auto;"></div>
-</div><!--end: right-->
+	<div id="editor" style="width: 100%; padding: 0px; border:0px; margin-left: 0px; margin-right:0px">
+		<div id="browser_issues"></div>
+		<div id="topcontent">
+			  <div class="btn-group" style="float:right;margin-top:20px;" >
+				  <button  type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+				      {% trans "Showing user topologies" %}
+				      <span class="caret"></span>
+				  </button>
+				  <ul class="dropdown-menu" style="width:100px;" role="menu">
+				      {% for t in to_list %}
+				        <li><a href="{%url "topology.info" t.id %}">{{t.attrs.name}}</a></li>
+				      {% endfor %}
+				  </ul>
+			  </div><!--end: btn-group-->
+			<h1 id="topology_name"> {% trans "Topology" %} '{{top.attrs.name}}'</h1>
+		</div><!--end: topcontent-->
+			<div id="menu" style="width:800px;margin:0px auto;"></div>
+			<div id="workspace" style="width:800px; height:600px;margin:0px auto;"></div>
+	</div><!--end: editor-->
 
-<script language="JavaScript" type="text/javascript">
-  display_issues($("#browser_issues"));
-  help_baseUrl = "{%externalurl 'help' %}";
-  {% if tutorial_info.state.enabled %}
-  var tutorial_base_url = "{{tutorial_info.data.base_url}}";
-  var tutorial_steps = {{tutorial_info.steps|safe}};
-  {% endif %}
-  
-  var editor = new Editor({
-  	menu_container: $('#menu'),
-  	workspace_container: $('#workspace'),
-  	{% if tutorial_info.state.enabled %}
-  		tutorial_show: true,
-		tutorial_state: {{tutorial_info.state|jsonify}},
-  	{% else %}
-  		tutorial_show:false,
-  	{% endif %}
-  	
-  	safe_mode: true,
-  	timeout_settings: {{timeout_settings|jsonify}},
-  	sites: {{sites_json|safe}},
-  	resources: {{res_json|safe}},
-  	capabilities: {{caps_json|safe}}, 
-  	topology: {{top.id}},
-  	user: {{request.session.user.data|jsonify}},
-  	isGlobalOwner: "{{user.flags.global_owner}}",
-  	isDebugUser: {{request.session.user.hasDebugFlag|jsonify}},
-  	permission_list: {{permission_list|safe}},
-  	error_message_appendix: '{% trans "If you continue to encounter this problem, please" %}' + '<a href="{%url "help.contact_form"%}" style="color: blue;" target="_blank">' + '{% trans "contact an administrator" %}' + '</a>' +'{% trans "or" %}' + '<a href="{%externalurl 'bugtracker' %}" style="color: blue;" target="_help">' + '{% trans "file a bug report" %}' +'</a>.',
-	onready: function(){
-		{% if tutorial_info.state.enabled %}
-		{{tutorial_info.initscript|safe}}
-		{%endif%}
-	}
-  	
-  });
-</script>
-</div>
+	<script language="JavaScript" type="text/javascript">
+	  display_issues($("#browser_issues"));
+	  help_baseUrl = "{%externalurl 'help' %}";
+	  {% if tutorial_info.state.enabled %}
+	  var tutorial_base_url = "{{tutorial_info.data.base_url}}";
+	  var tutorial_steps = {{tutorial_info.steps|safe}};
+	  {% endif %}
+	  
+	  var editor = new Editor({
+	  	menu_container: $('#menu'),
+	  	workspace_container: $('#workspace'),
+	  	{% if tutorial_info.state.enabled %}
+	  		tutorial_show: true,
+			tutorial_state: {{tutorial_info.state|jsonify}},
+	  	{% else %}
+	  		tutorial_show:false,
+	  	{% endif %}
+	  	
+	  	safe_mode: true,
+	  	timeout_settings: {{timeout_settings|jsonify}},
+	  	sites: {{sites_json|safe}},
+	  	resources: {{res_json|safe}},
+	  	capabilities: {{caps_json|safe}}, 
+	  	topology: {{top.id}},
+	  	user: {{request.session.user.data|jsonify}},
+	  	isGlobalOwner: "{{user.flags.global_owner}}",
+	  	isDebugUser: {{request.session.user.hasDebugFlag|jsonify}},
+	  	permission_list: {{permission_list|safe}},
+	  	error_message_appendix: 'If you continue to encounter this problem, please <a href="{%url "help.contact_form"%}" style="color: blue;" target="_blank">contact an administrator</a> or <a href="{%externalurl 'bugtracker' %}" style="color: blue;" target="_help">file a bug report</a>.',
+		onready: function(){
+			{% if tutorial_info.state.enabled %}
+			{{tutorial_info.initscript|safe}}
+			{%endif%}
+		}
+	  });
+	</script>
+</div><!--end: right-->
 {% endblock %}

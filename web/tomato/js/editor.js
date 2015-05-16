@@ -1555,28 +1555,33 @@ var Topology = Class.extend({
 			width: 600,
 			height: 600,
 			maxHeight:800,
-			buttons: {
-				Save: function() {
-					t.configWindow.hide();
-					var values = t.configWindow.getValues();
-					for (var name in values) {
-						if (values[name] === t.data.attrs[name]) delete values[name];
-						// Tread "" like null
-						if (values[name] === "" && t.data.attrs[name] === null) delete values[name];
-					}
-					t.modify(values);
-					t.configWindow.remove();
-					t.configWindow = null;
+			buttons: [{
+						text: gettext("Save"),
+						click: function() {
+							t.configWindow.hide();
+							var values = t.configWindow.getValues();
+							for (var name in values) {
+								if (values[name] === t.data.attrs[name]) delete values[name];
+								// Tread "" like null
+								if (values[name] === "" && t.data.attrs[name] === null) delete values[name];
+							}
+							t.modify(values);
+							t.configWindow.remove();
+							t.configWindow = null;
 
-					if(callback != null) {
-						callback(t);
-					}
-				},
-				Cancel: function() {
-					t.configWindow.remove();
-					t.configWindow = null;
-				}
-			}
+							if(callback != null) {
+								callback(t);
+							}
+						},
+					},
+					{
+						text: gettext("Cancel"),
+						click: function() {
+							t.configWindow.remove();
+							t.configWindow = null;
+						},
+					},
+			]
 		});
         this.configWindow.add(new TextElement({
 				label: "Name",
@@ -2321,29 +2326,34 @@ var Component = Class.extend({
 			title: gettext("Attributes"),
 			width: 600,
 			helpTarget:helpTarget,
-			buttons: {
-				Save: function() {
-					t.configWindow.hide();
-					var values = t.configWindow.getValues();
-					for (var name in values) {
-						if (values[name] === t.data.attrs[name]) delete values[name];
-						// Tread "" like null
-						if (values[name] === "" && t.data.attrs[name] === null) delete values[name];
-					}
-					t.modify(values);	
-					t.configWindow.remove();
-					t.configWindow = null;
-					
-					
-					if(callback != null) {
-						callback(t);
-					}
-				},
-				Cancel: function() {
-					t.configWindow.remove();
-					t.configWindow = null;
-				} 
-			}
+			buttons:[ {
+						text:gettext("Save"),
+						click: function() {
+							t.configWindow.hide();
+							var values = t.configWindow.getValues();
+							for (var name in values) {
+								if (values[name] === t.data.attrs[name]) delete values[name];
+								// Tread "" like null
+								if (values[name] === "" && t.data.attrs[name] === null) delete values[name];
+							}
+							t.modify(values);	
+							t.configWindow.remove();
+							t.configWindow = null;
+							
+							
+							if(callback != null) {
+								callback(t);
+							}
+						},
+					},
+					{
+						text: gettext("Cancel"),
+						click: function() {
+							t.configWindow.remove();
+							t.configWindow = null;
+						}
+					},
+			]
 		});
 		for (var i=0; i<settings.order.length; i++) {
 			var name = settings.order[i];
@@ -2725,20 +2735,25 @@ var Connection = Component.extend({
 		this.configWindow = new ConnectionAttributeWindow({
 			title: gettext("Attributes"),
 			width: 500,
-			buttons: {
-				Save: function() {
-					t.configWindow.hide();
-					var values = t.configWindow.getValues();
-					for (var name in values) if (values[name] === t.data.attrs[name]) delete values[name];
-					t.modify(values);		
-					t.configWindow.remove();
-					t.configWindow = null;
-				},
-				Cancel: function() {
-					t.configWindow.remove();
-					t.configWindow = null;
-				} 
-			}
+			buttons: [{
+						text: gettext("Save"),
+						click: function() {
+							t.configWindow.hide();
+							var values = t.configWindow.getValues();
+							for (var name in values) if (values[name] === t.data.attrs[name]) delete values[name];
+							t.modify(values);		
+							t.configWindow.remove();
+							t.configWindow = null;
+						},
+					},
+					{
+						text: gettext("Cancel"),
+						click: function() {
+						t.configWindow.remove();
+						t.configWindow = null;
+						}, 
+					},
+			]
 		}, this);
 		this.configWindow.show();
 		this.triggerEvent({operation: "attribute-dialog"});
@@ -3965,19 +3980,18 @@ var Template = Class.extend({
 			hb = hb + '<tr><td><img src="/img/error.png" /></td>'+
 				'<td>'+gettext("No nlXTP guest modules are installed. Executable archives will not auto-execute and status will be unavailable.")+ 
 				'<a href="'+help_baseUrl+'/rextfv/guestmodules" target="_help">'+gettext("More Info")+'</a></td></tr>';
-				
-			hb = hb + "</tbody></table></p>";
-			return Menu.button({
-				name: options.name || (this.type + "-" + this.name),
-				label: options.label || this.label || (this.type + "-" + this.name),
-				icon: this.iconUrl(),
-				toggle: true,
-				toggleGroup: options.toggleGroup,
-				small: options.small,
-				func: options.func,
-				hiddenboxHTML: hb
-			});
-		}
+			}	
+		hb = hb + "</tbody></table></p>";
+		return Menu.button({
+			name: options.name || (this.type + "-" + this.name),
+			label: options.label || this.label || (this.type + "-" + this.name),
+			icon: this.iconUrl(),
+			toggle: true,
+			toggleGroup: options.toggleGroup,
+			small: options.small,
+			func: options.func,
+			hiddenboxHTML: hb
+		});
 	},
 	labelForCommon: function() {
 		var label = this.label.replace(/[ ]*\(.*\)/, "");
