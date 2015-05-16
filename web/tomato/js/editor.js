@@ -1025,7 +1025,7 @@ var PermissionsWindow = Window.extend({
 			successFn: function(data) {
 				var s = data.realname+' (<a href="/account/info/'+data.id+'" target="_blank" style="font-size:10pt;">'+data.id+'</a>)'
 				td_name.append($(s));
-				if (data.id == t.options.ownUserId) td_icon.append($('<img src="/img/user.png" title=gettext("This is you!" )/>'));
+				if (data.id == t.options.ownUserId) td_icon.append($('<img src="/img/user.png" title=' + gettext("This is you!" )+'/>'));
 			}
 		});
 
@@ -1065,7 +1065,7 @@ var PermissionsWindow = Window.extend({
 									url:	'account/'+t.username.element.getValue()+'/info',
 									successFn: function(data) {
 										if (!(data.id in t.userListFinder)) {
-											if (window.confirm(gettext("Found the user ")+ data.realname + ' (' + data.id +")\n"+gettext("Is this correct?"))) {
+											if (window.confirm(gettext("Found the user ")+ data.realname + ' (' + data.id +')\n'+gettext("Is this correct?"))) {
 												t.addUserToList(data.id);
 												t.makePermissionEditable(data.id);
 											}
@@ -1944,7 +1944,6 @@ var createTopologyMenu = function(obj) {
 		callback: function(key, options) {},
 		items: {
 			"header": {
-				html:"<span>"+obj.name()+"<small><br />"+gettext("Topology ")+(editor.options.show_ids ? ' #'+obj.id : "")+'</small></span>',
 				html:'<span>'+obj.name()+'<br />' + gettext("Topology") + '#' + obj.id+'</span>',
 				type:"html"
 			},
@@ -2344,8 +2343,8 @@ var ConnectionAttributeWindow = AttributeWindow.extend({
 			var packet_capturing_elements = $('<div class="form-group" />')
 					.append($('<label class="col-sm-6 control-label">'+gettext("Enabled")+'</label>'))
 					.after($('<div class="col-sm-6" />')
-					.append($('<div class="col-sm-12" />')
-					.append(el.getElement()))));
+					.append($('<div class="col-sm-6" />').append(el.getElement()))
+					);
 			
 			var order = ["capture_mode", "capture_filter"];
 			var order_desc=[gettext("Capture mode"),gettext("Packet filter expression")];
