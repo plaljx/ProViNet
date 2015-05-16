@@ -5,9 +5,9 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-{% load i18n %}
-
+{% load url from future %}
 {% load tomato %}
+{% load i18n %}
 
 {% block content %}
 <div id="right">
@@ -15,8 +15,7 @@
 <h1>{% trans "Tutorials" %}</h1>
 </div>
 <div id="content">
-<script src="/static/js/jquery.js"></script>
-
+<script src="js/jquery.js"></script>
 
 <table class="sortable" style="vertical-align:middle;">
 
@@ -30,10 +29,10 @@
 </table>
 </div>
 <div id="bar">
-<link href="/style/jquery-ui.css" rel="stylesheet">
-<script src="/js/jquery.js"></script>
-<script src="/js/jquery-ui.js"></script>
-<script src="/js/custom-tutorial.js"></script>
+<link href="style/jquery-ui.css" rel="stylesheet">
+<script src="js/jquery.js"></script>
+<script src="js/jquery-ui.js"></script>
+<script src="js/custom-tutorial.js"></script>
 <button type="button" onClick="customTutorial()" class="btn btn-primary">{% trans "Load tutorial from URL" %}</button>
 </div>
 </div>

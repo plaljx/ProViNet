@@ -10,6 +10,7 @@
 <link type="text/css" href="style/ui.ribbon.css" rel="stylesheet" />
 <link type="text/css" href="style/jquery.contextMenu.css" rel="stylesheet" />
 <link type="text/css" href="style/editor.css" rel="stylesheet" />  
+<link type="text/css" href="style/pretty-json.css" rel="stylesheet" />
 <script type="text/javascript" src="{% url "js_catalog" %}"></script>
 <script language="JavaScript" type="text/javascript" src="js/jquery-ui.js"></script>
 <script language="JavaScript" type="text/javascript" src="js/ui.ribbon.js"></script>
@@ -19,6 +20,9 @@
 <script language="JavaScript" type="text/javascript" src="js/browser_issues.js"></script>
 <script language="JavaScript" type="text/javascript" src="js/dynimg.js"></script>
 <script language="JavaScript" type="text/javascript" src="js/editor.js"></script>
+<script language="JavaScript" type="text/javascript" src="js/underscore-min.js"></script>
+<script language="JavaScript" type="text/javascript" src="js/backbone-min.js"></script>
+<script language="JavaScript" type="text/javascript" src="js/pretty-json-min.js"></script>
 
 
 {% if tutorial_data %}
@@ -54,35 +58,32 @@
         <li><a href="{%url "topology.info" t.id %}">{{t.attrs.name}}</a></li>
       {% endfor %}
   </ul>
-</div>
+</div><!--end: topcontent-->
 	<h1 id="topology_name"> {% trans "Topology" %} '{{top.attrs.name}}'</h1>
-</div>
+</div><!--end: editor-->
 	<div id="menu" style="width:800px;margin:0px auto;"></div>
 	<div id="workspace" style="width:800px; height:600px;margin:0px auto;"></div>
-</div>
+</div><!--end: right-->
 
 <script language="JavaScript" type="text/javascript">
   display_issues($("#browser_issues"));
   help_baseUrl = "{%externalurl 'help' %}";
-  {% if tutorial_data %}
-  var tutorial_base_url = "{{tutorial_data.base_url}}";
-  var tutorial_steps = {{tutorial_steps|safe}};
-  {% if tutorial_data.data %}
-  var tutorial_data = {{tutorial_data.data|jsonify}};
-  {% endif %}
+  {% if tutorial_info.state.enabled %}
+  var tutorial_base_url = "{{tutorial_info.data.base_url}}";
+  var tutorial_steps = {{tutorial_info.steps|safe}};
   {% endif %}
   
   var editor = new Editor({
- 	menu_container: $('#menu'),
+  	menu_container: $('#menu'),
   	workspace_container: $('#workspace'),
-  	{% if tutorial_data %}
-  		tutorial: true,
-		tutorial_status: {{tutorial_status}},
+  	{% if tutorial_info.state.enabled %}
+  		tutorial_show: true,
+		tutorial_state: {{tutorial_info.state|jsonify}},
   	{% else %}
-  		tutorial:false,
+  		tutorial_show:false,
   	{% endif %}
-	  	
-    	safe_mode: true,
+  	
+  	safe_mode: true,
   	timeout_settings: {{timeout_settings|jsonify}},
   	sites: {{sites_json|safe}},
   	resources: {{res_json|safe}},
@@ -90,7 +91,14 @@
   	topology: {{top.id}},
   	user: {{request.session.user.data|jsonify}},
   	isGlobalOwner: "{{user.flags.global_owner}}",
-  	permission_list: {{permission_list|safe}}
+  	isDebugUser: {{request.session.user.hasDebugFlag|jsonify}},
+  	permission_list: {{permission_list|safe}},
+  	error_message_appendix: '{% trans "If you continue to encounter this problem, please" %}' + '<a href="{%url "help.contact_form"%}" style="color: blue;" target="_blank">' + '{% trans "contact an administrator" %}' + '</a>' +'{% trans "or" %}' + '<a href="{%externalurl 'bugtracker' %}" style="color: blue;" target="_help">' + '{% trans "file a bug report" %}' +'</a>.',
+	onready: function(){
+		{% if tutorial_info.state.enabled %}
+		{{tutorial_info.initscript|safe}}
+		{%endif%}
+	}
   	
   });
 </script>
