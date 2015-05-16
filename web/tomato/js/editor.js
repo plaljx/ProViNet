@@ -5,7 +5,7 @@ var settings = {
 	commonPreferenceThreshold: 100,
 	otherCommonElements: [
 	                      {
-	                  		label: gettext("Switch"),
+	                  		label: "Switch",
 	                		name: "vpn-switch",
 	                		icon: "img/switch32.png",
 	                		type: "tinc_vpn",
@@ -17,38 +17,9 @@ var settings = {
 
 var ignoreErrors = false;
 
-var showError = function(msg) {
-	if (ignoreErrors) return;
-	switch(msg.toLowerCase()) {
-		case "over quota":
-			showError(gettext("You are over quota. If you are a newly registered user, please wait until your account has been approved. Otherwise, contact an administrator."));
-			break;
-		default:
-			alert("Error: "+msg);
-	}
-}
 
-var ajax = function(options) {
-	var t = this;
-	$.ajax({
-		type: "POST",
-	 	async: true,
-	 	url: "../ajax/" + options.url,
-	 	data: {data: $.toJSON(options.data || {})},
-	 	complete: function(res) {
-	 		if (res.status == 401 || res.status == 403) {
-	 			showError(gettext("Your session has ended, please log in again"));
-	 			ignoreErrors=true;
-	 			window.location.reload();
-	 			return;
-	 		}
-	 		if (res.status != 200) return options.errorFn ? options.errorFn(res.statusText) : null;
-	 		var msg = $.parseJSON(res.responseText);
-	 		if (! msg.success) return options.errorFn ? options.errorFn(msg.error) : null;
-	 		return options.successFn ? options.successFn(msg.result) : null;
-	 	}
-	});
-};
+
+
 
 var MenuGroup = Class.extend({
 	init: function(name) {
@@ -156,10 +127,10 @@ Menu.button = function(options) {
 };
 
 Menu.checkbox = function(options) {
-	var html = $('<input type="checkbox" id="'+options.name+'"/><label for="'+options.name+'">'+options.label+'</label>');
+	var html = $('<input type="checkbox" id="'+options.name+'" /><label for="'+options.name+'">'+options.label+'</label>');
 	if (options.tooltip) html.attr("title", options.tooltip);
 	if (options.func) html.click(function(){
-		options.func(html.attr("checked"), html);
+		options.func(html.prop("checked"));
 	});
 	html.setChecked = function(value){
 		this.attr("checked", value);
@@ -224,16 +195,15 @@ var TextElement = FormElement.extend({
 	init: function(options) {
 		this._super(options);
 		this.pattern = options.pattern || /^.*$/;
-		this.element = $('<div />');
-		this.textfieldbox = $('<div class="col-sm-12" />');
+		this.element = $('<div class="col-sm-12" />');
 		this.textfield = $('<input class="form-control" type="'+(options.password ? "password" : "text")+'" name="'+this.name+'"/>');
-		
-		this.element.append(this.textfieldbox);
-		this.textfieldbox.append(this.textfield);
+
+		this.element.append(this.textfield);
 		
 		if (options.disabled) this.textfield.attr({disabled: true});
 		if (options.onChangeFct) {
 			this.textfield.change(options.onChangeFct);
+			this.textfield.keypress(options.onChangeFct);
 		}
 		var t = this;
 		this.textfield.change(function() {
@@ -256,12 +226,10 @@ var TextElement = FormElement.extend({
 var TextAreaElement = FormElement.extend({
 	init: function(options) {
 		this._super(options);
-		this.element = $('<div class="row" />');
-		this.textfieldbox = $('<div class="col-md-9">');
+		this.element = $('<div class="col-sm-12">');
 		this.textfield = $('<textarea class="form-control" name="'+this.name+'"></textarea>');
 		
-		this.element.append(this.textfieldbox);
-		this.textfieldbox.append(this.textfield);
+		this.element.append(this.textfield);
 		
 		if (options.disabled) this.textfield.attr({disabled: true});
 		var t = this;
@@ -281,19 +249,21 @@ var TextAreaElement = FormElement.extend({
 var CheckboxElement = FormElement.extend({
 	init: function(options) {
 		this._super(options);
-		this.element = $('<input class="form-element" type="checkbox" name="'+this.name+'"/>');
-		if (options.disabled) this.element.attr({disabled: true});
+
+		this.checkbox = $('<input class="form-element" type="checkbox" name="'+this.name+'" checked="true"/>');
+		this.element = $('<div class="col-sm-12">').append(this.checkbox);
+		if (options.disabled) this.checkbox.attr({disabled: true});
 		var t = this;
-		this.element.change(function() {
-			t.onChanged(this.checked);
+		this.checkbox.change(function() {
+			t.onChanged(t.prop("checked"));
 		});
 		if (options.value != null) this.setValue(options.value);
 	},
 	getValue: function() {
-		return this.element[0].checked;
+		return this.checkbox.attr("checked");
 	},
 	setValue: function(value) {
-		this.element[0].checked = value;
+		this.checkbox.attr("checked",value);
 	}
 });
 
@@ -317,10 +287,11 @@ var ChoiceElement = FormElement.extend({
 		}
 		
 		if (this.showInfo) {
-			this.element = $('<div class="col-sm-9" />');
-			this.element.append(this.select);
+			var choiceElement = $('<div class="col-sm-9" />');
+			choiceElement.append(this.select);
 			this.info = $('<div class="col-sm-3"></div>');
-			this.element.after(this.info);
+			this.element = $('<div />');
+			this.element.append(choiceElement,this.info);
 			
 			var t = this;
 			this.select.change(function(){
@@ -374,16 +345,16 @@ var TemplateElement = FormElement.extend({
 		this.options = options;
 		this.disabled = options.disabled;
 		this.call_element = options.call_element;
-				
-		this.element = $('<div style="display:none;"></div>');
+		
+		this.element = $('<div />');
 		this.labelarea = $('<div class="col-sm-6"/>');
 		this.changebuttonarea = $('<div class="col-sm-3"/>');
 		this.infoarea = $('<div class="col-sm-3"/>');
 		
-		this.element.after(this.labelarea);
-		this.element.after(this.changebuttonarea);
-		this.element.after(this.infoarea);
-				
+		this.element.append(this.labelarea);
+		this.element.append(this.changebuttonarea);
+		this.element.append(this.infoarea);
+		
 		template = editor.templates.get(options.type,options.value);
 		if (options.custom_template) {
 			this.change_value(new DummyForCustomTemplate(template));
@@ -401,10 +372,11 @@ var TemplateElement = FormElement.extend({
 		this.template = template;
 		var t = this;
 		
-       	var changebutton = $('&nbsp;<button type="button" class="btn btn-primary"><span class="ui-button-text">'+gettext("Change")+'</span></button>');
+		var changebutton = $('<button type="button" class="btn btn-primary"><span class="ui-button-text">' + gettext("Change") + '</span></button>');
 		changebutton.click(function() {
 			t.call_element.showTemplateWindow(
-		          	function(value) {
+				
+				function(value) {
 					t.change_value(
 						editor.templates.get(
 							t.options.type,value
@@ -445,9 +417,8 @@ var TemplateElement = FormElement.extend({
 
 var Window = Class.extend({
 	init: function(options) {
-		log(options);
 		this.options = options;
-		this.options.position = options.position || ['center',200];
+		this.options.position = options.position || { my: "center-"+options.width/4+" center", at: "center top", of: "#workspace" };
 		this.div = $('<div style="overflow:visible;"/>').dialog({
 			autoOpen: false,
 			draggable: options.draggable != null ? options.draggable : true,
@@ -471,7 +442,7 @@ var Window = Class.extend({
 		if (options.closeOnEscape != undefined)
 			this.div.closeOnEscape = options.closeOnEscape;
 		this.setPosition(options.position);
-		if (options.content) this.div.append(options.content);
+		if (options.content) this.div.append($('<div style="min-height: auto;" />').append(options.content));
 		if (options.autoShow) this.show();
 		
 
@@ -529,6 +500,118 @@ var Window = Class.extend({
 		return this.div;
 	}
 });
+var showError = function(error) {
+	if (ignoreErrors) return;
+	new errorWindow({error: { originalResponse: error,},show_error_appendix: true});
+}
+
+
+var errorWindow = Window.extend({
+	init: function(options) {
+		var t = this;
+		this.windowOptions = {title: "Error",
+				modal: true,
+				width: 600,
+				autoShow: true,
+				buttons: {
+					Okay: function() {
+						t.remove();
+						t = null;
+					}
+				},
+				show_error_appendix: false,
+				error_message_appendix: editor.options.error_message_appendix,
+			};
+		//Copy error to new variable and remove it from the options dict
+		var error = options.error;
+		delete options.error;
+		
+		for (var key in options) {
+			this.windowOptions[key] = options[key];
+		}
+		this._super(this.windowOptions);
+		
+		//Create the content of the error window
+		this.errorContent = $('<div />');
+
+		
+		this.errorResponse = $('<div />');
+		
+		if(error.parsedResponse) {
+			this.errorResponse.append(this.addError(error.parsedResponse.error));
+		} else {
+			this.errorResponse.append(this.addText(error.originalResponse));
+		}
+		
+		if(!(editor.options.isDebugUser || editor.options.debug_mode) && !options.show_error_appendix) {
+			this.errorResponse.append('<p style="color: #a0a0a0">'+this.options.error_message_appendix+'</p>');
+		}
+		this.errorContent.append(this.errorResponse);
+		this.div.append(this.errorContent);
+
+	},
+
+	addError: function(error) {
+		//Show additional information for debug users like the errorcode, the errormessage and errordata for debugusers
+		this.setTitle("Error: "+error.typemsg);
+		
+		this.content = $('<div />');
+		this.errorMessage = $('<p>'+error.errormsg+'</p>');
+
+		this.content.append(this.errorMessage);
+		
+		if(editor.options.isDebugUser && editor.options.debug_mode) {
+			
+			this.content.append($('<b>Error details:</b>'))
+			var errorDebugInfos = $('<table />');
+			
+			for(var line=0;line<error.debuginfos.length;line++) {
+				errorDebugInfos.append($('<tr><th>'+error.debuginfos[line].th+'</th><td>'+error.debuginfos[line].td+'</td></tr>'));
+			}
+			this.content.append(errorDebugInfos);
+		}
+		console.log(this.content);
+		return this.content;
+	},
+	
+	addText: function(text) {
+		var message = $('<p>'+text.replace(/(\r\n)|(\r)|(\n)/g, '<br />')+'</p>');
+		return message;
+	}
+});
+
+
+var ajax = function(options) {
+	var t = this;
+	$.ajax({
+		type: "POST",
+	 	async: true,
+	 	url: "../ajax/" + options.url,
+	 	data: {data: $.toJSON(options.data || {})},
+	 	complete: function(res) {
+	 		if (res.status == 401 || res.status == 403) {
+	 			showError(gettext("Your session has ended, please log in again"));
+	 			ignoreErrors=true;
+	 			window.location.reload();
+	 			return;
+	 		}
+	 		var	errorobject = {originalResponse: res.responseText,responseCode: res.status};
+	 		var msg = res.responseText;
+	 		try {
+	 			msg = $.parseJSON(res.responseText);
+ 				errorobject.parsedResponse = msg;
+ 			} catch (e){
+ 			}
+	 		if (res.status != 200) {
+	 			return options.errorFn ? options.errorFn(errorobject) : null;
+ 			}
+	 		if (! msg.success) {
+	 			return options.errorFn ? options.errorFn(errorobject) : null;
+	 		}
+	 		return options.successFn ? options.successFn(msg.result) : null;
+	 	}
+	});
+};
 
 var TutorialWindow = Window.extend({
 	init: function(options) {
@@ -541,19 +624,20 @@ var TutorialWindow = Window.extend({
 				
 			this.editor = options.editor
 				
-			this.tutorialStatus = options.tutorial_status || 0;
+			this.tutorialState = options.tutorial_state;
 			
 			//create UI
 			var t = this
 			this.text = $("<div>.</div>");
 			this.buttons = $("<p style=\"text-align:right; margin-bottom:0px; padding-bottom:0px;\"></p>");
-			this.backButton = $("<input type=\"button\" value=\"Back\" />");
+			this.backButton = $('<button class="btn btn-default"><span class="glyphicon glyphicon-arrow-left"></span>' + gettext( "Back") + '</button>');
 			this.buttons.append(this.backButton);
 			this.backButton.click(function() {t.tutorialGoBack(); });
-			this.skipButton = $("<input type=\"button\" value=\"Skip\" />");
+			this.skipButton = $('<button class="btn btn-default">'+gettext( "Skip" ) + ' <span class="glyphicon glyphicon-arrow-right"></span></button>');
+			this.buttons.append("&nbsp;");
 			this.buttons.append(this.skipButton);
 			this.skipButton.click(function() {t.tutorialGoForth(); });
-			this.closeButton = $("<input type=\"button\" value=\"Close Tutorial\" />");
+			this.closeButton = $('<button class="btn btn-success">'+gettext( "Close Tutorial") + ' <span class="glyphicon glyphicon-remove"></span></button>');
 			this.buttons.append(this.closeButton);
 			
 			this.closeButton.click(function() {
@@ -583,23 +667,23 @@ var TutorialWindow = Window.extend({
 		this.tutorialVisible = vis;
 	},
 	tutorialGoBack: function() {
-		if (this.tutorialStatus > 0) {
-			this.tutorialStatus--;
+		if (this.tutorialState.step > 0) {
+			this.tutorialState.step--;
 			this.skipButton.show();
 			this.closeButton.hide();
 		}
-		if (this.tutorialStatus == 0) {
+		if (this.tutorialState.step == 0) {
 			this.backButton.hide();
 		}
 		this.updateText();
 		this.updateStatusToBackend();
 	},
 	tutorialGoForth: function() {
-		if (this.tutorialStatus + 1 < this.tutorialSteps.length) {
-			this.tutorialStatus++;	
+		if (this.tutorialState.step + 1 < this.tutorialSteps.length) {
+			this.tutorialState.step++;	
 			this.backButton.show();
 		}
-		if (this.tutorialStatus + 1 == this.tutorialSteps.length) {
+		if (this.tutorialState.step + 1 == this.tutorialSteps.length) {
 			this.skipButton.hide();
 			this.closeButton.show();
 		}
@@ -608,10 +692,13 @@ var TutorialWindow = Window.extend({
 	},
 	triggerProgress: function(triggerObj) { //continues tutorial if correct trigger
 		if (this.tutorialVisible) { //don't waste cpu time if not needed... trigger function may be complex.
-			if (this.tutorialSteps[this.tutorialStatus].trigger != undefined) {
-				if (this.tutorialSteps[this.tutorialStatus].trigger(triggerObj)) {
-					this.tutorialGoForth();
+			if (this.tutorialSteps[this.tutorialState.step].trigger != undefined) {
+				try {
+					if (this.tutorialSteps[this.tutorialState.step].trigger(triggerObj)) {
+						this.tutorialGoForth();
+					}
 				}
+				catch(e) {}
 			}
 		}
 	},
@@ -620,13 +707,13 @@ var TutorialWindow = Window.extend({
 		this.tutorialSteps = tutorial_steps
 		
 		//set visible buttons
-		if (this.tutorialStatus == 0) {
+		if (this.tutorialState.step == 0) {
 			this.backButton.hide();
 			this.skipButton.show();
 			this.closeButton.hide();
 		} else {
 			this.backButton.show();
-			if (this.tutorialStatus == this.tutorialSteps.length - 1) {
+			if (this.tutorialState.step == this.tutorialSteps.length - 1) {
 				this.skipButton.hide();
 				this.closeButton.show();
 			} else {
@@ -640,7 +727,7 @@ var TutorialWindow = Window.extend({
 	},
 	updateText: function() {
 		if (!this.tutorialVisible) return;
-		var text = this.tutorialSteps[this.tutorialStatus].text;
+		var text = this.tutorialSteps[this.tutorialState.step].text;
 		this.text.empty();
 		this.text.append(text);
 
@@ -649,7 +736,7 @@ var TutorialWindow = Window.extend({
 		//dirty hack: un-set the window's height property
 		this.div[0].style.height = "";
 		
-		var helpUrl=this.tutorialSteps[this.tutorialStatus].help_page;
+		var helpUrl=this.tutorialSteps[this.tutorialState.step].help_page;
 		if (helpUrl) {
 			this.helpLinkTarget=help_baseUrl+"/"+helpUrl;
 			this.helpButton.show();
@@ -657,18 +744,45 @@ var TutorialWindow = Window.extend({
 			this.helpButton.hide();
 		}
 		
-		var skipButtonText = this.tutorialSteps[this.tutorialStatus].skip_button;
-		if (skipButtonText) {
-			this.skipButton[0].value = skipButtonText;
-		} else {
-			this.skipButton[0].value = gettext("Skip");
+		var skipButtonText = this.tutorialSteps[this.tutorialState.step].skip_button;
+		var highlight_skipbutton = true;
+		if (!(skipButtonText)) {
+			skipButtonText = gettext("Skip");
+			highlight_skipbutton = false;
 		}
+		this.skipButton[0].innerHTML = skipButtonText + ' <span class="glyphicon glyphicon-arrow-right"></span>';
+		if (highlight_skipbutton) { //this has not the 'skip' text on it, i.e., highlight the button
+			if (this.tutorialState.step == 0) { //this is the first step, which has the 'start tutorial' button
+				$(this.skipButton[0].getElementsByClassName('glyphicon')[0]).removeClass('glyphicon-arrow-right');
+				$(this.skipButton[0].getElementsByClassName('glyphicon')[0]).addClass('glyphicon-play');
+				$(this.skipButton[0]).removeClass('btn-default btn-info');
+				$(this.skipButton[0]).addClass('btn-success');
+			} else {
+				$(this.skipButton[0].getElementsByClassName('glyphicon')[0]).removeClass('glyphicon-play');
+				$(this.skipButton[0].getElementsByClassName('glyphicon')[0]).addClass('glyphicon-arrow-right');
+				$(this.skipButton[0]).removeClass('btn-success btn-default');
+				$(this.skipButton[0]).addClass('btn-info');
+			}
+		} else {
+			$(this.skipButton[0].getElementsByClassName('glyphicon')[0]).removeClass('glyphicon-play');
+			$(this.skipButton[0].getElementsByClassName('glyphicon')[0]).addClass('glyphicon-arrow-right');
+			$(this.skipButton[0]).removeClass('btn-info btn-success');
+			$(this.skipButton[0]).addClass('btn-default');
+		}
+
+	},
+	getData: function() {
+		return this.tutorialState.data;
+	},
+	setData: function(data) {
+		this.tutorialState.data = data;
+		this.updateStatusToBackend();
 	},
 	updateStatusToBackend: function() {
 		ajax({
 			url: 'topology/'+this.editor.topology.id+'/modify',
 		 	data: {attrs: {
-		 					_tutorial_status: this.tutorialStatus
+		 					_tutorial_state: this.tutorialState
 		 					},
 		 			}
 		});
@@ -707,10 +821,17 @@ var AttributeWindow = Window.extend({
 		tr.append($('<label for="'+element.getElement().name+'" class="col-sm-4 control-label" />').append(element.getLabel()));
 		elem = $('<div class="col-sm-8" />')
 		elem.append($('<p style="padding:0px; margin:0px;"></p>').append($(element.getElement())));
-		if (element.options.help_text)
-			elem.append($('<p style="padding:0px; margin:0px; color:#888888;"></p>').append(element.options.help_text));
 		tr.append(elem);
 		this.table.append(tr);
+		if (element.options.help_text) {
+			var helptr = $('<div class="form-group" />');
+			helptr.append($('<div class="col-sm-4 control-label" />'));
+			helptr.append($('<p style="padding:0px; margin:0px;"></p>')
+					.append($('<div class="col-sm-8" style="color:#888888;"></div>')
+					.append($('<div class="col-sm-12" style="color:#888888;"></div>')
+					.append(element.options.help_text))));
+			this.table.append(helptr);
+		}
 		return element;
 	},
 	autoElement: function(info, value, enabled) {
@@ -786,11 +907,10 @@ var InputWindow = Window.extend({
 		}
 
 		var label = $('<label for="newname" class="col-sm-4 control-label" />');
-
 		label.append(options.inputlabel);
-		label.after($('<div class="col-sm-8"/>').append(this.element.getElement()));
-		
 		div.append(label);
+		div.append($('<div class="col-sm-8"/>').append(this.element.getElement()));
+		
 		this.add(form);
 		this.setTitle(options.title);
 	}
@@ -806,7 +926,7 @@ var TemplateWindow = Window.extend({
 		                    	text: gettext("Save"),
 		                    	click: function() {
 		                			t.hide();
-							t.callback_before_finish(t.getValue());
+		                    			t.callback_before_finish(t.getValue());
 		                			t.save();
 		                		}
 		         
@@ -870,20 +990,17 @@ var TemplateWindow = Window.extend({
 	getList: function() {
 		var form = $('<form class="form-horizontal"></form>');
 		var ths = this;
+		var winID = Math.random();
 
 		//build template list entry
 		var div_formgroup = $('<div class="form-group"></div>');
 		for(var i=0; i<this.choices.length; i++) {
 			var t = this.choices[i];
 			
-			
-			
-
-			
 			var div_option = $('<div class="col-md-10" />');
 			var div_radio = $('<div class="radio"></div>');
 			div_option.append(div_radio);
-			var radio = $('<input type="radio" name="template" value="'+t.name+'" />');
+			var radio = $('<input type="radio" name="template" value="'+t.name+'" id="'+winID+t.name+'" />');
 			
 			if (this.disabled) {
 				radio.prop("disabled",true);
@@ -901,7 +1018,10 @@ var TemplateWindow = Window.extend({
 				radio.prop("checked","checked");
 			}
 			
-			var radiolabel = $('<label for="'+t.name+'">'+t.label+'</label>')
+			var radiolabel = $('<label for="'+winID+t.name+'">'+t.label+'</label>');
+			radiolabel.click( function(){
+				$(this).children('input').attr('checked', 'checked');
+			});
 			div_radio.append(radiolabel);
 			radiolabel.prepend(radio);
 			var div_info = $('<div class="col-md-2" />');
@@ -925,7 +1045,6 @@ var PermissionsWindow = Window.extend({
 		this.options = options;
 		this.topology = options.topology;
 		this.permissions = options.permissions;
-		console.log(this.topology);
 		
 		this.options.allowChange = this.options.isGlobalOwner;
 		
@@ -957,7 +1076,6 @@ var PermissionsWindow = Window.extend({
 		this.userList = $('<div />');
 		this.userListFinder = {};
 		this.div.append(this.userList);
-		this.listCreated = false;
 		
 		this.buttons = $('<div />');
 		this.div.append(this.buttons);
@@ -990,8 +1108,6 @@ var PermissionsWindow = Window.extend({
 	createUserPermList: function() {
 		var t = this;
 		
-		if (this.listCreated) return;
-		this.listCreated = true;
 		
 		if (!this.options.allowChange) {
 			this.options.allowChange = (this.topology.data.permissions[this.options.ownUserId] == "owner");
@@ -1001,8 +1117,10 @@ var PermissionsWindow = Window.extend({
 		}
 		
 		
-		this.userTable = $('<div class="row"><div class="col-sm-4 col-sm-offset-1"><h4>'+gettext("User")+'</h4></div><div class="col-sm-4"><h4>'+gettext("Permission")+'</h4></div></div>');
-		if (this.options.allowChange) this.userTable.append($('<div class="col-sm-3" />'));
+		this.userTable = $('<div />');
+		var tableHeader = $('<div class="row"><div class="col-sm-1" /><div class="col-sm-5"><h4>'+gettext("User")+'</h4></div><div class="col-sm-3"><h4>'+gettext("Permission")+'</h4></div><div class="col-sm-3" /></div>');
+		this.userTable.append(tableHeader); 
+		this.userList.empty();
 		this.userList.append(this.userTable);
 		var perm = this.topology.data.permissions;
 		for (u in perm) {
@@ -1014,8 +1132,8 @@ var PermissionsWindow = Window.extend({
 	addUserToList: function(username) {
 		var t = this;
 		var tr = $('<div class="row" />');
-		var td_name = $('<div class="col-sm-4" />');
-		var td_perm = $('<div class="col-sm-4" />');
+		var td_name = $('<div class="col-sm-5" />');
+		var td_perm = $('<div class="col-sm-3" />');
 		var td_buttons = $('<div class="col-sm-3" />');
 		var td_icon = $('<div class="col-sm-1" />');
 	
@@ -1023,8 +1141,7 @@ var PermissionsWindow = Window.extend({
 		ajax({
 			url:	'account/'+username+'/info',
 			successFn: function(data) {
-				var s = data.realname+' (<a href="/account/info/'+data.id+'" target="_blank" style="font-size:10pt;">'+data.id+'</a>)'
-				td_name.append($(s));
+				td_name.append(''+data.realname+' (<a href="/account/info/'+data.id+'" target="_blank" style="font-size:10pt;">'+data.id+'</a>)');
 				if (data.id == t.options.ownUserId) td_icon.append($('<img src="/img/user.png" title=' + gettext("This is you!" )+'/>'));
 			}
 		});
@@ -1040,7 +1157,7 @@ var PermissionsWindow = Window.extend({
 				td_buttons: td_buttons,
 				tr: tr
 		};
-		this.userTable.after(tr);
+		this.userTable.append(tr);
 		
 		this.drawView(username);
 	},
@@ -1072,7 +1189,9 @@ var PermissionsWindow = Window.extend({
 										} else
 											showError(gettext("This user is already in the list."));
 									},
-									errorFn: showError
+									errorFn: function(error) {
+								 		new errorWindow({error:error});
+									},
 								});
 								t.username = null;
 							}
@@ -1114,7 +1233,6 @@ var PermissionsWindow = Window.extend({
 			if (perm != "null")
 				sel.append($('<option value="'+perm+'" title="'+this.permissions[perm].description+'">'+this.permissions[perm].title+'</option>'));
 		}
-		sel.change(function(){ sel[0].title = t.permissions[sel[0].value].description });
 		
 		if ((permission == undefined) || (permission == null))
 			permission = 'null';
@@ -1164,8 +1282,8 @@ var PermissionsWindow = Window.extend({
 					t.backToView(username);
 				}
 			},
-			errorFn: function(msg){
-				showError(gettext("Error while setting user permission: ")+msg);
+			errorFn: function(error){
+		 		new errorWindow({error:error});
 				t.backToView(username);
 			}
 		})
@@ -1245,8 +1363,8 @@ var Workspace = Class.extend({
 			buttons: {},
 			width:500,
 			closeOnEscape: false,
-			tutorialVisible:this.editor.options.tutorial,
-			tutorial_status:this.editor.options.tutorial_status,
+			tutorialVisible:this.editor.options.tutorial_show,
+			tutorial_state:this.editor.options.tutorial_state,
 			hideCloseButton: true,
 			editor: this.editor
 		});
@@ -1321,7 +1439,9 @@ var Workspace = Class.extend({
 	
 	updateTopologyTitle: function() {
 		var t = editor.topology;
-		$('#topology_name').text(gettext("Topology") +"'"+t.data.attrs.name+"'"+(editor.options.show_ids ? " [#"+t.id+"]" : ""));
+		var new_name=gettext("Topology")+" '"+t.data.attrs.name+"'"+(editor.options.show_ids ? " [#"+t.id+"]" : "");
+		$('#topology_name').text(new_name);
+		document.title = new_name+" - BUPT ProViNet";
 	}
 });
 
@@ -1418,6 +1538,63 @@ var Topology = Class.extend({
 	setBusy: function(busy) {
 		this.busy = busy;
 	},
+	configWindowSettings: function() {
+		return {
+			order: ["name"],
+			ignore: [],
+			unknown: true,
+			special: {}
+		}
+	},
+	showConfigWindow: function(callback) {
+		var t = this;
+		var settings = this.configWindowSettings();
+
+		this.configWindow = new AttributeWindow({
+			title: gettext("Attributes"),
+			width: 600,
+			height: 600,
+			maxHeight:800,
+			buttons: {
+				Save: function() {
+					t.configWindow.hide();
+					var values = t.configWindow.getValues();
+					for (var name in values) {
+						if (values[name] === t.data.attrs[name]) delete values[name];
+						// Tread "" like null
+						if (values[name] === "" && t.data.attrs[name] === null) delete values[name];
+					}
+					t.modify(values);
+					t.configWindow.remove();
+					t.configWindow = null;
+
+					if(callback != null) {
+						callback(t);
+					}
+				},
+				Cancel: function() {
+					t.configWindow.remove();
+					t.configWindow = null;
+				}
+			}
+		});
+        this.configWindow.add(new TextElement({
+				label: "Name",
+				name: "name",
+				value: this.data.attrs.name,
+				disabled: false
+		}));
+		this.configWindow.add(new ChoiceElement({
+			label: "Site",
+			name: "site",
+			choices: createMap(this.editor.sites, "name", function(site) {
+				return (site.description || site.name) + (site.location ? (", " + site.location) : "");
+			}, {"": "Any site"}),
+			value: this.data.attrs.site,
+			disabled: false
+		}));
+		this.configWindow.show();
+	},
 	modify: function(attrs) {
 		this.setBusy(true);
 		this.editor.triggerEvent({component: "topology", object: this, operation: "modify", phase: "begin", attrs: attrs});
@@ -1429,11 +1606,14 @@ var Topology = Class.extend({
 				t.editor.triggerEvent({component: "topology", object: this, operation: "modify", phase: "end", attrs: attrs});
 		 	},
 		 	errorFn: function(error) {
-		 		showError(error);
+		 		new errorWindow({error:error});
 				t.editor.triggerEvent({component: "topology", object: this, operation: "modify", phase: "error", attrs: attrs});
 		 	}
 		});
-		for (var name in attrs) this.data.attrs[name] = attrs[name];
+		for (var name in attrs) {
+		    this.data.attrs[name] = attrs[name];
+    		if (name == "name") editor.workspace.updateTopologyTitle();
+		}
 	},
 	action: function(action, options) {
 		var options = options || {};
@@ -1450,7 +1630,7 @@ var Topology = Class.extend({
 				t.editor.triggerEvent({component: "topology", object: this, operation: "action", phase: "end", action: action, params: params});
 		 	},
 		 	errorFn: function(error) {
-		 		showError(error);
+		 		new errorWindow({error:error});
 				t.editor.triggerEvent({component: "topology", object: this, operation: "action", phase: "error", action: action, params: params});
 		 	}
 		});
@@ -1459,6 +1639,7 @@ var Topology = Class.extend({
 		var attrs = {};
 		attrs[name] = value;
 		this.modify(attrs);
+		if (name == "name") editor.workspace.updateTopologyTitle();
 	},
 	isEmpty: function() {
 		for (var id in this.elements) if (this.elements[id] != this.elements[id].constructor.prototype[id]) return false;
@@ -1525,7 +1706,7 @@ var Topology = Class.extend({
 				t.onUpdate();
 			},
 			errorFn: function(error) {
-				showError(error);
+		 		new errorWindow({error:error});
 				obj.paintRemove();
 				t.pendingNames.remove(data.name);
 				t.editor.triggerEvent({component: "element", object: obj, operation: "create", phase: "error", attrs: data});
@@ -1557,7 +1738,7 @@ var Topology = Class.extend({
 					el2.onConnected();
 				},
 				errorFn: function(error) {
-					showError(error);
+			 		new errorWindow({error:error});
 					obj.paintRemove();
 					t.editor.triggerEvent({component: "connection", object: obj, operation: "create", phase: "error", attrs: data});
 				}
@@ -1591,11 +1772,12 @@ var Topology = Class.extend({
 			if (el.busy) continue;
 			if (el.parent) continue;
 			if (el.actionEnabled(action)) {
+				ids++;
 				el.action(action, {
 					noask: true,
-					callback: cb
+					callback: cb,
+					noUpdate: options.noUpdate
 				});
-				ids++;
 			}
 		}
 		if (ids <= 0 && options.callback) options.callback();
@@ -1661,8 +1843,8 @@ var Topology = Class.extend({
 				}
 			});			
 		}
-		this.action_delegate("stop", {noask: true, callback: function() {
-			t.action_delegate("destroy", {noask: true, callback: function() {
+		this.action_delegate("stop", {noask: true, noUpdate: true, callback: function() {
+			t.action_delegate("destroy", {noask: true, noUpdate: true, callback: function() {
 				if (t.elementCount()) {
 					for (var elId in t.elements) {
 						if (t.elements[elId].parent) continue;
@@ -1682,19 +1864,23 @@ var Topology = Class.extend({
 		 	successFn: function(result) {
 		 		var win = new Window({
 		 			title: gettext("Debug info"),
-		 			position: "center top",
-		 			width: 800,
+		 			width: 500,
 		 			buttons: {
 		 				Close: function() {
 		 					win.hide();
 		 				}
 					} 
 		 		});
-		 		win.add($("<pre></pre>").text(JSON.stringify(result, undefined, 2)));
+		 		div = $('<div></div>');
+		 		new PrettyJSON.view.Node({
+		 			data: result,
+		 			el: div
+		 		});
+		 		win.add(div);
 		 		win.show();
 		 	},
 		 	errorFn: function(error) {
-		 		showError(error);
+		 		new errorWindow({error:error});
 		 	}
 		});
 	},
@@ -1711,7 +1897,6 @@ var Topology = Class.extend({
 		var openWithEditor = openWithEditor_html[0];
 		if (this.data.attrs._notes_autodisplay) {
 			openWithEditor.checked = true;
-			console.log("check");
 		}
 		dialog.append($('<br/>'))
 		dialog.append(openWithEditor_html);
@@ -1737,8 +1922,8 @@ var Topology = Class.extend({
 					},
 					{
 						text: gettext("Close"),
-		        click: function() {
-		        			dialog.dialog("close");
+		        			click: function() {
+		        				dialog.dialog("close");
 		       				}		
 					}		
 			]
@@ -1767,7 +1952,6 @@ var Topology = Class.extend({
 						t.rename.hide();
 						if(t.rename.element.getValue() != '') {
 							t.modify_value("name", t.rename.element.getValue());
-							editor.workspace.updateTopologyTitle();
 						}
 						t.rename = null;
 					}
@@ -1790,6 +1974,7 @@ var Topology = Class.extend({
 		dialog = new AttributeWindow({
 			title: gettext("Topology Timeout"),
 			width: 500,
+			height: 400,
 			buttons: [
 						{ 
 							text: gettext("Save"),
@@ -1830,6 +2015,7 @@ var Topology = Class.extend({
 		dialog = new AttributeWindow({
 			title: gettext("New Topology"),
 			width: 500,
+			height: 500,
 			closable: false,
 			buttons: [
 						{ 
@@ -1944,7 +2130,7 @@ var createTopologyMenu = function(obj) {
 		callback: function(key, options) {},
 		items: {
 			"header": {
-				html:'<span>'+obj.name()+'<br />' + gettext("Topology") + '#' + obj.id+'</span>',
+				html:'<span>'+obj.name()+'<small><br />'+gettext("Topology ")+(editor.options.show_ids ? " #"+obj.id : "")+'</small></span>',
 				type:"html"
 			},
 			"actions": {
@@ -1996,16 +2182,24 @@ var createTopologyMenu = function(obj) {
 					obj.showUsage();
 				}
 			},
+			"sep2": "---",
+			"configure": {
+				name: gettext("Configure"),
+				icon:'configure',
+				callback: function(){
+					obj.showConfigWindow();
+				}
+			},
 			"debug": obj.editor.options.debug_mode ? {
-				name: gettext('Debug'),
+				name: gettext("Debug"),
 				icon:'debug',
 				callback: function(){
 					obj.showDebugInfo();
 				}
 			} : null,
-			"sep2": "---",
+			"sep3": "---",
 			"remove": {
-				name: gettext('Delete'),
+				name: gettext("Delete"),
 				icon:'remove',
 				callback: function(){
 					obj.remove();
@@ -2074,23 +2268,24 @@ var Component = Class.extend({
 		 	successFn: function(result) {
 		 		var win = new Window({
 		 			title: gettext("Debug info"),
-		 			position: "center top",
-		 			width: 800,
-		 			buttons:[
-							{
-		 						text: gettext("Close"),
-								click: function() {
-		 							win.hide();
-		 							win.remove();
-		 						}
-							}
-						],
-				});
-		 		win.add($("<pre></pre>").text(JSON.stringify(result, undefined, 2)));
+		 			width: 500,
+		 			buttons: {
+		 				Close: function() {
+		 					win.hide();
+		 					win.remove();
+		 				}
+					} 
+		 		});
+		 		div = $('<div></div>');
+		 		new PrettyJSON.view.Node({
+		 			data: result,
+		 			el: div
+		 		});
+		 		win.add(div);
 		 		win.show();
 		 	},
 		 	errorFn: function(error) {
-		 		showError(error);
+		 		new errorWindow({error:error});
 		 	}
 		});
 	},
@@ -2106,7 +2301,10 @@ var Component = Class.extend({
 			special: {}
 		} 
 	},
-	showConfigWindow: function() {
+	showConfigWindow: function(showTemplate,callback) {
+		
+		if(showTemplate == null) showTemplate=true;
+		
 		var absPos = this.getAbsPos();
 		var wsPos = this.editor.workspace.container.position();
 		var t = this;
@@ -2121,37 +2319,38 @@ var Component = Class.extend({
 		
 		this.configWindow = new AttributeWindow({
 			title: gettext("Attributes"),
-			width: "600",
+			width: 600,
 			helpTarget:helpTarget,
-			buttons: [
-					{
-						text: gettext("Save"),
-						click: function() {
-							t.configWindow.hide();
-							var values = t.configWindow.getValues();
-							for (var name in values) {
-								if (values[name] === t.data.attrs[name]) delete values[name];
-								// Tread "" like null
-								if (values[name] === "" && t.data.attrs[name] === null) delete values[name];
-							}
-							t.modify(values);	
-							t.configWindow.remove();
-							t.configWindow = null;
-						}
-					},
-					{
-						text: gettext("Cancel"),	
-						click: function() {
-							t.configWindow.remove();
-							t.configWindow = null;
-						} 
+			buttons: {
+				Save: function() {
+					t.configWindow.hide();
+					var values = t.configWindow.getValues();
+					for (var name in values) {
+						if (values[name] === t.data.attrs[name]) delete values[name];
+						// Tread "" like null
+						if (values[name] === "" && t.data.attrs[name] === null) delete values[name];
 					}
-				],
+					t.modify(values);	
+					t.configWindow.remove();
+					t.configWindow = null;
+					
+					
+					if(callback != null) {
+						callback(t);
+					}
+				},
+				Cancel: function() {
+					t.configWindow.remove();
+					t.configWindow = null;
+				} 
+			}
 		});
 		for (var i=0; i<settings.order.length; i++) {
 			var name = settings.order[i];
-			if (settings.special[name]) this.configWindow.add(settings.special[name]);
-			else if (this.caps.attrs[name]) this.configWindow.autoAdd(this.caps.attrs[name], this.data.attrs[name], this.attrEnabled(name));
+			if(showTemplate || !(name == 'template')) {
+				if (settings.special[name]) this.configWindow.add(settings.special[name]);
+				else if (this.caps.attrs[name]) this.configWindow.autoAdd(this.caps.attrs[name], this.data.attrs[name], this.attrEnabled(name));
+			}
 		}
 		if (settings.unknown) {
 			for (var name in this.caps.attrs) {
@@ -2164,7 +2363,7 @@ var Component = Class.extend({
 		this.configWindow.show();
 		this.triggerEvent({operation: "attribute-dialog"});
 	},
-	update: function(fetch, callback) {
+	update: function(fetch, callback, hide_errors) {
 		var t = this;
 		this.triggerEvent({operation: "update", phase: "begin"});
 		ajax({
@@ -2172,12 +2371,11 @@ var Component = Class.extend({
 			data: {fetch: fetch},
 		 	successFn: function(result) {
 		 		t.updateData(result);
-		 		t.setBusy(false);
 				t.triggerEvent({operation: "update", phase: "end"});
 				if (callback) callback();
 		 	},
-		 	errorFn: function() {
-		 		t.setBusy(false);
+		 	errorFn: function(error) {
+		 		if (!hide_errors) new errorWindow({error:error});
 				t.triggerEvent({operation: "update", phase: "error"});
 		 	}
 		});
@@ -2201,8 +2399,9 @@ var Component = Class.extend({
 				t.triggerEvent({operation: "modify", phase: "end", attrs: attrs});
 		 	},
 		 	errorFn: function(error) {
-		 		showError(error);
+		 		new errorWindow({error:error});
 		 		t.update();
+		 		t.setBusy(false);
 				t.triggerEvent({operation: "modify", phase: "error", attrs: attrs});
 		 	}
 		});
@@ -2227,12 +2426,15 @@ var Component = Class.extend({
 		 		t.setBusy(false);
 		 		if (options.callback) options.callback(t, result[0], result[1]);
 				t.triggerEvent({operation: "action", phase: "end", action: action, params: params});
-				t.updateDependent();
+				if (! options.noUpdate) t.updateDependent();
+				editor.rextfv_status_updater.add(t, 30);
 		 	},
 		 	errorFn: function(error) {
-		 		showError(error);
+		 		new errorWindow({error:error});
 		 		t.update();
+		 		t.setBusy(false);
 				t.triggerEvent({operation: "action", phase: "error", action: action, params: params});
+				editor.rextfv_status_updater.add(t, 5);
 		 	}
 		});
 	},
@@ -2266,9 +2468,10 @@ var ConnectionAttributeWindow = AttributeWindow.extend({
 			});
 			this.elements.push(el);
 			var link_emulation = $('<div class="tab-pane active" id="Link_Emulation" />');
-			var link_emulation_elements = $('<div class="form-group" />')
+			link_emulation.append($('<div class="form-group" />')
 						.append($('<label class="col-sm-4 control-label">'+gettext("Enabled")+'</label>'))
-						.append($('<div class="col-sm-8">').append(el.getElement()));
+						.append($('<div class="col-sm-8" style="padding: 0px" />')
+						.append(el.getElement())));
 			
 			//direction arrows
 			var size = 30;
@@ -2294,8 +2497,8 @@ var ConnectionAttributeWindow = AttributeWindow.extend({
 			}
 			var fromDir = $('<div>'+gettext("From ") + name1 + ' <br/>'+gettext("to ") + name2 + '</div>');
 			var toDir = $('<div>'+gettext("From ") + name2 + ' <br/>'+gettext("to ") + name1 + '</div>');
-			link_emulation_elements.after($('<div class="form-group" />')
-				.append($('<label class="col-sm-4 control-label">'+gettext("Direction")+'</label>'))
+			link_emulation.append($('<div class="form-group" />')
+				.append($('<label class="col-sm-4 control-label">Direction</label>'))
 				.append($('<div class="col-sm-4" />').append(fromDir).append(dir1))
 				.append($('<div class="col-sm-4" />').append(toDir).append(dir2))
 			);
@@ -2311,18 +2514,15 @@ var ConnectionAttributeWindow = AttributeWindow.extend({
 				var el_to = this.autoElement(con.caps.attrs[name+"_to"], con.data.attrs[name+"_to"], true)
 				this.elements.push(el_to);
 				this.emulation_elements.push(el_to);
-				link_emulation_elements.after($('<div class="form-group" />')
-					.append($('<label class="col-sm-2 control-label" style="padding: 0;" />').append(desc))
-					.append($('<div class="col-sm-4" style="padding: 0;"/>').append(el_from.getElement()))
-					.append($('<div class="col-sm-4" style="padding: 0;" />').append(el_to.getElement()))
+				link_emulation.append($('<div class="form-group" />')
+					.append($('<label class="col-sm-4 control-label" style="padding: 0;" />').append(con.caps.attrs[name+"_to"].desc))
+					.append($('<div class="col-sm-3" style="padding: 0;"/>').append(el_from.getElement()))
+					.append($('<div class="col-sm-3" style="padding: 0;" />').append(el_to.getElement()))
 					.append($('<div class="col-sm-2" style="padding: 0;" />').append(con.caps.attrs[name+"_to"].unit))
 				);
 			}
 			this.updateEmulationStatus(con.data.attrs.emulation);
 			
-			
-
-			link_emulation.append(link_emulation_elements);
 			tab_content.append(link_emulation);
 			this.table.append(tab_content);
 		}
@@ -2330,7 +2530,6 @@ var ConnectionAttributeWindow = AttributeWindow.extend({
 			var t = this;
 			var packet_capturing = $('<div class="tab-pane" id="Packet_capturing" />');
 			
-			packet_capturing.append(packet_capturing_elements);
 			this.capturing_elements = [];
 			var el = new CheckboxElement({
 				name: "capturing",
@@ -2340,29 +2539,28 @@ var ConnectionAttributeWindow = AttributeWindow.extend({
 				}
 			});
 			this.elements.push(el);
-			var packet_capturing_elements = $('<div class="form-group" />')
+			packet_capturing.append($('<div class="form-group" />')
 					.append($('<label class="col-sm-6 control-label">'+gettext("Enabled")+'</label>'))
-					.after($('<div class="col-sm-6" />')
-					.append($('<div class="col-sm-6" />').append(el.getElement()))
-					);
+					.append($('<div class="col-sm-6" />')
+					.append(el.getElement())));
+		
 			
 			var order = ["capture_mode", "capture_filter"];
 			var order_desc=[gettext("Capture mode"),gettext("Packet filter expression")];
                      for (var i = 0; i < order.length; i++) {
 				var name = order[i];
-                            var desc = order_desc[i];
+				var desc = order_desc[i];
 				var el = this.autoElement(con.caps.attrs[name], con.data.attrs[name], con.attrEnabled(name));
 				this.capturing_elements.push(el);
 				this.elements.push(el);
-				packet_capturing_elements.after($('<div class="form-group" />')
-					.append($('<label class="col-sm-4 control-label">').append(desc))
+				packet_capturing.append($('<div class="form-group" />')
+					.append($('<label class="col-sm-6 control-label">').append(con.caps.attrs[name].desc))
 					.append($('<div class="col-sm-6" />').append(el.getElement()))
 				);
 			}
 			this.updateCapturingStatus(con.data.attrs.capturing);
 			
 
-			packet_capturing.append(packet_capturing_elements);
 			tab_content.append(packet_capturing);
 			this.table.append(tab_content);
 		}
@@ -2459,7 +2657,7 @@ var Connection = Component.extend({
 				         || attrs.delay_from || attrs.jitter_from || attrs.lossratio_from || attrs.duplicate_from || attrs.corrupt_from);
 		var bw = 10000000;
 		if (attrs && attrs.emulation) bw = Math.min(attrs.bandwidth_to, attrs.bandwidth_from); 
-		this.path.attr({stroke: color, "stroke-dasharray": [le ? "-" : ""]});
+		this.path.attr({stroke: color});
 		this.path.attr({"stroke-width": bw < 10000 ? 1 : ( bw > 10000 ? 4 : 2.5 )});
 		this.path.attr({path: this.getPath()});
 		var pos = this.getAbsPos();
@@ -2514,8 +2712,8 @@ var Connection = Component.extend({
 		var port = this.data.attrs.capture_port;
 		var cmd = "wireshark -k -i <( nc "+host+" "+port+" )";
 		new Window({
-			title: gettext("Live capture Information"), 
-			content: '<p>'+gettext("Host")+': '+host+'<br />'+gettext("Port")+': '+port+'</p><p>'+gettext("Start live capture via")+': <pre>'+cmd+'</pre></p>',
+			title: "Live capture Information", 
+			content: '<p>Host: '+host+'<br />Port: '+port+"</p><p>Start live capture via: <pre>"+cmd+"</pre></p>", 
 			autoShow: true,
 			width: 600
 		});
@@ -2525,29 +2723,23 @@ var Connection = Component.extend({
 		var wsPos = this.editor.workspace.container.position();
 		var t = this;
 		this.configWindow = new ConnectionAttributeWindow({
-                        title: gettext("Attributes"),
-                        width: 500,
-                        buttons: [
-                                        {
-                                                text: gettext("Save"),
-                                                click: function() {
-                                                        t.configWindow.hide();
-                                                        var values = t.configWindow.getValues();
-                                                        for (var name in values) if (values[name] === t.data.attrs[name]) delete values[name];
-                                                        t.modify(values);
-                                                        t.configWindow.remove();
-                                                        t.configWindow = null;
-                                                }
-                                        },
-                                        {
-                                                text: gettext("Cancel"),
-                                                click: function() {
-                                                        t.configWindow.remove();
-                                                        t.configWindow = null;
-                                                }
-                                        }
-                                ]
-                }, this);
+			title: gettext("Attributes"),
+			width: 500,
+			buttons: {
+				Save: function() {
+					t.configWindow.hide();
+					var values = t.configWindow.getValues();
+					for (var name in values) if (values[name] === t.data.attrs[name]) delete values[name];
+					t.modify(values);		
+					t.configWindow.remove();
+					t.configWindow = null;
+				},
+				Cancel: function() {
+					t.configWindow.remove();
+					t.configWindow = null;
+				} 
+			}
+		}, this);
 		this.configWindow.show();
 		this.triggerEvent({operation: "attribute-dialog"});
 	},
@@ -2572,7 +2764,7 @@ var Connection = Component.extend({
 						t.elements[i].remove();
 		 	},
 		 	errorFn: function(error) {
-		 		showError(error);
+		 		new errorWindow({error:error});
 		 		t.setBusy(false);
 				t.triggerEvent({operation: "remove", phase: "error"});
 		 	}
@@ -2591,7 +2783,7 @@ var createConnectionMenu = function(obj) {
 		callback: function(key, options) {},
 		items: {
 			"header": {
-				html:'<span>'+obj.name()+'<br />' + gettext("Connection") + '#'+obj.id+'</span>', type:"html"
+				html:'<span>'+obj.name_vertical()+'<small><br>' +gettext("Connection")+(editor.options.show_ids ? " #"+obj.id : "")+'</small></span>', type:"html"
 			},
 			"usage": {
 				name: gettext("Resource usage"),
@@ -2713,6 +2905,7 @@ var Element = Component.extend({
 		var usedMajors = {};
 		for (var i=0; i < seg.elements.length; i++) {
 			var el = this.topology.elements[seg.elements[i]];
+			if (!el || !el.data) continue; //Element is being created
 			if (el.data.type == "external_network_endpoint") return "dhcp";
 			var addr = el.getUsedAddress();
 			if (! addr) continue;
@@ -2736,6 +2929,7 @@ var Element = Component.extend({
 				var seg = segs[i];
 				for (var j=0; j < seg.elements.length; j++) {
 					var el = this.topology.elements[seg.elements[j]];
+					if (!el || !el.data) continue; //Element is being created
 					var addr = el.getUsedAddress();
 					if (! addr || addr == "dhcp") continue;
 					usedMajors[addr[0]] = (usedMajors[addr[0]] || 0) + 1; 
@@ -2750,6 +2944,7 @@ var Element = Component.extend({
 			var usedMinors = {};
 			for (var j=0; j < seg.elements.length; j++) {
 				var el = this.topology.elements[seg.elements[j]];
+				if (!el || !el.data) continue; //Element is being created
 				var addr = el.getUsedAddress();
 				if (! addr || addr == "dhcp") continue;
 				if (addr[0] == major) usedMinors[addr[1]] = (usedMinors[addr[1]] || 0) + 1; 
@@ -2922,7 +3117,14 @@ var Element = Component.extend({
 				});
 				var t = this;							
 				var div = $('<div/>');
-				this.upload_form = $('<form method="post" id="upload_form" enctype="multipart/form-data" action="'+url+'" target="upload_target"><input type="file" name="upload" onChange="javascript: $(\'#upload_window_upload\').button(\'enable\');"/></form>');
+				this.upload_form = $('<form method="post" id="upload_form" enctype="multipart/form-data" action="'+url+'" target="upload_target">\
+								<div class="input-group">\
+				                    <span class="btn btn-primary btn-file input-group-btn">\
+				                        Browse <input type="file" name="upload" onChange="javascript: $(\'#upload_window_upload\').button(\'enable\'); $(this).parents(\'.input-group\').find(\':text.form-control\').val(this.value.replace(/\\\\/g, \'/\').replace(/.*\\//, \'\'));"/>\
+				                    </span>\
+									<input type="text" class="form-control" readonly>\
+								</div>\
+						</form>');
 				div.append(this.upload_form);
 				this.info = new Window({
 					title: window_title, 
@@ -2953,7 +3155,7 @@ var Element = Component.extend({
 				});
 			});
 			iframe.css("display", "none");
-			$('body').append(iframe);
+			$('body').append(iframe);			
 		}});
 	},
 	uploadImage: function() {
@@ -3013,7 +3215,7 @@ var Element = Component.extend({
 					t.triggerEvent({operation: "remove", phase: "end"});
 			 	},
 			 	errorFn: function(error) {
-			 		showError(error);
+			 		new errorWindow({error:error});
 			 		t.setBusy(false);
 					t.triggerEvent({operation: "remove", phase: "error"});
 			 	}
@@ -3031,186 +3233,203 @@ var Element = Component.extend({
 });
 
 var createElementMenu = function(obj) {
-	var menu = {
-		callback: function(key, options) {},
-		items: {
-			"header": {
-				html:'<span>'+obj.name()+gettext('<small><br />Element')+
-					(editor.options.show_ids ? 
-							" #"+obj.id : 
-							"")+
-					(editor.options.show_sites_on_elements && obj.component_type=="element" && obj.data.attrs && "site" in obj.data.attrs ? "<br />"+
-							(obj.data.attrs.host_info && obj.data.attrs.host_info.site ? 
-									"at "+editor.sites_dict[obj.data.attrs.host_info.site].description : 
-									(obj.data.attrs.site ? 
-											"will be at " + editor.sites_dict[obj.data.attrs.site].description : 
-											"no site selected")  ) : 
-							"")+
-					'</small></span>', 
-				type:"html"},
-			"connect": obj.isConnectable() ? {
-				name: gettext('Connect'),
-				icon:'connect',
-				callback: function(){
-					obj.editor.onElementConnectTo(obj);
+	var header= {
+		html:'<span>'+obj.name()+'<small><br />'+gettext("Element")+
+		(editor.options.show_ids ? 
+				" #"+obj.id : 
+				"")+
+		(editor.options.show_sites_on_elements && obj.component_type=="element" && obj.data.attrs && "site" in obj.data.attrs ? "<br />"+
+				(obj.data.attrs.host_info && obj.data.attrs.host_info.site ? 
+						gettext("at ")+editor.sites_dict[obj.data.attrs.host_info.site].description : 
+						(obj.data.attrs.site ? 
+								gettext("will be at ") + editor.sites_dict[obj.data.attrs.site].description : 
+								gettext("no site selected"))  ) : 
+				"")+
+		'</small></span>', 
+		type:"html"
+	}
+	var menu;
+	
+	if (obj.busy) {
+		menu={
+			callback: function(key, options) {},
+			items: {
+				"header": header,
+				"busy_indicator": {
+					name: gettext("Please wait for the current action to finish and re-open this menu."),
+					icon:'loading'
 				}
-			} : null,
-			"start": obj.actionEnabled("start") ? {
-				name: gettext('Start'),
-				icon:'start',
-				callback: function(){
-					obj.action_start();
-				}
-			} : null,
-			"stop": obj.actionEnabled("stop") ? {
-				name: gettext("Stop"),
-				icon:"stop",
-				callback: function(){
-					obj.action_stop();
-				}
-			} : null,
-			"prepare": obj.actionEnabled("prepare") ? {
-				name: gettext("Prepare"),
-				icon:"prepare",
-				callback: function(){
-					obj.action_prepare();
-				}
-			} : null,
-			"destroy": obj.actionEnabled("destroy") ? {
-				name: gettext("Destroy"),
-				icon:"destroy",
-				callback: function(){
-					obj.action_destroy();
-				}
-			} : null,
-			"sep2": "---",
-			"console": obj.consoleAvailable() ? {
-				name: gettext("Console"),
-				icon: "console",
-				items: {
-					"console_novnc": obj.data.attrs.websocket_pid ? {
-						name: gettext("NoVNC (HTML5+JS)"),
-						icon:"novnc",
-						callback: function(){
-							obj.openConsoleNoVNC();
-						}
-					} : null,
-					"console_java": {
-						name: gettext( "Java applet"),
-						icon: "java-applet",
-						callback: function(){
-							obj.openConsole();
-						}
-					}, 
-					"console_link": {
-						name: gettext("vnc:// link"),
-						icon:"console",
-						callback: function(){
-							obj.openVNCurl();
-						}
-					},
-					"console_info": {
-						name: gettext("VNC Information"),
-						icon:"info",
-						callback: function(){
-							obj.showVNCinfo();
-						}
-					},
-				}
-			} : null,
-			"used_addresses": obj.data.attrs.used_addresses ? {
-				name: gettext("Used addresses"),
-				icon:"info",
-				callback: function(){
-					obj.showUsedAddresses();
-				}
-			} : null,
-			"usage": {
-				name: gettext("Resource usage"),
-				icon:"usage",
-				callback: function(){
-					obj.showUsage();
-				}
-			},
-			"disk_image": (obj.actionEnabled("download_grant") || obj.actionEnabled("upload_grant")) || obj.actionEnabled("change_template") ? { 
-				name: gettext( "Disk image"),
-				icon: "drive",
-				items: {
-					"change_template": obj.actionEnabled("change_template") ? {
-						name:gettext("Change Template"),
-						icon:"edit",
-						callback: function() {
-							obj.showTemplateWindow();
-						}
-					} : null,
-					"download_image": obj.actionEnabled("download_grant") ? {
-						name:gettext("Download image"),
-						icon:"download",
-						callback: function(){
-							obj.downloadImage();
-						}
-					} : null,
-					"upload_image": obj.actionEnabled("upload_grant") ? {
-						name:gettext("Upload custom image"),
-						icon:"upload",
-						callback: function(){
-							obj.uploadImage();
-						}
-					} : null,
-				}
-			} : null,
-			"rextfv": obj.actionEnabled("rextfv_download_grant") || obj.actionEnabled("rextfv_upload_grant") || obj.rextfvStatusSupport() ? {
-				name: gettext("Executable archive"),
-				icon:"rextfv",
-				items: {
-					"download_rextfv": obj.actionEnabled("rextfv_download_grant") ? {
-						name:gettext("Download Archive"),
-						icon:"download",
-						callback: function(){
-							obj.downloadRexTFV();
-						}
-					} : null,
-					"upload_rextfv": obj.actionEnabled("rextfv_upload_grant") ? {
-						name:gettext("Upload Archive"),
-						icon:"upload",
-						callback: function(){
-							obj.uploadRexTFV();
-						}
-					} : null,
-					"rextfv_status": obj.rextfvStatusSupport() ? {
-						name:gettext("Status"),
-						icon:"info",
-						callback: function(){
-							obj.openRexTFVStatusWindow();
-						}
-					} : null,
-				},
-			} : null,
-			"sep3": "---",
-			"configure": {
-				name:gettext('Configure'),
-				icon:'configure',
-				callback:function(){
-					obj.showConfigWindow();
-				}
-			},
-			"debug": obj.editor.options.debug_mode ? {
-				name:gettext('Debug'),
-				icon:'debug',
-				callback: function(){
-					obj.showDebugInfo();
-				}
-			} : null,
-			"sep4": "---",
-			"remove": obj.isRemovable() ? {
-				name:gettext('Delete'),
-				icon:'remove',
-				callback: function(){
-					obj.remove(null, true);
-				}
-			} : null
+			}
 		}
-	};
+	} else {
+		menu= {
+			callback: function(key, options) {},
+			items: {
+				"header": header,
+				"connect": obj.isConnectable() ? {
+					name: gettext("Connect"),
+					icon:'connect',
+					callback: function(){
+						obj.editor.onElementConnectTo(obj);
+					}
+				} : null,
+				"start": obj.actionEnabled("start") ? {
+					name: gettext("Start"),
+					icon:'start',
+					callback: function(){
+						obj.action_start();
+					}
+				} : null,
+				"stop": obj.actionEnabled("stop") ? {
+					name: gettext("Stop"),
+					icon:"stop",
+					callback: function(){
+						obj.action_stop();
+					}
+				} : null,
+				"prepare": obj.actionEnabled("prepare") ? {
+					name: gettext("Prepare"),
+					icon:"prepare",
+					callback: function(){
+						obj.action_prepare();
+					}
+				} : null,
+				"destroy": obj.actionEnabled("destroy") ? {
+					name: gettext("Destroy"),
+					icon:"destroy",
+					callback: function(){
+						obj.action_destroy();
+					}
+				} : null,
+				"sep2": "---",
+				"console": obj.consoleAvailable() ? {
+					name: gettext("Console"),
+					icon:"console",
+					items: {
+						"console_novnc": obj.data.attrs.websocket_pid ? {
+							name: gettext("NoVNC (HTML5+JS)"),
+							icon:"novnc",
+							callback: function(){
+								obj.openConsoleNoVNC();
+							}
+						} : null,
+						"console_java": {
+							name: gettext("Java applet"),
+							icon: "java-applet",
+							callback: function(){
+								obj.openConsole();
+							}
+						}, 
+						"console_link": {
+							name: gettext("vnc:// link"),
+							icon:"console",
+							callback: function(){
+								obj.openVNCurl();
+							}
+						},
+						"console_info": {
+							name: gettext("VNC Information"),
+							icon:"info",
+							callback: function(){
+								obj.showVNCinfo();
+							}
+						},
+					}
+				} : null,
+				"used_addresses": obj.data.attrs.used_addresses ? {
+					name: gettext("Used addresses"),
+					icon:"info",
+					callback: function(){
+						obj.showUsedAddresses();
+					}
+				} : null,
+				"usage": {
+					name: gettext("Resource usage"),
+					icon:"usage",
+					callback: function(){
+						obj.showUsage();
+					}
+				},
+				"disk_image": (obj.actionEnabled("download_grant") || obj.actionEnabled("upload_grant")) || obj.actionEnabled("change_template") ? { 
+					name: gettext("Disk image"),
+					icon: "drive",
+					items: {
+						"change_template": obj.actionEnabled("change_template") ? {
+							name: gettext("Change Template"),
+							icon:"edit",
+							callback: function() {
+								obj.showTemplateWindow();
+							}
+						} : null,
+						"download_image": obj.actionEnabled("download_grant") ? {
+							name: gettext("Download image"),
+							icon:"download",
+							callback: function(){
+								obj.downloadImage();
+							}
+						} : null,
+						"upload_image": obj.actionEnabled("upload_grant") ? {
+							name: gettext("Upload custom image"),
+							icon:"upload",
+							callback: function(){
+								obj.uploadImage();
+							}
+						} : null,
+					}
+				} : null,
+				"rextfv": obj.actionEnabled("rextfv_download_grant") || obj.actionEnabled("rextfv_upload_grant") || obj.rextfvStatusSupport() ? {
+					name: gettext("Executable archive"),
+					icon:"rextfv",
+					items: {
+						"download_rextfv": obj.actionEnabled("rextfv_download_grant") ? {
+							name: gettext("Download Archive"),
+							icon:"download",
+							callback: function(){
+								obj.downloadRexTFV();
+							}
+						} : null,
+						"upload_rextfv": obj.actionEnabled("rextfv_upload_grant") ? {
+							name: gettext("Upload Archive"),
+							icon:"upload",
+							callback: function(){
+								obj.uploadRexTFV();
+							}
+						} : null,
+						"rextfv_status": obj.rextfvStatusSupport() ? {
+							name: gettext("Status"),
+							icon:"info",
+							callback: function(){
+								obj.openRexTFVStatusWindow();
+							}
+						} : null,
+					},
+				} : null,
+				"sep3": "---",
+				"configure": {
+					name: gettext("Configure"),
+					icon:'configure',
+					callback:function(){
+					obj.showConfigWindow(true);
+					}
+				},
+				"debug": obj.editor.options.debug_mode ? {
+					name:gettext("Debug"),
+					icon:'debug',
+					callback: function(){
+						obj.showDebugInfo();
+					}
+				} : null,
+				"sep4": "---",
+				"remove": obj.isRemovable() ? {
+					name: gettext("Delete"),
+					icon:'remove',
+					callback: function(){
+						obj.remove(null, true);
+					}
+				} : null
+			}
+		};
+	}
 	for (var name in menu.items) {
 		if (! menu.items[name]) {
 			delete menu.items[name];
@@ -3271,9 +3490,9 @@ var UnknownElement = Element.extend({
 var IconElement = Element.extend({
 	init: function(topology, data, canvas) {
 		this._super(topology, data, canvas);
-	//	this.iconUrl = "img/" + this.data.type + "32.png";
 		this.iconSize = {x: 32, y:32};
 		this.busy = false;
+		editor.rextfv_status_updater.add(this, 1);
 	},
 	iconUrl: function() {
 		return "img/" + this.data.type + "32.png";
@@ -3296,23 +3515,56 @@ var IconElement = Element.extend({
 			this.errIcon.attr({'src':'/img/pixel.png'})
 		}
 		
-		//set state icon
 		if (this.busy) {
 			this.stateIcon.attr({src: "img/loading.gif", opacity: 1.0});
+			this.stateIcon.attr({title: gettext("Action Running...")});
+			this.rextfvIcon.attr({src: "img/pixel.png", opacity: 0.0});
+			this.rextfvIcon.attr({title: ""});
 			return;			
 		}
+
+		//set state icon
 		switch (this.data.state) {
 			case "started":
 				this.stateIcon.attr({src: "img/started.png", opacity: 1.0});
+				this.stateIcon.attr({title: gettext("State: Started")});
 				break;
 			case "prepared":
 				this.stateIcon.attr({src: "img/prepared.png", opacity: 1.0});
+				this.stateIcon.attr({title: gettext("State: Prepared")});
 				break;
 			case "created":
 			default:
 				this.stateIcon.attr({src: "img/pixel.png", opacity: 0.0});
+				this.stateIcon.attr({title: gettext("State: Created")});
 				break;
 		}
+		
+		//set RexTFV icon
+		if (this.rextfvStatusSupport() && this.data.state=="started") {
+			rextfv_stat = this.data.attrs.rextfv_run_status;
+			if (rextfv_stat.readable) {
+				if (rextfv_stat.isAlive) {
+					this.rextfvIcon.attr({src: "img/loading.gif", opacity: 1.0});
+					this.rextfvIcon.attr({title: gettext("Executable Archive: Running")});
+				} else {
+					if (rextfv_stat.done) {
+						this.rextfvIcon.attr({src: "img/tick.png", opacity: 1.0});
+						this.rextfvIcon.attr({title: gettext("Executable Archive: Done")});
+					} else {
+						this.rextfvIcon.attr({src: "img/cross.png", opacity: 1.0});
+						this.rextfvIcon.attr({title: gettext("Executable Archive: Unknown. Probably crashed.")});
+					}
+				}
+			} else {
+				this.rextfvIcon.attr({src: "img/pixel.png", opacity: 0.0});
+				this.rextfvIcon.attr({title: ""});
+			}
+		} else {
+			this.rextfvIcon.attr({src: "img/pixel.png", opacity: 0.0});
+			this.rextfvIcon.attr({title: ""});
+		}
+		
 	},
 	getRectObj: function() {
 		return this.rect[0];
@@ -3322,7 +3574,8 @@ var IconElement = Element.extend({
 		this.icon = this.canvas.image(this.iconUrl(), pos.x-this.iconSize.x/2, pos.y-this.iconSize.y/2-5, this.iconSize.x, this.iconSize.y);
 		this.text = this.canvas.text(pos.x, pos.y+this.iconSize.y/2, this.data.attrs.name);
 		this.stateIcon = this.canvas.image("img/pixel.png", pos.x+this.iconSize.x/2-10, pos.y+this.iconSize.y/2-15, 16, 16);
-		this.errIcon = this.canvas.image("img/pixel.png", pos.x+this.iconSize.x/2-10, pos.y-this.iconSize.y/2-10, 16, 16);
+		this.errIcon = this.canvas.image("img/pixel.png", pos.x+this.iconSize.x/2, pos.y-this.iconSize.y/2-10, 16, 16);
+		this.rextfvIcon = this.canvas.image("img/pixel.png", pos.x+this.iconSize.x/2, pos.y-this.iconSize.y/2+8, 16, 16);
 		this.stateIcon.attr({opacity: 0.0});
 		this.updateStateIcon();
 		//hide icon below rect to disable special image actions on some browsers
@@ -3347,7 +3600,8 @@ var IconElement = Element.extend({
 		var pos = this.getAbsPos();
 		this.icon.attr({src: this.iconUrl(), x: pos.x-this.iconSize.x/2, y: pos.y-this.iconSize.y/2-5});
 		this.stateIcon.attr({x: pos.x+this.iconSize.x/2-10, y: pos.y+this.iconSize.y/2-15});
-		this.errIcon.attr({x: pos.x+this.iconSize.x/2-10, y: pos.y-this.iconSize.y/2-10});
+		this.errIcon.attr({x: pos.x+this.iconSize.x/2, y: pos.y-this.iconSize.y/2-10});
+		this.rextfvIcon.attr({x: pos.x+this.iconSize.x/2, y: pos.y-this.iconSize.y/2+8});
 		this.rect.attr({x: pos.x-this.iconSize.x/2, y: pos.y-this.iconSize.y/2-5});
 		this.text.attr({x: pos.x, y: pos.y+this.iconSize.y/2, text: this.data.attrs.name});
 		this.updateStateIcon();
@@ -3360,15 +3614,10 @@ var IconElement = Element.extend({
 var VPNElement = IconElement.extend({
 	init: function(topology, data, canvas) {
 		this._super(topology, data, canvas);
- //   	this.iconUrl = "img/" + this.data.attrs.mode + "32.png";
 		this.iconSize = {x: 32, y:16};
 	},
 	iconUrl: function() {
-//		return "dynimg/vpn/32/" + this.data.attrs.mode + "/32";
-                return "img/" + this.data.attrs.mode + "32.png";
-	},
-	isConnectable: function() {
-		return this._super() && !this.busy;
+		return dynimg(32,"vpn",this.data.attrs.mode,null);
 	},
 	isConnectable: function() {
 		return this._super() && !this.busy;
@@ -3387,27 +3636,25 @@ var VPNElement = IconElement.extend({
 var ExternalNetworkElement = IconElement.extend({
 	init: function(topology, data, canvas) {
 		this._super(topology, data, canvas);
-//		this.iconUrl = "img/" + this.data.attrs.kind.split("/")[0] + "32.png";
 		this.iconSize = {x: 32, y:32};
+
 	},
 	iconUrl: function() {
-//		return editor.networks.getNetworkIcon(this.data.attrs.kind);
-                return "img/" + this.data.attrs.kind.split("/")[0] + "32.png";
+		return editor.networks.getNetworkIcon(this.data.attrs.kind);
 	},
-	
 	configWindowSettings: function() {
 		var config = this._super();
 		config.order = ["name", "kind"];
 		
 		var networkInfo = {};
-		var networks = this.editor.networks.all();
+		var networks = this.editor.networks.getAllowed();
 		
 		for (var i=0; i<networks.length; i++) {
 			var info = $('<div class="hoverdescription" style="display: inline;"></div>');
 			var d = $('<div class="hiddenbox"></div>');
 			var p = $('<p style="margin:4px; border:0px; padding:0px; color:black;"></p>');
 			var desc = $('<table></table>');
-         		p.append(desc);
+			p.append(desc);
 			d.append(p);
 			
 			net = networks[i];
@@ -3415,7 +3662,7 @@ var ExternalNetworkElement = IconElement.extend({
 			info.append('<img src="/img/info.png" />');
 
 			if (net.description) {
-			desc.append($('<tr><td style="background:white;"><img src="/img/info.png" /></td><td style="background:white;">'+net.description+'</td></tr>'));
+				desc.append($('<tr><td style="background:white;"><img src="/img/info.png" /></td><td style="background:white;">'+net.description+'</td></tr>'));
 			
 			}
 			
@@ -3427,7 +3674,7 @@ var ExternalNetworkElement = IconElement.extend({
 			label: gettext("Network kind"),
 			name: "kind",
 			info: networkInfo,
-			choices: createMap(this.editor.networks.all(), "kind", "label"),
+			choices: createMap(this.editor.networks.getAll(), "kind", "label"),
 			value: this.data.attrs.kind || this.caps.attrs.kind["default"],
 			disabled: !this.attrEnabled("kind")
 		});
@@ -3458,6 +3705,9 @@ var VMElement = IconElement.extend({
 	isConnectable: function() {
 		return this._super() && !this.busy;
 	},
+	iconUrl: function() {
+		return this.getTemplate() ? this.getTemplate().iconUrl() : this._super(); 
+	},
 	isRemovable: function() {
 		return this._super() && !this.busy;
 	},
@@ -3487,10 +3737,10 @@ var VMElement = IconElement.extend({
 		config.order = ["name", "site", "profile", "template", "_endpoint"];
 		
 		var profileInfo = {};
-		var profiles = this.editor.profiles.getAll(this.data.type);
+		var profiles = this.editor.profiles.getAllowed(this.data.type);
 		var profile_helptext = null;
 		if (!editor.allowRestrictedProfiles)
-			profile_helptext = gettext('If you need more performance, contact your administrator.');
+			profile_helptext = gettext("If you need more performance, contact your administrator.");
 		
 		for (var i=0; i<profiles.length; i++) {
 			var info = $('<div class="hoverdescription" style="display: inline;"></div>');
@@ -3522,7 +3772,7 @@ var VMElement = IconElement.extend({
 			
 			if (prof.restricted) {
 				info.append('<img src="/img/lock_open.png" />');
-				desc.append($('<tr><td style="background:white;"><img src="/img/lock_open.png" /></td><td>This profile is restricted; you have access to restricted profiles.</td></tr>'));
+				desc.append($('<tr><td style="background:white;"><img src="/img/lock_open.png" /></td><td>' + gettext("This profile is restricted; you have access to restricted profiles.") +'</td></tr>'));
 			}
 			
 			info.append(d);
@@ -3547,14 +3797,14 @@ var VMElement = IconElement.extend({
 			
 			if (this.data.attrs.host_info.site && (this.data.attrs.site == null)) {
 				info.append('<img src="/img/automatic.png" />'); //TODO: insert a useful symbol for "automatic" here and on the left column one line below
-				desc.append($(gettext('<tr><td><img src="/img/automatic.png" /></td><td>This site has been automatically selected by the backend.</td></tr>')))
+				desc.append($('<tr><td><img src="/img/automatic.png" /></td><td>' + gettext("This site has been automatically selected by the backend.") +'</td></tr>'))
 			}
 
 			if (site.description_text) {
 				desc.append($('<tr><td style="background:white;"><img src="/img/info.png" /></td><td style="background:white;">'+site.description_text+'</td></tr>'));
 			}
 			
-			var hostinfo_l = '<tr><td style="background:white;"><img src="/img/server.png" /></td><td style="background:white;"><h3>Hosted By:</h3>';
+			var hostinfo_l = '<tr><td style="background:white;"><img src="/img/server.png" /></td><td style="background:white;"><h3>' + gettext("Hosted By:")+'</h3>';
 			var hostinfo_r = '</td></tr>';
 			if (site.organization.homepage_url) {
 				hostinfo_l = hostinfo_l + '<a href="' + site.organization.homepage_url + '">';
@@ -3594,7 +3844,7 @@ var VMElement = IconElement.extend({
 			label: gettext("Performance Profile"),
 			name: "profile",
 			info: profileInfo,
-			choices: createMap(this.editor.profiles.getAllowed(this.data.type), "name", "label"),
+			choices: createMap(this.editor.profiles.getAll(this.data.type), "name", "label"),
 			value: this.data.attrs.profile || this.caps.attrs.profile["default"],
 			disabled: !this.attrEnabled("profile"),
 			help_text: profile_helptext
@@ -3706,27 +3956,28 @@ var Template = Class.extend({
 		this.icon = options.icon;
 	},
 	iconUrl: function() {
-//		return this.icon || "dynimg/"+this.type+"/32/"+(this.subtype?this.subtype:"none")+"/"+(this.name?this.name:"none");
-                return this.icon || "img/" + this.type + (this.subtype?("_"+this.subtype):"") + "32.png";
+		return this.icon || dynimg(32,this.type,(this.subtype?this.subtype:null),(this.name?this.name:null));
 	},
 	menuButton: function(options) {
 		var hb = '<p style="margin:4px; border:0px; padding:0px; color:black;"><table><tbody>'+
 					'<tr><td><img src="/img/info.png"></td><td>'+this.description+'</td></tr>';
 		if (!this.nlXTP_installed) {
 			hb = hb + '<tr><td><img src="/img/error.png" /></td>'+
-				'<td>'+gettext("No nlXTP guest modules are installed. Executable archives will not auto-execute and status will be unavailable.")+ '<a href="'+help_baseUrl+'/rextfv/guestmodules" target="_help">'+gettext("More Info")+'</a></td></tr>';
+				'<td>'+gettext("No nlXTP guest modules are installed. Executable archives will not auto-execute and status will be unavailable.")+ 
+				'<a href="'+help_baseUrl+'/rextfv/guestmodules" target="_help">'+gettext("More Info")+'</a></td></tr>';
+				
+			hb = hb + "</tbody></table></p>";
+			return Menu.button({
+				name: options.name || (this.type + "-" + this.name),
+				label: options.label || this.label || (this.type + "-" + this.name),
+				icon: this.iconUrl(),
+				toggle: true,
+				toggleGroup: options.toggleGroup,
+				small: options.small,
+				func: options.func,
+				hiddenboxHTML: hb
+			});
 		}
-		hb = hb + "</tbody></table></p>";
-		return Menu.button({
-			name: options.name || (this.type + "-" + this.name),
-			label: options.label || this.label || (this.type + "-" + this.name),
-			icon: this.iconUrl(),
-			toggle: true,
-			toggleGroup: options.toggleGroup,
-			small: options.small,
-			func: options.func,
-			hiddenboxHTML: hb
-		});
 	},
 	labelForCommon: function() {
 		var label = this.label.replace(/[ ]*\(.*\)/, "");
@@ -3745,10 +3996,10 @@ var Template = Class.extend({
 	},
 	infobox: function() {
 		var restricted_icon = "/img/lock_open.png";
-		var restricted_text = "You have the permission to use this restricted template.";
+		var restricted_text = gettext("You have the permission to use this restricted template.");
 		if (!editor.allowRestrictedTemplates) {
 			restricted_icon = "/img/lock.png";
-			restricted_text = "This template is restricted. Contact an administrator if you want to get access to restricted templates.";
+			restricted_text = gettext("This template is restricted. Contact an administrator if you want to get access to restricted templates.");
 		}
 		
 		var info = $('<div class="hoverdescription" style="display: inline;"></div>');
@@ -3775,7 +4026,10 @@ var Template = Class.extend({
 		}
 		
 		if (!this.nlXTP_installed) {
-			desc.append($('<tr><td style="background:white;"><img src="/img/warning16.png" /></td><td style="background:white;">'+gettext("No nlXTP guest modules are installed. Executable archives will not auto-execute and status will be unavailable.")+'<a href="'+help_baseUrl+'/rextfv/guestmodules" target="_help">'+gettext("More Info")+'</a></td></tr>'));
+			desc.append($('<tr><td style="background:white;"><img src="/img/warning16.png" /></td><td style="background:white;">'+
+				gettext("No nlXTP guest modules are installed. Executable archives will not auto-execute and status will be unavailable.")+
+				'<a href="'+help_baseUrl+'/rextfv/guestmodules" target="_help">'+
+				gettext("More Info")+'</a></td></tr>'));
 			info.append('<img src="/img/warning16.png" />');
 		} else {
 			info.append('<img src="/img/invisible16.png" />');
@@ -3798,8 +4052,8 @@ var DummyForCustomTemplate = Template.extend({
 	init:function(original) {
 		this._super(original.classoptions);
 		this.subtype = "customimage";
-		this.label = "Custom Image";
-		this.description = "You have uploaded an own image. We cannot know anything about this. NlXTP modules may be missing.";
+		this.label = gettext("Custom Image");
+		this.description = gettext("You have uploaded an own image. We cannot know anything about this. NlXTP modules may be missing.");
 		this.nlXTP_installed = true;
 		this.creation_date = undefined;
 		this.restricted = false;
@@ -3808,7 +4062,7 @@ var DummyForCustomTemplate = Template.extend({
 
 var TemplateStore = Class.extend({
 	init: function(data,editor) {
-		this.editor = editor
+		this.editor = editor;
 		data.sort(function(t1, t2){
 			var t = t2.attrs.preference - t1.attrs.preference;
 			if (t) return t;
@@ -3831,6 +4085,18 @@ var TemplateStore = Class.extend({
 		for (var name in this.types[type])
 			tmpls.push(this.types[type][name]);
 		return tmpls;
+	},
+	getAllowed: function(type) {
+		var templates = this.getAll(type);
+		if (!this.editor.allowRestrictedTemplates) {
+			var templates_filtered = [];
+			for (var i = 0; i<templates.length;i++) {
+				if (!(templates[i].restricted))
+					templates_filtered.push(templates[i]);
+			}
+			templates = templates_filtered;
+		}
+		return templates;
 	},
 	get: function(type, name) {
 		if (! this.types[type]) return null;
@@ -3860,7 +4126,8 @@ var Profile = Class.extend({
 });
 
 var ProfileStore = Class.extend({
-	init: function(data) {
+	init: function(data,editor) {
+		this.editor = editor;
 		data.sort(function(t1, t2){
 			var t = t2.attrs.preference - t1.attrs.preference;
 			if (t) return t;
@@ -3884,17 +4151,15 @@ var ProfileStore = Class.extend({
 		return tmpls;
 	},
 	getAllowed: function(type) {
-		var profs = this.getAll(type)
-		console.log(profs);
-		if (!editor.allowRestrictedProfiles) {
+		var profs = this.getAll(type);
+		if (!this.editor.allowRestrictedProfiles) {
 			var profs_filtered = [];
 			for (var i = 0; i<profs.length;i++) {
 				if (!(profs[i].restricted))
 					profs_filtered.push(profs[i]);
-			profs = profs_filtered;
 			}
+			profs = profs_filtered;
 		}
-		console.log(profs);
 		return profs;
 	},
 	get: function(type, name) {
@@ -3904,7 +4169,9 @@ var ProfileStore = Class.extend({
 });
 
 var NetworkStore = Class.extend({
-	init: function(data) {
+	init: function(data,editor) {
+
+		this.editor = editor;
 		data.sort(function(t1, t2){
 			var t = t2.attrs.preference - t1.attrs.preference;
 			if (t) return t;
@@ -3913,31 +4180,137 @@ var NetworkStore = Class.extend({
 			return 0;
 		});
 		this.nets = [];
-		for (var i=0; i<data.length; i++)
-		 if (data[i].type == "network")
-		  this.nets.push(data[i].attrs);
-//		for (var i=0; i<data.length; i++) {
-//		 if (data[i].type == "network") {
-//			 net = data[i].attrs;
-//			 if (!net.icon) {
-//				 net.icon = this.getNetworkIcon(net.kind);
-//			 }
-//			 this.nets.push(net);
-//		 }
-//		}
+		for (var i=0; i<data.length; i++) {
+		 if (data[i].type == "network") {
+			 net = data[i].attrs;
+			 if (!net.icon) {
+				 net.icon = this.getNetworkIcon(net.kind);
+			 }
+			 this.nets.push(net);
+		 }
+		}
 	},
-	all: function() {
+	getAll: function() {
 		return this.nets;
+	},
+	getAllowed: function() {
+		var allowedNets = this.getAll()
+		if (!this.editor.allowRestrictedNetworks) {
+			var nets_filtered = [];
+			
+			for (var i = 0; i<allowedNets.length;i++) {
+				if (!(allowedNets[i].restricted)) {
+					nets_filtered.push(allowedNets[i]);
+				}
+			}
+			allowedNets = nets_filtered;
+		}
+		return allowedNets;
 	},
 	getCommon: function() {
 		var common = [];
 		for (var i = 0; i < this.nets.length; i++)
-		 if (this.nets[i].show_as_common)
+		 if (this.nets[i].show_as_common && (!this.nets[i].restricted || this.editor.allowRestrictedNetworks))
 		   common.push(this.nets[i]);
 		return common;
-//	},
-//	getNetworkIcon: function(kind) {
-//		return "dynimg/network/32/" + kind.split("/")[0] + "/" + (kind.split("/")[1]?kind.split("/")[1]:"none");
+	},
+	getNetworkIcon: function(kind) {
+		return dynimg(32,"network",kind.split("/")[0],(kind.split("/")[1]?kind.split("/")[1]:null));
+	}
+});
+
+var RexTFV_status_updater = Class.extend({
+	init: function(options) {
+		this.options = options;
+		this.elements = [];
+	},
+	updateFirst: function(t) { //Takes RexTFV_status_updater as argument.
+	    entry = t.elements.shift();
+        elExists = true;
+        mustRemove = false;
+
+        if (entry.element in editor.topology.elements) { //element exists
+            editor.topology.elements[entry.element].update(undefined, undefined, true) //hide errors.
+        } else {
+            elExists = false;
+        }
+
+        if (elExists &&
+            editor.topology.elements[entry.element].rextfvStatusSupport() &&
+			editor.topology.elements[entry.element].data.attrs.rextfv_run_status.running) {
+			    entry.tries = 1;
+		} else {
+    		entry.tries--;
+    		mustRemove = (entry.tries < 0)
+		}
+
+		if (!mustRemove) t.elements.push(entry)
+	},
+	updateSome: function(t) { //this should be called by a timer. Takes RexTFV_status_updater as argument.
+		                      //update only the first five elements of the array. This boundary is to avoid server overload.
+		var count = 5;
+        if (t.elements.length < count) count = t.elements.length; //do not update elements twice.
+		while (count-- > 0) t.updateFirst(t);
+	},
+	updateAll: function(t) { //this should be called by a timer. Takes RexTFV_status_updater as argument.
+		toRemove = [];
+		//iterate through all entries, update them, and then update their retry-count according to the refreshed data.
+		//do not remove elements while iterating. instead, put to-be-removed entries in the toRemove array.
+		for (var i=0; i<t.elements.length; i++) {
+			entry = t.elements[i];
+			success = true;
+			if (entry.element in editor.topology.elements) {
+				editor.topology.elements[entry.element].update(undefined, undefined, true); //hide errors.
+			} else {
+				success = false;
+			}
+			if (success && 
+				editor.topology.elements[entry.element].rextfvStatusSupport() &&
+				editor.topology.elements[entry.element].data.attrs.rextfv_run_status.running) {
+					entry.tries = 1;
+			} else {
+				entry.tries--;
+				if (entry.tries < 0) {
+					toRemove.push(entry)
+				}
+			}
+		}
+		//remove entries marked as to-remove.
+		for (var i=0; i<toRemove.length; i++) {
+			t.remove(toRemove[i]);
+		}
+	},
+	add: function(el,tries) { //every entry has a number of retries and an element ID attached to it.
+								// retries are decreased when the status is something else than "running" (i.e., done, no RexTFV support, etc.).
+								// the idea is that the system might need some time to detect RexTFV activity after uploading the archive or starting a device.
+								// retries are set to 1 if the status is "running".
+								// retries == 1 is the default. if retries < 0, the entry is removed. This means, after the status is set to "not running",
+								// the editor will update the element twice before removing it.
+		
+
+		//first, search whether this element is already monitored. If yes, update number of tries if necessary (keep the bigger one). exit funciton if found.
+		for (var i=0; i<this.elements.length; i++) {
+			if (this.elements[i].element == el.id) {
+				if (this.elements[i].tries < tries)
+					this.elements[i].tries = tries;
+				return
+			}
+		}
+		//if the search hasn't found anything, simply append this.
+		this.elements.push({
+			element: el.id,
+			tries: tries
+		})
+	},
+	// usually only called by this. removes an entry.
+	remove: function(entry) {
+		for (var i=0; i<this.elements.length; i++) {
+			entry_found = this.elements[i];
+			if (entry_found == entry) {
+				this.elements.splice(i,1);
+				return;
+			}
+		}
 	}
 });
 
@@ -3953,11 +4326,17 @@ var Editor = Class.extend({
 	init: function(options) {
 		this.options = options;
 		
+		this.rextfv_status_updater = new RexTFV_status_updater(); //has to be created before any element.
+		var t = this;
+		
 		this.allowRestrictedTemplates= false;
 		this.allowRestrictedProfiles = false;
+		this.allowRestrictedNetworks = false;
+		this.isDebugUser = options.isDebugUser;
 		for (var i=0; i<this.options.user.flags.length; i++) {
 			if (this.options.user.flags[i] == "restricted_profiles") this.allowRestrictedProfiles = true;
 			if (this.options.user.flags[i] == "restricted_templates") this.allowRestrictedTemplates= true;
+			if (this.options.user.flags[i] == "restricted_networks") this.allowRestrictedNetworks= true;
 		}
 		
 		this.options.grid_size = this.options.grid_size || 25;
@@ -3968,17 +4347,18 @@ var Editor = Class.extend({
 		this.topology = new Topology(this);
 		this.workspace = new Workspace(this.options.workspace_container, this);
 		this.sites = this.options.sites;
-		this.profiles = new ProfileStore(this.options.resources);
+		this.profiles = new ProfileStore(this.options.resources,this);
 		this.templates = new TemplateStore(this.options.resources,this);
-		this.networks = new NetworkStore(this.options.resources);
+		this.networks = new NetworkStore(this.options.resources,this);
 		this.buildMenu(this);
 		this.setMode(Mode.select);
+		
 		
 		this.sites_dict = {};
 		for (s in this.sites) {
 			this.sites_dict[this.sites[s].name] = this.sites[s];
 		}
-		var t = this;
+				
 		this.workspace.setBusy(true);
 		ajax ({
 			url: "topology/"+options.topology+"/info",
@@ -3997,9 +4377,14 @@ var Editor = Class.extend({
 							"timeout": t.options.timeout_settings["default"]
 						}});
 					} else
-						t.topology.initialDialog();
+						if (t.topology.data.attrs._initialized!=undefined)
+							t.topology.initialDialog();
+				t.workspace.updateTopologyTitle();
+				t.options.onready();
 			}
 		});
+
+		setInterval(function(){t.rextfv_status_updater.updateSome(t.rextfv_status_updater)}, 1200);
 	},
 	triggerEvent: function(event) {
 		log(event);
@@ -4019,10 +4404,12 @@ var Editor = Class.extend({
 	optionMenuItem: function(options) {
 		var t = this;
 		return Menu.checkbox({
-			name: options.name, label: options.label, tooltip: options.tooltip,
+			name: options.name, 
+			label: options.label, 
+			tooltip: options.tooltip,
 			func: function(value){
-				t.options[options.name]=value != null;
-			  t.onOptionChanged(options.name);
+				t.setOption(options.name,value);
+				t.onOptionChanged(options.name);
 			},
 			checked: this.options[options.name]
 		});
@@ -4098,13 +4485,15 @@ var Editor = Class.extend({
 		var t = this;
 		return function(pos) {
 			var data = {type: type, attrs: {_pos: pos}};
-			t.topology.createElement(data, function(el) {
-				el.action("prepare", {callback: function(el){
-					el.uploadImage();
-				}});
-			});
+			t.topology.createElement(data, function(el1) {
+					el1.showConfigWindow(false, function (el2) { 
+							el2.action("prepare", { callback: function(el3) {el3.uploadImage();} });	
+						}
+				);
+				}
+			);
 			t.selectBtn.click();
-		}
+		};
 	},
 	createTemplateFunc: function(tmpl) {
 		return this.createElementFunc({type: tmpl.type, attrs: {template: tmpl.name}});
@@ -4116,7 +4505,7 @@ var Editor = Class.extend({
 	
 		var tab = this.menu.addTab(gettext("Home"));
 
-		var group = tab.addGroup(gettext("Mode"));
+		var group = tab.addGroup(gettext("Modes"));
 		this.selectBtn = Menu.button({
 			label: gettext("Select & Move"),
 			icon: "img/select32.png",
@@ -4231,11 +4620,10 @@ var Editor = Class.extend({
 
 		var tab = this.menu.addTab(gettext("Devices"));
 
-		var group = tab.addGroup("Linux (OpenVZ)");
-		var tmpls = t.templates.getAll("openvz");
+		var group = tab.addGroup(gettext("Linux (OpenVZ)"));
+		var tmpls = t.templates.getAllowed("openvz");
 		var btns = [];
 		for (var i=0; i<tmpls.length; i++)
-			if (!tmpls[i].restricted || editor.allowRestrictedTemplates)
 			 btns.push(tmpls[i].menuButton({
 				toggleGroup: toggleGroup,
 				small: true,
@@ -4243,12 +4631,11 @@ var Editor = Class.extend({
 		})); 
 		group.addStackedElements(btns);
 
-		var group = tab.addGroup("Linux (KVM)");
-		var tmpls = t.templates.getAll("kvmqm", "linux");
+		var group = tab.addGroup(gettext("Linux (KVM)"));
+		var tmpls = t.templates.getAllowed("kvmqm", "linux");
 		var btns = [];
 		for (var i=0; i<tmpls.length; i++)
 		 if(tmpls[i].subtype == "linux")
-			if (!tmpls[i].restricted || editor.allowRestrictedTemplates)
 			  btns.push(tmpls[i].menuButton({
 				toggleGroup: toggleGroup,
 				small: true,
@@ -4257,11 +4644,10 @@ var Editor = Class.extend({
 		group.addStackedElements(btns);
 
 		var group = tab.addGroup(gettext("Other (KVM)"));
-		var tmpls = t.templates.getAll("kvmqm");
+		var tmpls = t.templates.getAllowed("kvmqm");
 		var btns = [];
 		for (var i=0; i<tmpls.length; i++)
 		 if(tmpls[i].subtype != "linux")
-			if (!tmpls[i].restricted || editor.allowRestrictedTemplates)
 			  btns.push(tmpls[i].menuButton({
 			  	toggleGroup: toggleGroup,
 				small: true,
@@ -4270,7 +4656,7 @@ var Editor = Class.extend({
 		group.addStackedElements(btns);
 
 		var group = tab.addGroup(gettext("Scripts (Repy)"));
-		var tmpls = t.templates.getAll("repy");
+		var tmpls = t.templates.getAllowed("repy");
 		var btns = [];
 		for (var i=0; i<tmpls.length; i++)
 		 if(tmpls[i].subtype == "device")
@@ -4286,7 +4672,7 @@ var Editor = Class.extend({
 			Menu.button({
 				label: gettext("KVM image"),
 				name: "kvm-custom",
-				icon: "img/kvm16.png",
+				icon: "img/kvm32.png",
 				toggle: true,
 				toggleGroup: toggleGroup,
 				small: true,
@@ -4295,7 +4681,7 @@ var Editor = Class.extend({
 			Menu.button({
 				label: gettext("OpenVZ image"),
 				name: "openvz-custom",
-				icon: "img/openvz16.png",
+				icon: "img/openvz32.png",
 				toggle: true,
 				toggleGroup: toggleGroup,
 				small: true,
@@ -4304,7 +4690,7 @@ var Editor = Class.extend({
 			Menu.button({
 				label: gettext("Repy script"),
 				name: "repy-custom",
-				icon: "img/repy16.png",
+				icon: "img/repy32.png",
 				toggle: true,
 				toggleGroup: toggleGroup,
 				small: true,
@@ -4313,11 +4699,11 @@ var Editor = Class.extend({
 		]);
 
 
-		var tab = this.menu.addTab(gettext("Network"));
+		var tab = this.menu.addTab("Network");
 
 		var group = tab.addGroup(gettext("VPN Elements"));
 		group.addElement(Menu.button({
-			label:gettext("Switch"),
+			label: gettext("Switch"),
 			name: "vpn-switch",
 			icon: "img/switch32.png",
 			toggle: true,
@@ -4351,7 +4737,7 @@ var Editor = Class.extend({
 			small: false,
 			func: this.createPositionElementFunc(this.createUploadFunc("repy"))
 		}));
-		var tmpls = t.templates.getAll("repy");
+		var tmpls = t.templates.getAllowed("repy");
 		var btns = [];
 		for (var i=0; i<tmpls.length; i++)
 		 if(tmpls[i].subtype != "device")
@@ -4363,21 +4749,14 @@ var Editor = Class.extend({
 		group.addStackedElements(btns);
 
 		var group = tab.addGroup(gettext("Networks"));
-		var common = t.networks.all();
+		var common = t.networks.getAllowed();
 		var buttonstack = [];
 		for (var i=0; i < common.length; i++) {
 			var net = common[i];
-	//		var inet_icon = 'img/internet16.png';
-	//		var is_big_button = (net.big_icon);
-	//		if (is_big_button) {
-	//			inet_icon = 'img/internet32.png';
-	//		}
-				
 			var inet_button = Menu.button({
 				label: net.label,
 				name: net.name,
-	//			icon: net.icon,
-                                icon: 'img/internet32.png',
+				icon: net.icon,
 				toggle: true,
 				toggleGroup: toggleGroup,
 				small: !net.big_icon,
@@ -4474,7 +4853,6 @@ var Editor = Class.extend({
 
 
 		var tab = this.menu.addTab(gettext("Options"));
-              
 
 		var group = tab.addGroup(gettext("Editor"));
 		this.optionCheckboxes = {
@@ -4499,6 +4877,7 @@ var Editor = Class.extend({
 		        label: gettext("Colorify segments"),
 		        tooltip:"Paint different network segments with different colors"
 		    }),
+		    
 		    show_ids: this.optionMenuItem({
 		        name:"show_ids",
 		        label: gettext("Show IDs"),
