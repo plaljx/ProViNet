@@ -34,33 +34,32 @@
 		</div><!--end: btn-group-->
 
 		<div class="btn-group">
-		{% if request.session.user.isHostManager %}
-		<form>
-			<button type="submit"  
-			{% if tech %}
-				formaction="{%url "template.add" tech%}"
-			{%else%}
-				formaction="{%url "template.add"%}"
-			{%endif%}
-			class="btn btn-success"><span class="glyphicon glyphicon-plus"></span> {% trans "Add template" %}
-			</button>
-		</form>
+		{% if request.session.user.isGlobalHostManager or request.session.user.isGlobalAdmin %}
+			<form>
+			  <button type="submit" 
+			  {% if tech %}
+			  	formaction="{%url "template.add" tech%}"
+			  {%else%}
+			  	formaction="{%url "template.add"%}"
+			  {%endif%}
+			  class="btn btn-success"><span class="glyphicon glyphicon-plus"></span> {% trans "Add template" %}</button>
+			</form>
 		{% endif %}
+		
 		</div><!--end: btn-group-->
 	</div><!--end: bar-->
-	<div class="skip-sm"></div>
 
 	<div id="content">
 	{% if templ_list|length > 10 and request.session.user.isGlobalHostManager %}
-	<form>
-	  <button type="submit" 
-	  {% if tech %}
-	  	formaction="{%url "template.add" tech%}"
-	  {%else%}
-	  	formaction="{%url "template.add"%}"
-	  {%endif%}
-	  class="btn btn-success"><span class="glyphicon glyphicon-plus"></span> {% trans "Add template" %}</button>
-	</form>
+		<form>
+		  <button type="submit" 
+		  {% if tech %}
+		  	formaction="{%url "template.add" tech%}"
+		  {%else%}
+		  	formaction="{%url "template.add"%}"
+		  {%endif%}
+		  class="btn btn-success"><span class="glyphicon glyphicon-plus"></span> {% trans "Add template" %}</button>
+		</form>
 	{% endif %}
 
 	{% if templ_list %}
@@ -102,29 +101,29 @@
 		    </td>
 		    <td class="icononly">
 		    <div class="hoverdescription">
-		    	{% if templ.attrs.description %}		    	
+		   	{% if templ.attrs.description %}		    	
 			    	<img src="/img/info.png" alt="i" />
-			    {% else %}
-			    	<img src="/img/invisible16.png" />
-			    {%endif%}
-			    
-			    {% if templ.attrs.show_as_common %}
-			    	<img src="/img/tick.png"/>
-			    {% else %}
-			    	<img src="/img/invisible16.png" />
-			    {%endif%}
+			{% else %}
+				<img src="/img/invisible16.png" />
+			{%endif%}
+			
+			{% if templ.attrs.show_as_common %}
+				<img src="/img/tick.png"/>
+			{% else %}
+				<img src="/img/invisible16.png" />
+			{%endif%}
 			    
 		    	{% if not templ.attrs.nlXTP_installed and not templ.attrs.tech == 'repy' %}
 			    	<img src="/img/warning16.png" alt="!"/>
-			    {% else %}
-			    	<img src="/img/invisible16.png" />
-			    {%endif%}
-			    
-			    {% if templ.attrs.restricted %}
-			    	<img src="/img/lock.png" />
-			    {% else %}
-			    	<img src="/img/invisible16.png" />
-				{% endif %}
+			{% else %}
+				<img src="/img/invisible16.png" />
+			{%endif%}
+			
+			{% if templ.attrs.restricted %}
+				<img src="/img/lock.png" />
+			{% else %}
+				<img src="/img/invisible16.png" />
+			{% endif %}
 				
 	    		<div class="hiddenbox"><table>
 	    		{% if templ.attrs.description %}
@@ -148,12 +147,12 @@
 		    		</tr>
 	    		{%endif%}
 		    	
-			    {% if templ.attrs.restricted %}
-					<tr>
-						<td><img src="/img/lock.png" /></td>
-						<td>{% trans "This template is restricted." %}</td>
-					</tr>
-				{% endif %}
+			{% if templ.attrs.restricted %}
+				<tr>
+					<td><img src="/img/lock.png" /></td>
+					<td>{% trans "This template is restricted." %}</td>
+				</tr>
+			{% endif %}
 				
 	    		</table></div>
 			 </div>	    
@@ -164,18 +163,7 @@
 	{% else %}
 		<p>{% trans "No templates" %}</p>
 	{% endif %}
-
-	{% if request.session.user.isGlobalHostManager %}
-	<form>
-	  <button type="submit" 
-	  {% if tech %}
-	  	formaction="{%url "template.add" tech%}"
-	  {%else%}
-	  	formaction="{%url "template.add"%}"
-	  {%endif%}
-	  class="btn btn-success"><span class="glyphicon glyphicon-plus"></span> {% trans "Add template" %}</button>
-	</form>
-	{% endif %}
+	
 	</div><!--end: content -->
 </div><!--end: right -->
 {% endblock %}
