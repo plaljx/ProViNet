@@ -16,8 +16,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import subprocess, os, hashlib, shutil
+import platform
 
-DEVNULL = open("/dev/null", "w")
+OPERATING_SYSTEM = platform.system()
+if OPERATING_SYSTEM == "Windows":
+	DEVNULL = open("nul", "w")
+else:
+	DEVNULL = open("/dev/null", "w")
 
 def runUnchecked(cmd, shell=False, ignoreErr=False, input=None, cwd=None): #@ReservedAssignment
     stderr = DEVNULL if ignoreErr else subprocess.STDOUT

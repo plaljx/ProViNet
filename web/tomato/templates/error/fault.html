@@ -1,0 +1,16 @@
+{% extends "main/base.html" %}
+
+{% load url from future %}
+
+{% block title %}
+<title>Error page - G-Lab ToMaTo</title> 
+{% endblock %}
+
+{% block content %}
+<h1>Oops an error occurred !</h1>
+
+<h2>Error Details</h2>
+Type: {{type}}<br/>
+Code: {{code}}<br/>
+Description: {{text}}<br/>
+{% endblock %}

@@ -1,134 +1,149 @@
 {% extends "base.html" %}
-
+ <!DOCTYPE html         PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+ <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="{{ LANGUAGE_CODE }}" lang="{{ LANGUAGE_CODE }}">
+ <head>
+ <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+ 
 {% load url from future %}
+{% load tomato %}
 {% load i18n %}
 
 {% block header %}
-<script language="JavaScript" type="text/javascript" src="/js/dynimg.js"></script>
-{% endblock %}
-
-{% block title %}
-<title>{% blocktrans %}"Template {{template.attrs.name}} - BUPT ProViNet"{% endblocktrans %}</title> 
+<script language="JavaScript" type="text/javascript" src="js/dynimg.js"></script>
 {% endblock %}
 
 {% block content %}
 
-<form>
-  <button type="submit" formaction="{%url "template_list"%}" class="btn btn-primary" style="float:right;"><span class="glyphicon glyphicon-list"></span> {% trans "All Templates" %}</button>
-</form>
-
-<h1>{% trans "Template" %} {{template.attrs.name}}</h1>
-
-<div class="skip-sm"></div>
-
-{% load tomato %}
-
-<table class="table">
-	<tr>
-		<th>{% trans "Name:" %}</th>
-		<td>{{template.attrs.name}}</td>
-	</tr>
-	<tr>
-		<th>{% trans "Label:" %}</th>
-		<td>{{template.attrs.label}}</td>
-	</tr>
-	<tr>
-		<th>{% trans "Tech:" %}</th>
-		<td><img src="/img/{{template.attrs.tech}}16.png" /> {{template.attrs.tech}}</td>
-	</tr>
-	<tr>
-		<th>{% trans "Subtype:" %}</th>
-		<td>{{template.attrs.subtype}}</td>
-	</tr>
-	<tr>
-		<th>{% trans "Preference:" %}</th>
-		<td>{{template.attrs.preference}}</td>
-	</tr>
-	<tr>
-		<th>{% trans "Common Element:" %}</th>
-		<td>{% if template.attrs.show_as_common %}
-			<img src="/img/tick.png"> yes
-		{% else %}
-			<img src="/img/error.png"> no
+<div id="right">
+	<div id="topcontent">
+		<form>
+		  <button type="submit" formaction="{%url "template_list"%}" class="btn btn-primary" style="float:right;"><span class="glyphicon glyphicon-list"></span> {% trans "All Templates" %}</button>
+		</form>
+		<h1>{% trans "Template" %} {{template.attrs.name}}</h1>
+	</div>
+	<div id="bar">
+	{% if request.session.user.isGlobalHostManager %}
+		<form>
+		  <button type="submit" formaction="{%url "template.edit_torrent" template.id%}" class="btn btn-warning"><span class="glyphicon glyphicon-open"></span> {% trans "upload torrent" %}</button>
+		  <button type="submit" formaction="{%url "template.edit" template.id%}" class="btn btn-warning"><span class="glyphicon glyphicon-pencil"></span> {% trans "edit template" %}</button>
+		  <button type="submit" formaction="{%url "template.remove" template.id%}" class="btn btn-danger"><span class="glyphicon glyphicon-trash"></span> {% trans "remove template" %}</button>
+		</form>
+	{%endif%}
+	</div>
+	<div class="skip-sm"></div>
+	<div id="content">
+	<table class="table">
+		<tr>
+			<th>{% trans "Name:" %}</th>
+			<td>{{template.attrs.name}}</td>
+		</tr>
+		<tr>
+			<th>{% trans "Label:" %}</th>
+			<td>{{template.attrs.label}}</td>
+		</tr>
+		<tr>
+			<th>{% trans "Tech:" %}</th>
+			<td><img src="/img/{{template.attrs.tech}}16.png" /> {{template.attrs.tech}}</td>
+		</tr>
+		<tr>
+			<th>{% trans "Subtype:" %}</th>
+			<td>{{template.attrs.subtype}}</td>
+		</tr>
+		<tr>
+			<th>{% trans "Preference:" %}</th>
+			<td>{{template.attrs.preference}}</td>
+		</tr>
+		<tr>
+			<th>{% trans "Common Element:" %}</th>
+			<td>{% if template.attrs.show_as_common %}
+				<img src="/img/tick.png"> {% trans "yes" %}
+			{% else %}
+				<img src="/img/error.png"> {% trans "no" %}
+			{% endif %}
+			</td>
+		</tr>
+		<tr>
+			<th>{% trans "Creation date:" %}</th>
+			<td>{{template.attrs.creation_date}}</td>
+		</tr>	
+		<tr>
+			<th>{% trans "Executable archive support:" %}</th>
+			<td>
+			{% if template.attrs.nlXTP_installed %}
+				<img src="/img/tick.png"/> {% trans "yes" %}
+			{% else %}
+				{% if template.attrs.tech != 'repy' %}<img src="/img/warning16.png"/>{% endif %} {% trans "no" %}
+			{% endif %}
+			</td>
+		</tr>	
+		<tr>
+			<th>{% trans "Restricted:" %}</th>
+			<td>
+			{% if template.attrs.restricted %}
+				<img src="/img/lock.png" /> {% trans "yes" %}
+			{% else %}
+				{% trans "no" %}
+			{% endif %}
+			</td>
+		</tr>	
+		<tr>
+			<th>{% trans "Icon:" %}</th>
+			<td>
+			{% if template.attrs.icon %}
+				<img src="{{template.attrs.icon}}" />
+			{% else %}
+				<img id="template_icon" src="/img/{{template.attrs.tech}}32.png" />
+				<script language="JavaScript">
+					var template_iconurl = dynimg(32,"{{template.attrs.tech}}","{{template.attrs.subtype}}","{{template.attrs.name}}");
+					$("#template_icon").attr("src",template_iconurl);
+				</script>
+			{% endif %}
+			</td>
+		</tr>
+		{% if template.attrs.tech == 'kvmqm' %}
+		<tr>
+			<th>{% trans "Default Keyboard Layout" %}</th>
+			{{template.attrs.kblang}}
+		</tr>
+		{%endif%}
+		<tr>
+			<th>{% trans "Availability:" %}</th>
+			<td>
+				<dl class="dl-horizontal">
+	  				<dt>{% trans "Backend" %}</dt><dd>
+					    {% if template.attrs.ready.backend %}
+					    	<img src="/img/tick.png"/> {% trans "yes" %}
+			    		{% else %}
+			    			<img src="/img/error.png"/> {% trans "no" %}
+			    		{% endif %}
+	  				</dd>
+	  				<dt>{% trans "Hosts" %}</dt><dd>
+					    {% if template.attrs.ready.hosts.ready == template.attrs.ready.hosts.total %}
+					    	<img src="/img/tick.png"/>
+			    		{% else %}
+					    	<img src="/img/error.png"/>
+			    		{% endif %}
+			    		{{template.attrs.ready.hosts.ready}}/{{template.attrs.ready.hosts.total}}
+	  				</dd>
+				</dl>		
+		    </td>
+		</tr>
+		<tr>
+			<th>{% trans "Description:" %}</th>
+			<td>{{template.attrs.description|linebreaks|escape|simpletags:"b i em strong"|safe }}</td>
+		</tr>
+		{% if not template.attrs.restricted or "restricted_templates" in request.session.user.flags %}
+		<tr>
+			<th>{% trans "Torrent File" %}</th>
+			<td>
+				<form><button type="submit" formaction="{%url "template.download_torrent" template.id%}" class="btn btn-info"><span class="glyphicon glyphicon-floppy-save"></span></button></form>
+			</td>
+		</tr>
 		{% endif %}
-		</td>
-	</tr>
-	<tr>
-		<th>{% trans "Creation date:" %}</th>
-		<td>{{template.attrs.creation_date}}</td>
-	</tr>	
-	<tr>
-		<th>{% trans "Executable archive support:" %}</th>
-		<td>
-		{% if template.attrs.nlXTP_installed %}
-			<img src="/img/tick.png"/> yes
-		{% else %}
-			{% if template.attrs.tech != 'repy' %}<img src="/img/warning16.png"/>{% endif %} no
-		{% endif %}
-		</td>
-	</tr>	
-	<tr>
-		<th>{% trans "Restricted:" %}</th>
-		<td>
-		{% if template.attrs.restricted %}
-			<img src="/img/lock.png" /> yes
-		{% else %}
-			no
-		{% endif %}
-		</td>
-	</tr>	
-	<tr>
-		<th>{% trans "Icon:" %}</th>
-		<td>
-		{% if template.attrs.icon %}
-			<img src="{{template.attrs.icon}}" />
-		{% else %}
-			<img id="template_icon" src="/img/{{template.attrs.tech}}32.png" />
-			<script language="JavaScript">
-				var template_iconurl = dynimg(32,"{{template.attrs.tech}}","{{template.attrs.subtype}}","{{template.attrs.name}}");
-				$("#template_icon").attr("src",template_iconurl);
-			</script>
-		{% endif %}
-		</td>
-	</tr>	
-	<tr>
-		<th>{% trans "Availability:" %}</th>
-		<td>
-			<dl class="dl-horizontal">
-  				<dt>{% trans "Backend" %}</dt><dd>
-				    {% if template.attrs.ready.backend %}
-				    	<img src="/img/tick.png"/> yes
-		    		{% else %}
-		    			<img src="/img/error.png"/> no
-		    		{% endif %}
-  				</dd>
-  				<dt>{% trans "Hosts" %}</dt><dd>
-				    {% if template.attrs.ready.hosts.ready == template.attrs.ready.hosts.total %}
-				    	<img src="/img/tick.png"/>
-		    		{% else %}
-				    	<img src="/img/error.png"/>
-		    		{% endif %}
-		    		{{template.attrs.ready.hosts.ready}}/{{template.attrs.ready.hosts.total}}
-  				</dd>
-			</dl>		
-	    </td>
-	</tr>
-	<tr>
-		<th>{% trans "Description:" %}</th>
-		<td>{{template.attrs.description|linebreaks|escape|simpletags:"b i em strong"|safe }}</td>
-	</tr>
-</table>
+	</table>
 
-<div class="skip-sm"></div>
-
-{% load tomato %}
-
-{% if request.session.user.isGlobalHostManager %}
-<form>
-  <button type="submit" formaction="{%url "template.edit_torrent" template.id%}" class="btn btn-warning"><span class="glyphicon glyphicon-open"></span> {% trans "upload torrent" %}</button>
-  <button type="submit" formaction="{%url "template.edit" template.id%}" class="btn btn-warning"><span class="glyphicon glyphicon-pencil"></span> {% trans "edit template" %}</button>
-  <button type="submit" formaction="{%url "template.remove" template.id%}" class="btn btn-danger"><span class="glyphicon glyphicon-trash"></span> {% trans "remove template" %}</button>
-</form>
-{%endif%}
+	<div class="skip-sm"></div>
+	</div><!--end: content -->
+</div><!--end: right -->
 
 {% endblock %}
