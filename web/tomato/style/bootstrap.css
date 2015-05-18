@@ -524,20 +524,11 @@ h6 .small,
   color: #999999;
 }
 
-h1
-{
- text-transform: capitalize;
-  color:#1F90C8;
-  margin:20px 30px;
-}
+h1,
 h2,
 h3 {
-  color:#6A6A6A;
-  margin-top: 10px;
+  margin-top: 20px;
   margin-bottom: 10px;
-  width:80%;
-  margin-left:60px;
-  float:left;
 }
 
 h1 small,

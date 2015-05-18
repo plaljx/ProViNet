@@ -1,116 +1,112 @@
 {% extends "base.html" %}
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+ <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="{{ LANGUAGE_CODE }}" lang="{{ LANGUAGE_CODE }}">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
 {% load url from future %}
 {% load i18n %}
-
-{% block title %}
-<title>{% blocktrans %}"Organization {{organization.description}} - BUPT ProViNet"{% endblocktrans %}</title> 
-{% endblock %}
+{% load tomato %}
 
 {% block content %}
-
-<form>
-  <button type="submit" formaction="{%url "organization.list"%}" class="btn btn-primary" style="float:right;"><span class="glyphicon glyphicon-globe"></span> {% trans "All Organizations" %}</button>
-</form>
-
-<h1>{% trans "Organization" %} "{{organization.description}}"</h1>
-
-<div class="skip-xs"></div>
-
-{% load tomato %}
-
-<table class="table">
-	<tr>
-		<th>{% trans "Icon:" %}</th>
-		<td>{% if organization.image_url %}<img class="site" src="{{organization.image_url}}"/>{% endif %}</td>
-	</tr>
-	{% if request.session.user and request.session.user|args:organization.name|call:"isAdmin" %}
-	<tr>
-		<th>{% trans "Internal name:" %}</th>
-	    <td>{{organization.name}}</td>
-	</tr>
-	{% endif %}
-	<tr>
-		<th>{% trans "Homepage:" %}</th>
-		<td><a href="{{organization.homepage_url}}" target="_blank">{{organization.homepage_url}}</a>
-	</tr>
-	{% if organization.description_text %}
-	<tr>
-		<th>{% trans "Description:" %}</th>
-		<td>{{organization.description_text|linebreaks|escape|simpletags:"b i em strong"|safe}}</td>
-	</tr>
-	{% endif %}
-</table>
-
-<div class="skip-xs"></div>
-
-{% load tomato %}
-
-<form>
-  {% if request.session.user and request.session.user|args:organization.name|call:"isAdmin" %}
-  	<button type="submit" formaction="{%url "organization_accounts" organization.name%}" class="btn btn-info"><span class="glyphicon glyphicon-list"></span> {% trans "Accounts" %}</button>
-  {%endif%}
-  {% if request.session.user and request.session.user|args:organization.name|call:"hasOrgaToplFlags" or request.session.user.hasGlobalToplFlags %}
-  	<button type="submit" formaction="{%url "organization_topologies" organization.name%}" class="btn btn-info"><span class="glyphicon glyphicon-list"></span> {% trans "Topologies" %}</button>
-  {%endif%}
-  <button type="submit" formaction="{%url "organization_hosts" organization.name%}" class="btn btn-info"><span class="glyphicon glyphicon-list"></span> {% trans "Hosts" %}</button>
-  <button type="submit" formaction="{%url "organization_external_networks" organization.name%}" class="btn btn-info"><span class="glyphicon glyphicon-list"></span> {% trans "External Network Instances" %}</button>
-  <a class="btn btn-info" href="javascript:window.open('{%url "organization.usage" organization.name%}', '_blank', 'innerHeight=450,innerWidth=600,status=no,toolbar=no,menubar=no,location=no,hotkeys=no,scrollbars=no');"><span class="glyphicon glyphicon glyphicon-stats"></span> {% trans "Resource Usage" %}</a>
-  {% if request.session.user and request.session.user|args:organization.name|call:"isHostManager" %}
-	<div class="skip-xs"></div>
-	<button type="submit" formaction="{%url "site.add" organization.name%}" class="btn btn-success"><span class="glyphicon glyphicon-plus"></span> {% trans "Add Site" %}</button>
-	<button type="submit" formaction="{%url "organization.edit" organization.name%}" class="btn btn-warning"><span class="glyphicon glyphicon-pencil"></span> {% trans "Edit Organization" %}</button>
-	<button type="submit" formaction="{%url "organization.remove" organization.name%}" class="btn btn-danger"><span class="glyphicon glyphicon-trash"></span> {% trans "Remove Organization" %}</button>
-  {% endif %}
-</form>
-
-<div class="skip-sm"></div>
-
-{% for site in sites %}
-<a name="{{site.name}}"></a>
-<div class="skip-sm"><hr/></div>
-
-<h2>Site "{{site.description}}"</h2>
-
-<table class="table">
-	{% if request.session.user and request.session.user|args:organization.name|call:"isHostManager" %}
-	<tr>
-		<th>{% trans "Internal name:" %}</th>
-	    <td>{{site.name}}</td>
-	</tr>
-	{% endif %}
-	<tr>
-		<th>{% trans "Location:" %}</th>
-		<td>{{site.location}}</td>
-	</tr>
-	<tr>
-		<th>{% trans "Geolocation:" %}</th>
-		<td>{% if site.geolocation %}
-				{% trans "Longitude:" %} {{site.geolocation.longitude}}, {% trans "Latitude:" %} {{site.geolocation.latitude}}
-				<a class="btn btn-default btn-xs" target="_blank" href="http://maps.google.com/?ie=UTF8&hq=&ll={{site.geolocation.latitude}},{{site.geolocation.longitude}}&z=13"><span class="glyphicon glyphicon-share-alt"></span> {% trans "Google Maps" %}</a>
-			{% else %}
-				{% trans "unknown" %}
+<div id="right">
+	<div id="topcontent">
+		<form>
+		  <button type="submit" formaction="{%url "admin.organization.list"%}" class="btn btn-primary" style="float:right;"><span class="glyphicon glyphicon-globe"></span> {% trans "All Organizations" %}</button>
+		</form>
+		<h1>{% trans "Organization" %} "{{organization.description}}"</h1>
+	</div>
+	<div id="bar">
+		<form>
+		  {% if request.session.user and request.session.user|args:organization.name|call:"isAdmin" %}
+		  	<button type="submit" formaction="{%url "organization_accounts" organization.name%}" class="btn btn-info"><span class="glyphicon glyphicon-list"></span> {% trans "Accounts" %}</button>
+		  {%endif%}
+		  {% if request.session.user and request.session.user|args:organization.name|call:"hasOrgaToplFlags" or request.session.user.hasGlobalToplFlags %}
+		  	<button type="submit" formaction="{%url "organization_topologies" organization.name%}" class="btn btn-info"><span class="glyphicon glyphicon-list"></span> {% trans "Topologies" %}</button>
+		  {%endif%}
+		  <button type="submit" formaction="{%url "organization_hosts" organization.name%}" class="btn btn-info"><span class="glyphicon glyphicon-list"></span> {% trans "Hosts" %}</button>
+		  <button type="submit" formaction="{%url "organization_external_networks" organization.name%}" class="btn btn-info"><span class="glyphicon glyphicon-list"></span> {% trans "External Network Instances" %}</button>
+		  <a class="btn btn-info" href="javascript:window.open('{%url "usage.organization" organization.name%}', '_blank', 'innerHeight=450,innerWidth=600,status=no,toolbar=no,menubar=no,location=no,hotkeys=no,scrollbars=no');"><span class="glyphicon glyphicon glyphicon-stats"></span> {% trans "Resource Usage" %}</a>
+		  {% if request.session.user and request.session.user|args:organization.name|call:"isHostManager" %}
+			<div class="skip-xs"></div>
+			<button type="submit" formaction="{%url "admin.site.add" organization.name%}" class="btn btn-success"><span class="glyphicon glyphicon-plus"></span> {% trans "Add Site" %}</button>
+			<button type="submit" formaction="{%url "admin.organization.edit" organization.name%}" class="btn btn-warning"><span class="glyphicon glyphicon-pencil"></span> {% trans "Edit Organization" %}</button>
+			<button type="submit" formaction="{%url "admin.organization.remove" organization.name%}" class="btn btn-danger"><span class="glyphicon glyphicon-trash"></span> {% trans "Remove Organization" %}</button>
+		  {% endif %}
+		</form>
+	</div>
+	<div id="content">
+		<table class="table">
+			<tr>
+				<th>{% trans "Icon:" %}</th>
+				<td>{% if organization.image_url %}<img class="site" src="{{organization.image_url}}"/>{% endif %}</td>
+			</tr>
+			{% if request.session.user and request.session.user|args:organization.name|call:"isAdmin" %}
+			<tr>
+				<th>{% trans "Internal name:" %}</th>
+			    <td>{{organization.name}}</td>
+			</tr>
 			{% endif %}
-		</td>
-	</tr>
-	{% if site.description_text %}
-	<tr>
-		<th>{% trans "Description:" %}</th>
-	    <td>{{site.description_text|linebreaks|escape|simpletags:"b i em strong"|safe}}</td>
-	</tr>
-	{% endif %}
-</table>
+			<tr>
+				<th>{% trans "Homepage:" %}</th>
+				<td><a href="{{organization.homepage_url}}" target="_blank">{{organization.homepage_url}}</a>
+			</tr>
+			{% if organization.description_text %}
+			<tr>
+				<th>{% trans "Description:" %}</th>
+				<td>{{organization.description_text|linebreaks|escape|simpletags:"b i em strong"|safe}}</td>
+			</tr>
+			{% endif %}
+		</table>
 
-<div class="skip-xs"></div>
+		<div class="skip-xs"></div>
 
-<form>
-  <button type="submit" formaction="{%url "site_hosts" site.name%}" class="btn btn-info"><span class="glyphicon glyphicon-list"></span> {% trans "Hosts" %}</button>
-  <button type="submit" formaction="{%url "site_external_networks" site.name%}" class="btn btn-info"><span class="glyphicon glyphicon-list"></span> {% trans "External Network Instances" %}</button>
-  {% if request.session.user and request.session.user|args:organization.name|call:"isHostManager" %}
-  <button type="submit" formaction="{%url "site.edit" site.name%}" class="btn btn-warning"><span class="glyphicon glyphicon-pencil"></span> {% trans "Edit Site" %}</button>
-  <button type="submit" formaction="{%url "site.remove" site.name%}" class="btn btn-danger"><span class="glyphicon glyphicon-trash"></span> {% trans "Remove Site" %}</button>
-  {% endif %}
-</form>
-{% endfor %}
+		{% for site in sites %}
+		<a name="{{site.name}}"></a>
+		<div class="skip-sm"><hr/></div>
 
+		<h2>Site "{{site.description}}"</h2>
+
+		<table class="table">
+			{% if request.session.user and request.session.user|args:organization.name|call:"isHostManager" %}
+			<tr>
+				<th>{% trans "Internal name:" %}</th>
+			    <td>{{site.name}}</td>
+			</tr>
+			{% endif %}
+			<tr>
+				<th>{% trans "Location:" %}</th>
+				<td>{{site.location}}</td>
+			</tr>
+			<tr>
+				<th>{% trans "Geolocation:" %}</th>
+				<td>{% if site.geolocation %}
+						{% trans "Longitude:" %} {{site.geolocation.longitude}}, {% trans "Latitude:" %} {{site.geolocation.latitude}}
+						<a class="btn btn-default btn-xs" target="_blank" href="http://maps.google.com/?ie=UTF8&hq=&ll={{site.geolocation.latitude}},{{site.geolocation.longitude}}&z=13"><span class="glyphicon glyphicon-share-alt"></span> {% trans "Google Maps" %}</a>
+					{% else %}
+						{% trans "unknown" %}
+					{% endif %}
+				</td>
+			</tr>
+			{% if site.description_text %}
+			<tr>
+				<th>{% trans "Description:" %}</th>
+			    <td>{{site.description_text|linebreaks|escape|simpletags:"b i em strong"|safe}}</td>
+			</tr>
+			{% endif %}
+		</table>
+
+		<div class="skip-xs"></div>
+
+		<form>
+		  <button type="submit" formaction="{%url "site_hosts" site.name%}" class="btn btn-info"><span class="glyphicon glyphicon-list"></span> {% trans "Hosts" %}</button>
+		  <button type="submit" formaction="{%url "site_external_networks" site.name%}" class="btn btn-info"><span class="glyphicon glyphicon-list"></span> {% trans "External Network Instances" %}</button>
+		  {% if request.session.user and request.session.user|args:organization.name|call:"isHostManager" %}
+		  <button type="submit" formaction="{%url "admin.site.edit" site.name%}" class="btn btn-warning"><span class="glyphicon glyphicon-pencil"></span> {% trans "Edit Site" %}</button>
+		  <button type="submit" formaction="{%url "admin.site.remove" site.name%}" class="btn btn-danger"><span class="glyphicon glyphicon-trash"></span> {% trans "Remove Site" %}</button>
+		  {% endif %}
+		</form>
+		{% endfor %}
+	</div>
+</div>
 {% endblock %}
