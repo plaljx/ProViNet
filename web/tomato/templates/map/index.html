@@ -4,10 +4,6 @@
 {% load tomato %}
 {% load i18n %}
 
-{% block title %}
-<title>{% trans "Site Map - BUPT ProViNet" %}</title> 
-{% endblock %}
-
 {% block header %}
     <style>
       #map_canvas {
@@ -19,8 +15,6 @@
     <script src="https://maps.googleapis.com/maps/api/js?sensor=false"></script>
     <script src="/js/util.js"></script>
     <script src="/js/map.js"></script>
-    <script src="/js/jquery-ui.js"></script>
-    <link href="/style/jquery-ui.css" rel="stylesheet">
     <script>
       function initialize() {
         var map = new Map({
@@ -34,8 +28,10 @@
 {% endblock %}
 
 {% block content %}
-
-    <h1>{% trans "Site Map" %}</h1>
-    <div id="map_canvas"></div>
-
+<div id="right">
+	<div id="topcontent">
+    		<h1>{% trans "Site Map" %}</h1>
+	</div>
+	<div id="map_canvas"></div>
+</div><!--end: right-->
 {% endblock %}

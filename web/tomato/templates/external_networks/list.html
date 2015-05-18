@@ -1,89 +1,91 @@
 {% extends "base.html" %}
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+ <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="{{ LANGUAGE_CODE }}" lang="{{ LANGUAGE_CODE }}">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
 {% load url from future %}
 {% load tomato %}
 {% load i18n %}
 
-{% block title %}
-<title>{% trans "External Network list - BUPT ProViNet" %}</title> 
-{% endblock %}
-
 {% block content %}
-<h1>{% trans "External Network list" %}</h1>
-
-{% if netw_list|length > 10 and request.session.user.isHostManager %}
-<form>
-  <button type="submit" formaction="{%url "external_network.add"%}" class="btn btn-success"><span class="glyphicon glyphicon-plus"></span> {% trans "Add external network" %}</button>
-</form>
-{% endif %}
-
-{% if netw_list %}
-{% for netw in netw_list %}
-<div class="skip-sm"><hr/></div>
-
-<h2>{% trans "External network" %} {{netw.attrs.kind}}</h2>
-
-<table class="table">
-	<tr>
-		<th>{% trans "Label:" %}</th>
-	    <td>{{netw.attrs.label}}</td>
-	</tr>
-	<tr>
-		<th>{% trans "Preference:" %}</th>
-		<td>{{netw.attrs.preference}}</td>
-	</tr>
-	
-	{% if netw.attrs.show_as_common %}
-	<tr>
-		<th>{% trans "Common Element:" %}</th>
-		<td><img src="/img/tick.png" /></td>
-	</tr>
-	{% endif %}
-	
-	{% if netw.attrs.big_icon %}
-	<tr>
-		<th>{% trans "Big icon:" %}</th>
-		<td><img src="/img/tick.png" /></td>
-	</tr>
-	{% endif %}
-	
-	{% if netw.attrs.description %}
-	<tr>
-		<th>{% trans "Description:" %}</th>
-	    <td>{{netw.attrs.description|linebreaks|escape|simpletags:"b i em strong"|safe}}</td>
-	</tr>
-	{% endif %}
-	<tr>
-		<th>{% trans "Restricted:" %}</th>
-		<td>
-		{% if netw.attrs.restricted %}
-			<img src="/img/lock.png" /> yes
-		{% else %}
-			no
-		{% endif %}
-		</td>
-	</tr>	
-</table>
-
-
-<form>
-	<button type="submit" formaction="{%url "external_network_instances" netw.id%}" class="btn btn-info"><span class="glyphicon glyphicon-list"></span> {% trans "instances of" %} {{netw.attrs.kind}}</button>
+<div id="right">
+	<div id="topcontent">
 	{% if request.session.user.isHostManager %}
-  	<button type="submit" formaction="{%url "external_network.edit" netw.id%}" class="btn btn-warning"><span class="glyphicon glyphicon-pencil"></span> {% trans "edit" %}</button>
-  	<button type="submit" formaction="{%url "external_network.remove" netw.id%}" class="btn btn-danger"><span class="glyphicon glyphicon-trash"></span> {% trans "remove" %}</button>
-  	
-<div class="skip-xs"></div>
-  {% endif %}
-</form>
-{% endfor %}
-{% else %}
-	<p>{% trans "No external networks" %}</p>
-{% endif %}
-	    
-{% if request.session.user.isHostManager %}
-<form>
-  <button type="submit" formaction="{%url "external_network.add"%}" class="btn btn-success"><span class="glyphicon glyphicon-plus"></span> {% trans "Add external network" %}</button>
-</form>
-{% endif %}
+		<form>
+		  <button type="submit" formaction="{%url "external_network.add"%}" class="btn btn-success"  style="float:right;"><span class="glyphicon glyphicon-plus"></span> {% trans "Add external network" %}</button>
+		</form>
+	{% endif %}
+		<h1>{% trans "External Network list" %}</h1>
+	</div>
 
+	{% if netw_list|length > 10 and request.session.user.isHostManager %}
+		<form>
+		  <button type="submit" formaction="{%url "external_network.add"%}" class="btn btn-success"><span class="glyphicon glyphicon-plus"></span> {% trans "Add external network" %}</button>
+		</form>
+	{% endif %}
+
+	{% if netw_list %}
+		{% for netw in netw_list %}
+		<div id="toop">
+			<h2>{% trans "External network: " %} {{netw.attrs.kind}}</h2>
+		</div>
+		<div id="content">
+			<table class="table">
+				<tr>
+					<th>{% trans "Label:" %}</th>
+				    <td>{{netw.attrs.label}}</td>
+				</tr>
+				<tr>
+					<th>{% trans "Preference:" %}</th>
+					<td>{{netw.attrs.preference}}</td>
+				</tr>
+				
+				{% if netw.attrs.show_as_common %}
+				<tr>
+					<th>{% trans "Common Element:" %}</th>
+					<td><img src="/img/tick.png" /></td>
+				</tr>
+				{% endif %}
+				
+				{% if netw.attrs.big_icon %}
+				<tr>
+					<th>{% trans "Big icon:" %}</th>
+					<td><img src="/img/tick.png" /></td>
+				</tr>
+				{% endif %}
+				
+				{% if netw.attrs.description %}
+				<tr>
+					<th>{% trans "Description:" %}</th>
+				    <td>{{netw.attrs.description|linebreaks|escape|simpletags:"b i em strong"|safe}}</td>
+				</tr>
+				{% endif %}
+				<tr>
+					<th>{% trans "Restricted:" %}</th>
+					<td>
+					{% if netw.attrs.restricted %}
+						<img src="/img/lock.png" /> yes
+					{% else %}
+						no
+					{% endif %}
+					</td>
+				</tr>	
+			</table>
+		</div><!--end: content-->
+		<div id="bar">
+			<form>
+				<button type="submit" formaction="{%url "external_network_instances" netw.id%}" class="btn btn-info"><span class="glyphicon glyphicon-list"></span> {% trans "instances of" %} {{netw.attrs.kind}}</button>
+				{% if request.session.user.isHostManager %}
+				  	<button type="submit" formaction="{%url "external_network.edit" netw.id%}" class="btn btn-warning"><span class="glyphicon glyphicon-pencil"></span> {% trans "edit" %}</button>
+				  	<button type="submit" formaction="{%url "external_network.remove" netw.id%}" class="btn btn-danger"><span class="glyphicon glyphicon-trash"></span> {% trans "remove" %}</button>
+					<div class="skip-xs"></div>
+			  	{% endif %}
+			</form>
+		</div>
+		{% endfor %}
+	{% else %}
+		<p>{% trans "No external networks" %}</p>
+	{% endif %}
+</div>
 {% endblock %}

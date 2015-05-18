@@ -27,6 +27,8 @@ from lib import wrap_rpc
 from admin_common import RemoveConfirmForm, BootstrapForm, Buttons
 from template import techs_dict,techs_choices
 
+from lib.error import UserError #@UnresolvedImport
+
 from tomato.crispy_forms.layout import Layout
 from django.utils.translation import ugettext_lazy as _
 from django.utils.translation import string_concat
@@ -103,7 +105,7 @@ class EditKVMqmForm(EditProfileForm):
 	
 class AddProfileForm(ProfileForm):
 	name = forms.CharField(max_length=50,label=_("Internal Name"), help_text=_("Must be unique for all templates of the same tech. Cannot be changed. Not displayed."))
-	diskspace = forms.IntegerField(label="Disk Space (MB)", required = False, help_text=_("only OpenVZ and KVMqm"))
+	diskspace = forms.IntegerField(label=_("Disk Space (MB)"), required = False, help_text=_("only OpenVZ and KVMqm"))
 	cpus = forms.FloatField(label=_("number of CPUs"), help_text=_("Repy, OpenVZ: float number; KVMqm: integer number"))
 	def __init__(self, *args, **kwargs):
 		super(AddProfileForm, self).__init__(*args, **kwargs)
@@ -209,28 +211,22 @@ def edit(api, request, res_id=None):
 			else:
 				data['restricted'] = False
 			
-			if api.resource_info(formData['res_id'])['type'] == 'profile':
-				api.resource_modify(formData["res_id"],data)
-				return HttpResponseRedirect(reverse("tomato.profile.info", kwargs={"res_id": res_id}))
-			else:
-				return render(request, "main/error.html",{'type':'invalid id','text':_('The resource with id ')+formData['res_id']+_(' is no repy device profile.')})
-		else:
-			label = request.POST["label"]
-			if label:
-				return render(request, "form.html", {'form': form, "heading":_("Edit Device Profile '")+label+"'"})
-			else:
-				return render(request, "main/error.html",{'type':'Transmission Error','text':_('There was a problem transmitting your data.')})
+			UserError.check(api.resource_info(formData['res_id'])['type'] == 'template',UserError.INVALID_PARAMETER, _("This resource is not a profile"), data={'id':formData['res_id']})
+			api.resource_modify(formData["res_id"],data)
+			return HttpResponseRedirect(reverse("tomato.profile.info", kwargs={"res_id": res_id}))
+		label = request.POST["label"]
+		UserError.check(label, UserError.INVALID_DATA, _("Form transmission failed."))
+		return render(request, "form.html", {'form': form, "heading": _("Edit Device Profile '")+label+"'"})
 	else:
-		if res_id:
-			res_info = api.resource_info(res_id)
-			origData = res_info['attrs']
-			origData['res_id'] = res_id
-			if origData['tech'] == 'repy':
-				form = EditRePyForm(res_id, origData)
-			elif origData['tech'] == 'openvz':
-				form = EditOpenVZForm(res_id, origData)
-			else:
-				form = EditKVMqmForm(res_id, origData)
-			return render(request, "form.html", {'form': form, "heading":string_concat(_("Edit "), res_info['attrs']['tech'], _(" Device Profile '"), res_info['attrs']['label'], "'")})
+		UserError.check(res_id, UserError.INVALID_DATA, _("No resource specified."))
+		res_info = api.resource_info(res_id)
+		origData = res_info['attrs']
+		origData['res_id'] = res_id
+		if origData['tech'] == 'repy':
+			form = EditRePyForm(res_id, origData)
+		elif origData['tech'] == 'openvz':
+			form = EditOpenVZForm(res_id, origData)
 		else:
-			return render(request, "main/error.html",{'type':'not enough parameters','text':_('No resource specified. Have you followed a valid link?')})
+			form = EditKVMqmForm(res_id, origData)
+		return render(request, "form.html", {'form': form, "heading": _("Edit ")+res_info['attrs']['tech']+ _(" Device Profile '")+res_info['attrs']['label']+"'"})
+
