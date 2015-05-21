@@ -19,6 +19,7 @@
 from django.shortcuts import render
 from lib import wrap_rpc
 from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import string_concat
 
 @wrap_rpc
 def host_users(api, request, name):
@@ -28,14 +29,14 @@ def host_users(api, request, name):
 @wrap_rpc
 def topology(api, request, id):
 	data = api.topology_info(id)
-	return render(request, "debug/json.html", {'title': _("Information on topology") + "#%s" % id, 'data': data})
+	return render(request, "debug/json.html", {'title': string_concat(_("Information on topology"), " #%s" % id), 'data': data})
 
 @wrap_rpc
 def element(api, request, id):
 	data = api.element_info(id)
-	return render(request, "debug/json.html", {'title': _("Information on element") + " #%s" % id, 'data': data})
+	return render(request, "debug/json.html", {'title':  string_concat(_("Information on element"), " #%s" % id), 'data': data})
 
 @wrap_rpc
 def connection(api, request, id):
 	data = api.conection_info(id)
-	return render(request, "debug/json.html", {'title': _("Information on connection") + " #%s" % id, 'data': data})
+	return render(request, "debug/json.html", {'title':  string_concat(_("Information on connection"), " #%s" % id), 'data': data})

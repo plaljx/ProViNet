@@ -3,40 +3,38 @@
 {% load url from future %}
 {% load i18n %}
 
-{% block title %}
-<title>{% blocktrans %}Users of host {{host}} - BUPT ProViNet{% endblocktrans %} </title> 
-{% endblock %}
-
 {% block content %}
+<div id="right">
+	<div id="topcontent">
+		<h1>{% blocktrans %}Users of host {{host}}{% endblocktrans %}</h1>
+	</div>
 
-<h1>{% blocktrans %}Users of host {{host}}{% endblocktrans %}</h1>
+	<div id="content">
+	
+	{% load tomato %}
 
-<div class="skip-sm"></div>
+	<script src="/js/enhancetable.js"></script>	
+	<table class="sortable,filterable, table table-striped">
+		<tr>
+			<th>{% trans "ID on host" %}</th>
+			<th>{% trans "Type" %}</th>
+			<th>{% trans "State" %}</th>
+			<th>{% trans "Topology" %}</th>
+			<th>{% trans "Element" %}</th>
+			<th>{% trans "Connection" %}</th>
+		</tr>
+		{% for u in users %}
+		<tr>
+			<td>{{u.onhost_id}}</td>
+			<td>{{u.type}}</td>
+			<td>{{u.state}}</td>
+			<td>{% if u.topology_id %}<a href="{%url "debug.topology" u.topology_id %}">{{u.topology_id}}</a>{% endif %}</td>
+			<td>{% if u.element_id %}<a href="{%url "debug.element" u.element_id %}">{{u.element_id}}</a>{% endif %}</td>
+			<td>{% if u.connection_id %}<a href="{%url "debug.connection" u.connection_id %}">{{u.connection_id}}</a>{% endif %}</td>
+		</tr>
+		{% endfor %}
+	</table>
 
-{% load tomato %}
-
-<script src="/js/enhancetable.js"></script>	
-<table class="sortable,filterable, table table-striped">
-	<tr>
-		<th>{% trans "ID on host" %}</th>
-		<th>{% trans "Type" %}</th>
-		<th>{% trans "State" %}</th>
-		<th>{% trans "Topology" %}</th>
-		<th>{% trans "Element" %}</th>
-		<th>{% trans "Connection" %}</th>
-	</tr>
-	{% for u in users %}
-	<tr>
-		<td>{{u.onhost_id}}</td>
-		<td>{{u.type}}</td>
-		<td>{{u.state}}</td>
-		<td>{% if u.topology_id %}<a href="{%url "debug.topology" u.topology_id %}">{{u.topology_id}}</a>{% endif %}</td>
-		<td>{% if u.element_id %}<a href="{%url "debug.element" u.element_id %}">{{u.element_id}}</a>{% endif %}</td>
-		<td>{% if u.connection_id %}<a href="{%url "debug.connection" u.connection_id %}">{{u.connection_id}}</a>{% endif %}</td>
-	</tr>
-	{% endfor %}
-</table>
-
-<div class="skip-sm"></div>
-
+	</div><!--end: content-->
+</div><!--end: right-->
 {% endblock %}

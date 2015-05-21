@@ -30,6 +30,7 @@ from django.core.urlresolvers import reverse
 
 from lib.error import UserError #@UnresolvedImport
 from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import string_concat
 
 class ErrorDumpForm(BootstrapForm):
 	source = forms.CharField(max_length=255,help_text=_("The description for the errorgroup. This is also its name in the errorgroup list."), widget=forms.HiddenInput())
@@ -62,8 +63,8 @@ class EditErrorGroupForm(ErrorGroupForm):
 
 @wrap_rpc
 def group_list(api, request, site=None, organization=None):	
-	errorgroup = api.errorgroup_list()
-	for e in errorgroup:
+	errorgroups = api.errorgroup_list()
+	for e in errorgroups:
 		e['frontend_mod'] = {'sources':[]}
 		host_count = 0
 		for s in e['dump_contents']['source']:
@@ -76,7 +77,7 @@ def group_list(api, request, site=None, organization=None):
 				e['frontend_mod']['sources'].append(", ")
 			e['frontend_mod']['sources'].append('%d hostmanager' % host_count)
 		 
-		
+	errorgroups.sort(key=lambda e: e['last_timestamp'], reverse=True)	
 	return render(request, "dumpmanager/list.html", {'errorgroup_list': errorgroup})
 
 @wrap_rpc
@@ -86,6 +87,7 @@ def group_info(api, request, group_id):
 		errordump['source___link'] = None
 		if errordump['source'].startswith('host:'):
 			errordump['source___link'] = errordump['source'].replace('host:','')
+	errorgroup['dumps'].sort(key=lambda d: d['timestamp'])
 	return render(request, "dumpmanager/info.html", {'errorgroup': errorgroup})
 
 @wrap_rpc
@@ -114,7 +116,7 @@ def group_remove(api, request, group_id):
 			return HttpResponseRedirect(reverse("tomato.dumpmanager.group_list"))
 	form = RemoveConfirmForm.build(reverse("tomato.dumpmanager.group_remove", kwargs={"group_id": group_id}))
 	group_desc = api.errorgroup_info(group_id, include_dumps=False)['description']
-	return render(request, "form.html", {"heading": _("Remove Errorgroup"), "message_before": _"Are you sure you want to remove the errorgroup '")+group_desc+"'?", 'form': form})
+	return render(request, "form.html", {"heading": _("Remove Errorgroup"), "message_before": string_concat(_("Are you sure you want to remove the errorgroup '"), group_desc, "'?"), 'form': form})
 
 @wrap_rpc
 def group_edit(api, request, group_id):
@@ -132,8 +134,7 @@ def group_edit(api, request, group_id):
 		UserError.check(group_id, UserError.INVALID_DATA, _("No error group specified."))
 		errorgroupinfo=api.errorgroup_info(group_id,False)
 		form = EditErrorGroupForm(api, group_id, errorgroupinfo)
-		return render(request, "form.html", {"heading": _("Editing errorgroup '")+group_id+"'", 'form': form})
-
+		return render(request, "form.html", {"heading": _("Renaming errorgroup '")+errorgroupinfo['description']+"'", 'form': form})
 
 @wrap_rpc
 def dump_info(api, request, source, dump_id,data=False):
@@ -149,7 +150,7 @@ def dump_remove(api, request, source, dump_id):
 			api.errordump_remove(source,dump_id)
 			return HttpResponseRedirect(reverse("tomato.dumpmanager.group_info",kwargs={'group_id':dump['group_id']}))
 	form = RemoveConfirmForm.build(reverse("tomato.dumpmanager.dump_remove", kwargs={"source": source, "dump_id":dump_id}))
-	return render(request, "form.html", {"heading": _("Remove dump"), "message_before": _("Are you sure you want to remove the dump '")+dump_id+"' from '"+source+"'?", 'form': form})
+	return render(request, "form.html", {"heading": _("Remove dump"), "message_before": _("Are you sure you want to remove the dump '")+dump_id+_("' from '")+source+"'?", 'form': form})
 
 
 @wrap_rpc

@@ -2,16 +2,19 @@
 
 {% block content %}
 
-<h1>{{title}}</h1>
+<div id="right">
+	<div id="topcontent">
+		<h1>{{title}}</h1>
+	</div>
+	<div id="content">
 
-<div class="skip-sm"></div>
+	{% load tomato %}
 
-{% load tomato %}
-
-<pre><tt>
-{{data|jsonify:1}}
-</pre></tt>
-
-<div class="skip-sm"></div>
-
+	<pre><tt>
+	{{data|jsonify:1}}
+	
+	</pre></tt>
+	<div class="skip-sm"></div>
+	</div><!--end: content-->
+</div><!--end: right-->
 {% endblock %}

@@ -2,32 +2,36 @@
 
 {% load url from future %}
 {% load tomato %}
-
-{% block title %}
-<title>Error page - G-Lab ToMaTo</title> 
-{% endblock %}
+{% load i18n %}
 
 {% block content %}
-<h1>An Exception Occured.</h1>
+<div id="right">
+	<div id="topcontent">
+	<h1>{% trans "Error page - BUPT ProViNet" %}</h1> 
+	</div>
+	<div class="alert alert-danger">
+		<h1>{% trans "An Exception Occured." %}</h1>
+		<b>{% trans "Type:" %}</b> {{type}}<br/>
+		<b>{% trans "Description:" %}</b> {{text}}<br/>
+	</div>
+	
+	<div id="content">
 
-
-
-<b>Type:</b> {{type}}<br/>
-<b>Description:</b> {{text}}<br/>
-
-{% if request.session.user.hasDebugFlag %}
-<br/><b>Traceback:</b><table><tbody>
-{% for t in traceback %}
-<tr>
-	<td rowspan=2><small>{{t.0}}</small>, line {{t.1}}</td><td style="padding-left: 0.8cm;"><small>in</small> <tt>{{t.2}}</tt></td>
-</tr>
-<tr>
-	<td style="padding-left: 1cm; padding-bottom: 0.5cm;"><tt>{{t.3}}</tt></td>
-</tr>
-{% endfor %}
-</tbody></table>
-{% else %}
-	<p>If you continue to encounter this problem, please <a href="{%url "help.contact_form"%}">contact an administrator</a> or <a href="{%externalurl 'bugtracker' %}" target="_help">file a bug report</a>.</p>
-{% endif %}
-
+	{% if request.session.user.hasDebugFlag %}
+	<br/><b>{% trans "Traceback:" %}</b><table><tbody>
+	{% for t in traceback %}
+	<tr>
+		<td rowspan=2><small>{{t.0}}</small>, line {{t.1}}</td><td style="padding-left: 0.8cm;"><small>in</small> <tt>{{t.2}}</tt></td>
+	</tr>
+	<tr>
+		<td style="padding-left: 1cm; padding-bottom: 0.5cm;"><tt>{{t.3}}</tt></td>
+	</tr>
+	{% endfor %}
+	</tbody></table>
+	{% else %}
+		<p>{% trans "If you continue to encounter this problem, please" %} <a href="{%url "help.contact_form"%}">{% trans "contact an administrator" %}</a> or <a href="{%externalurl 'bugtracker' %}" target="_help">{% trans "file a bug report" %}</a>.</p>
+	{% endif %}
+	
+	</div><!--end: content-->
+</div><!--end: right-->
 {% endblock %}

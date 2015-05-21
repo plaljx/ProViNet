@@ -1,15 +1,15 @@
 {% extends "help/base.html" %}
 {% load i18n %}
 
-{% block title %}
-<title>{% trans "Contact - BUPT ProViNet" %}</title> 
-{% endblock %}
-
 {% block content %}
-<h1>{% trans "Contact" %}</h1>
-
-{% trans "Your request has been submitted and soon be read by our administrators." %}
+<div id="right">
+	<div id="topcontent">
+	<h1>{% trans "Contact" %}</h1>
+	</div>
 	
+	<div id="content">
+	{% trans "Your request has been submitted and soon be read by our administrators." %}
 	
-	
+	</div><!--end content-->
+</div><!--end right-->
 {% endblock %}

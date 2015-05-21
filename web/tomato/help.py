@@ -30,6 +30,7 @@ from tomato.crispy_forms.layout import Layout
 from tomato.crispy_forms.bootstrap import FormActions, StrictButton
 from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import string_concat
 
 available_issues = [
                     ('admin', _("User Priviliges or General Assistance")),
@@ -64,8 +65,8 @@ class HelpForm(BootstrapForm):
             'subject',
             'message',
             FormActions(
-                StrictButton('<span class="glyphicon glyphicon-remove"></span>' + _('Cancel'), css_class='btn-default backbutton'),
-                StrictButton('<span class="glyphicon glyphicon-send"></span>' + _('Send e-mail'), css_class='btn-primary', type="submit")
+                StrictButton(string_concat('<span class="glyphicon glyphicon-remove"></span>', _("Cancel")), css_class='btn-default backbutton'),
+                StrictButton(string_concat('<span class="glyphicon glyphicon-send"></span>', _("Send e-mail")), css_class='btn-primary', type="submit")
             )
         )
 

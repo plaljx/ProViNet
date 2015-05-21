@@ -2,25 +2,30 @@
 
 {% load url from future %}
 {% load tomato %}
-
-{% block title %}
-<title>Error: {{typemsg}}</title> 
-{% endblock %}
+{% load i18n %}
 
 {% block content %}
-<h1>Error: {{typemsg}}</h1>
-
-	<p>{{errormsg}}</p>
+<div id="right">
+	<div id="topcontent">
+	<h1>{% trans "Error:" %} {{typemsg}}</h1>
+	</div>
+	<div class="alert alert-danger">
+		<p>{{errormsg}}</p>
+		<li><b>{{errormsg}}</b></li>
+	</div>
 	
-{% if request.session.user.hasDebugFlag %}
-	<h2>Error Details</h2>
-	<table><tbody>
-	{% for tr in debuginfos %}
-		<tr><th>{{tr.th}}:</th><td>{{tr.td}}</td></tr>
-	{% endfor %}
-	</tbody></table>
-{% else %}
-	<p>If you continue to encounter this problem, please <a href="{%url "help.contact_form"%}">contact an administrator</a> or <a href="{%externalurl 'bugtracker' %}" target="_help">file a bug report</a>.</p>
-{% endif %}
-
+	<div id="content">
+	{% if request.session.user.hasDebugFlag %}
+		<h2>{% trans "Error Details" %}</h2>
+		<table><tbody>
+		{% for tr in debuginfos %}
+			<tr><th>{{tr.th}}:</th><td>{{tr.td}}</td></tr>
+		{% endfor %}
+		</tbody></table>
+	{% else %}
+		<p>{% trans "If you continue to encounter this problem, please" %} <a href="{%url "help.contact_form"%}">{% trans "contact an administrator" %}</a> or <a href="{%externalurl 'bugtracker' %}" target="_help">{% trans "file a bug report" %}</a>.</p>
+	{% endif %}
+	
+	</div><!--end: content-->
+</div><!--end: right-->
 {% endblock %}
