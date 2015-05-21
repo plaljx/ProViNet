@@ -3,90 +3,131 @@
 {% load url from future %}
 {% load i18n %}
 
-{% block title %}
-<title>{% trans "Statistics - BUPT ProViNet" %}</title> 
-{% endblock %}
-
 {% block content %}
+<div id="right">
+	<div id="topcontent">
+	<h1>{% trans "Statistics" %}</h1>
+	</div>
+	
+	<script type="text/javascript" src="js/jscharts.js"></script>
+	  <div id ="lcc_chart">
+	  <script type="text/javascript">
+		var num = {{stats.resources.load}}*100;
+		var myData = new Array(['',100-{{stats.resources.load}}*100],['',{{stats.resources.load}}*100]);
+	 	var colors = ['#B0C4DE','#4169E1'];
+	 	var myChart = new JSChart('lcc_chart','pie');
+		myChart.setDataArray(myData);
+		myChart.colorizePie(colors);
+		myChart.setSize(300,185);
+	 	myChart.setPiePosition(200,100);
+		myChart.setTitle('');
+		myChart.setPieRadius(85);
+		myChart.setPieUnitsColor('#555');
+		myChart.draw();
+	 </script>
+	 <div id="bar" class="ss">
+		 <strong>{% trans "Average load" %}(%)</strong>	   
+	</div>
+	</div>
+	 
+	 <script type="text/javascript" src="js/jscharts.js"></script>
+	  <div id ="lc_chart">
+	  <script type="text/javascript">	 
+		var myData = new Array(['',100-{{stats.resources.availability}}*100],['',{{stats.resources.availability}}*100]);
+		var colors = ['#B0C4DE','#4169E1'];
+		var myChart = new JSChart('lc_chart','pie');
+		 myChart.setDataArray(myData);
+		 myChart.colorizePie(colors);
+		 myChart.setSize(500,185);
+		 myChart.setPiePosition(200,100);
+		 myChart.setTitle('')
+		 myChart.setPieRadius(85);
+		 myChart.setPieUnitsColor('#555');
+		 myChart.draw();	       
+	</script>
+	<div id="bar" class="ss">		 
+	        <strong>{% trans "Average availability" %}(%)</strong>
+	</div>
+	</div>
+	
+	<div id="content">
+	{% load tomato %}
+	<div class="skip-sm"></div>
+	<div id="bar">	
+		<h2>{% trans "Resources" %}</h2>
+	</div>
+	
+	<table class="table">
+		<tr>
+			<th>{% trans "Host count:" %}</th>
+			<td>{{stats.resources.hosts}}</td>
+		</tr>
+		<tr>
+			<th>{% trans "Average availability:" %}</th>
+			<td>{{stats.resources.availability|percentage}}</td>
+		</tr>
+		<tr>
+			<th>{% trans "Average load:" %}</th>
+			<td>{{stats.resources.load|percentage}}</td>
+		</tr>
+		<tr>
+			<th>{% trans "Total CPUs:" %}</th>
+			<td>{{stats.resources.cpus}}</td>
+		</tr>
+		<tr>
+			<th>{% trans "Total memory:" %}</th>
+			<td>{{stats.resources.memory|mult:1024|filesizeformat}}</td>
+		</tr>
+		<tr>
+			<th>{% trans "Total disk space:" %}</th>
+			<td>{{stats.resources.diskspace|mult:1024|filesizeformat}}</td>
+		</tr>
+	</table>
 
-<h1>{% trans "Statistics" %}</h1>
+	<div class="skip-sm"></div>
 
-<div class="skip-sm"></div>
+	<div id="bar">
+		<h2>{% trans "Usage" %}</h2>
+	</div>
+	<table class="table">
+		<tr>
+			<th>{% trans "Users:" %}</th>
+			<td>{{stats.usage.users}}</td>
+		</tr>
+		<tr>
+			<th>{% trans "Topologies:" %}</th>
+			<td>{{stats.usage.topologies}}</td>
+		</tr>
+		<tr>
+			<th>{% trans "Elements:" %}</th>
+			<td>{{stats.usage.elements}}</td>
+		</tr>
+		<tr>
+			<th>{% trans "Connections:" %}</th>
+			<td>{{stats.usage.connections}}</td>
+		</tr>
+		<tr>
+			<th>{% trans "Virtual machines:" %}</th>
+			<td>
+				<dl class="dl-horizontal">
+					<dt>{% trans "KVM" %}</dt><dd>{{stats.usage.element_types.kvmqm}}</dd>
+					<dt>{% trans "OpenVZ" %}</dt><dd>{{stats.usage.element_types.openvz}}</dd>
+					<dt>{% trans "Repy" %}</dt><dd>{{stats.usage.element_types.repy}}</dd>
+				</dl>
+			</td>
+		</tr>
+		<tr>
+			<th>{% trans "Virtual networks:" %}</th>
+			<td>
+				<dl class="dl-horizontal">
+					<dt>{% trans "Tinc" %}</dt><dd>{{stats.usage.element_types.tinc_vpn}}</dd>
+					<dt>{% trans "External" %}</dt><dd>{{stats.usage.element_types.external_network}}</dd>
+				</dl>
+			</td>
+		</tr>
+	</table>
 
-{% load tomato %}
-
-<h2>{% trans "Resources" %}</h2>
-
-<table class="table">
-	<tr>
-		<th>{% trans "Host count:" %}</th>
-		<td>{{stats.resources.hosts}}</td>
-	</tr>
-	<tr>
-		<th>{% trans "Average availability:" %}</th>
-		<td>{{stats.resources.availability|percentage}}</td>
-	</tr>
-	<tr>
-		<th>{% trans "Average load:" %}</th>
-		<td>{{stats.resources.load|percentage}}</td>
-	</tr>
-	<tr>
-		<th>{% trans "Total CPUs:" %}</th>
-		<td>{{stats.resources.cpus}}</td>
-	</tr>
-	<tr>
-		<th>{% trans "Total memory:" %}</th>
-		<td>{{stats.resources.memory|mult:1024|filesizeformat}}</td>
-	</tr>
-	<tr>
-		<th>{% trans "Total disk space:" %}</th>
-		<td>{{stats.resources.diskspace|mult:1024|filesizeformat}}</td>
-	</tr>
-</table>
-
-<div class="skip-sm"></div>
-
-
-<h2>{% trans "Usage" %}</h2>
-
-<table class="table">
-	<tr>
-		<th>{% trans "Users:" %}</th>
-		<td>{{stats.usage.users}}</td>
-	</tr>
-	<tr>
-		<th>{% trans "Topologies:" %}</th>
-		<td>{{stats.usage.topologies}}</td>
-	</tr>
-	<tr>
-		<th>{% trans "Elements:" %}</th>
-		<td>{{stats.usage.elements}}</td>
-	</tr>
-	<tr>
-		<th>{% trans "Connections:" %}</th>
-		<td>{{stats.usage.connections}}</td>
-	</tr>
-	<tr>
-		<th>{% trans "Virtual machines:" %}</th>
-		<td>
-			<dl class="dl-horizontal">
-				<dt>{% trans "KVM" %}</dt><dd>{{stats.usage.element_types.kvmqm}}</dd>
-				<dt>{% trans "OpenVZ" %}</dt><dd>{{stats.usage.element_types.openvz}}</dd>
-				<dt>{% trans "Repy" %}</dt><dd>{{stats.usage.element_types.repy}}</dd>
-			</dl>
-		</td>
-	</tr>
-	<tr>
-		<th>{% trans "Virtual networks:" %}</th>
-		<td>
-			<dl class="dl-horizontal">
-				<dt>{% trans "Tinc" %}</dt><dd>{{stats.usage.element_types.tinc_vpn}}</dd>
-				<dt>{% trans "External" %}</dt><dd>{{stats.usage.element_types.external_network}}</dd>
-			</dl>
-		</td>
-	</tr>
-</table>
-
-{% load tomato %}
-
+	{% load tomato %}
+	</div><!--end: content-->
+</div><!--end: right-->
 {% endblock %}

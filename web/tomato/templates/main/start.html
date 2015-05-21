@@ -33,7 +33,7 @@
 				{% endif %}
 												
 				{% if request.session.user.isHostManager %}
-					<a href="{%url "host.list"%}" class="btn btn-primary btn-lg">{% trans "Manage Hosts" %}</a>
+					<a href="{%url "admin.host.list"%}" class="btn btn-primary btn-lg">{% trans "Manage Hosts" %}</a>
 				{%endif%}
 			{%else%}
 				<a href="{%url "topology.create"%}" class="btn btn-primary btn-lg">{% trans "Create New Topology" %}</a>

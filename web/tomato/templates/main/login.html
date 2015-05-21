@@ -1,8 +1,4 @@
 {% extends "main/base.html" %}
-<!DOCTYPE html        PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="{{ LANGUAGE_CODE }}" lang="{{ LANGUAGE_CODE }}">
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
 {% load url from future %}
 {% load i18n %}
@@ -22,8 +18,8 @@
 				<a href="{%url "account.register"%}" class="btn btn-primary">{% trans "Register" %}</a>
 				<a href="http://niclab.bupt.edu.cn" class="btn btn-primary"><span class="glyphicon glyphicon-globe"></span>{% trans " Visit our Homepage" %}</a>
 			{% endif %}
-		<div>
-	</div>
-</div>
+		<div><!--end: bar-->
+	</div><!--end: content-->
+</div><!--end: right-->
 
 {% endblock %}
