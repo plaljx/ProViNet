@@ -228,5 +228,5 @@ def edit(api, request, res_id=None):
 			form = EditOpenVZForm(res_id, origData)
 		else:
 			form = EditKVMqmForm(res_id, origData)
-		return render(request, "form.html", {'form': form, "heading": _("Edit ")+res_info['attrs']['tech']+ _(" Device Profile '")+res_info['attrs']['label']+"'"})
+		return render(request, "form.html", {'form': form, "heading": string_concat(_("Edit "), res_info['attrs']['tech'],  _(" Device Profile '"), res_info['attrs']['label'], "'")})
 

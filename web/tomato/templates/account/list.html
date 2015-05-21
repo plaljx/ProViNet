@@ -4,120 +4,120 @@
 {% load tomato %}
 {% load i18n %}
 
-{% block title %}
-<title>{% trans "Account list - BUPT ProViNet" %}</title> 
-{% endblock %}
-
-
 {% block content %}
-{% ifequal with_flag 'new_account' %}
-<h1>{% trans "Pending Account Registrations" %}</h1>
-{% else %}
-<h1>{% trans "Account list" %}</h1>
-{% endifequal %}
+<div id="right">
+	<div id="topcontent">
+	{% ifequal with_flag 'new_account' %}
+		<h1>{% trans "Pending Account Registrations" %}</h1>
+	{% else %}
+		<h1>{% trans "Account list" %}</h1>
+	{% endifequal %}
+	</div>
 
-{% if 'global_admin' in request.session.user.flags %}
-<div class="btn-group">
-  <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-    <span class="glyphicon glyphicon-filter"></span>
-    {% if organization %}
-      {% trans "Showing all accounts of " %}'{{organization_description}}'
-    {% else %}
-      {% trans "Showing all accounts" %}
-    {% endif %}
-    <span class="caret"></span>
-  </button>
-  <ul class="dropdown-menu" role="menu">
-    <li><a href="{% url "account_list_all" %}">{% trans "Show all accounts" %}</a></li>
-    <li class="divider"></li>
-    <li class="dropdown-header">{% trans "Organizations" %}</li>
-    {% for orga in orgas %}
-      <li><a href="{% url "organization_accounts" organization=orga.name %}">{% trans "Show all accounts of" %} '{{orga.description}}'</a></li>    
-    {% endfor %}
-  </ul>
-</div>
-{% endif %}
+	<div id="bar">
+	{% if 'global_admin' in request.session.user.flags %}
+		<div class="btn-group">
+		  <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+		    <span class="glyphicon glyphicon-filter"></span>
+		    {% if organization %}
+		      {% trans "Showing all accounts of " %}'{{organization_description}}'
+		    {% else %}
+		      {% trans "Showing all accounts" %}
+		    {% endif %}
+		    <span class="caret"></span>
+		  </button>
+		  <ul class="dropdown-menu" role="menu">
+		    <li><a href="{% url "account_list_all" %}">{% trans "Show all accounts" %}</a></li>
+		    <li class="divider"></li>
+		    <li class="dropdown-header">{% trans "Organizations" %}</li>
+		    {% for orga in orgas %}
+		      <li><a href="{% url "organization_accounts" organization=orga.name %}">{% trans "Show all accounts of" %} '{{orga.description}}'</a></li>    
+		    {% endfor %}
+		  </ul>
+		</div>
+	{% endif %}
 
-{% if 'global_admin' in request.session.user.flags or 'orga_admin' in request.session.user.flags %}
-<div class="btn-group">
-  <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-    <span class="glyphicon glyphicon-filter"></span>
-    {% if with_flag %}
-      {% trans "Showing pending registrations" %}
-    {% else %}
-      {% trans "Showing regular accounts" %}
-    {% endif %}
-    <span class="caret"></span>
-  </button>
-  <ul class="dropdown-menu" role="menu">
-    {% if organization %}
-      <li><a href="{% url "account_list" %}">{% trans "Show regular accounts" %}</a></li>
-    {% else %}
-      <li><a href="{% url "account_list_all" %}">{% trans "Show regular accounts" %}</a></li>
-    {% endif %}
-    {% if 'global_admin' in request.session.user.flags %}
-      {% ifequal organization request.session.user.organization %}
-        <li><a href="{% url "account_list_registrations" %}">{% trans "Show pending registrations" %}</a></li>
-      {% else %}    
-        <li><a href="{% url "account_list_registrations_all" %}">{% trans "Show pending registrations" %}</a></li>
-      {% endifequal %}
-    {% else %}
-      <li><a href="{% url "account_list_registrations" %}">{% trans "Show pending registrations" %}</a></li>
-    {% endif %}
-  </ul>
-</div>
-{% endif %}
-
-<div class="skip-sm"></div>
-
-<script src="/js/enhancetable.js"></script>
-{% if accounts %}
-<table class="sortable,filterable table table-striped">
-  <tr>
-    <th>{% trans "Name" %}</th>
-    <th>{% trans "Origin" %}</th>
-    <th>{% trans "Full name" %}</th>
-    <th>{% trans "Organization" %}</th>
-   	<th>{% trans "Flags" %}</th>
-  </tr>
-{% for account in accounts %}
-  <tr>
-    <td>
-      {% if "new_account" in account.flags %}
-      <span class="glyphicon glyphicon-question-sign" title={% trans "New account" %}></span>
-      {% else %}{% if "global_admin" in account.flags or "global_topl_admin" in account.flags or "global_host_manager" in account.flags %}
-      <span class="glyphicon glyphicon-star" title={% trans "Account with global permissions" %}></span>
-      {% else %}{% if "orga_admin" in account.flags or "orga_topl_admin" in account.flags or "orga_host_manager" in account.flags %}
-      <span class="glyphicon glyphicon-star-empty" title={% trans "Account with organization-wide permissions" %}></span>
-      {% else %}
-      <span class="glyphicon glyphicon-user" title={% trans "Regular user" %}></span>
-      {% endif %}{% endif %}{% endif %}
-      <a href="{%url "account.info" account.name%}">{{account.name}}</a>
-    </td>
-    <td>{{account.origin}}</td>
-    <td>{{account.realname}}</td>
-    <td>{{account.organization}}</td>    
-    <td>
-    	<div class="hoverdescription" style="white-space:normal">
-    		{{account.flags|join:", "}}
-    		<div class="hiddenbox">
-    			{{account.flags_name }}
-    		</div>
-    	</div>
-    </td>
-  </tr>
-{% endfor %}
-</table>
-{% else %}
-{% ifequal with_flag 'new_account' %}
-<p>{% trans "There are no pending registrations." %}</p>
-{% else %}
-<p>{% trans "There are no accounts yet." %}</p>
-{% endifequal %}
-{% endif %}
-
-<form>
-  <button type="submit" formaction="{%url "account.register"%}" class="btn btn-success"><span class="glyphicon glyphicon-plus"></span> {% trans "Create new Account" %}</button>
-</form>
-
+	{% if 'global_admin' in request.session.user.flags or 'orga_admin' in request.session.user.flags %}
+		<div class="btn-group">
+		  <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+		    <span class="glyphicon glyphicon-filter"></span>
+		    {% if with_flag %}
+		      {% trans "Showing pending registrations" %}
+		    {% else %}
+		      {% trans "Showing regular accounts" %}
+		    {% endif %}
+		    <span class="caret"></span>
+		  </button>
+		  <ul class="dropdown-menu" role="menu">
+		    {% if organization %}
+		      <li><a href="{% url "account_list" %}">{% trans "Show regular accounts" %}</a></li>
+		    {% else %}
+		      <li><a href="{% url "account_list_all" %}">{% trans "Show regular accounts" %}</a></li>
+		    {% endif %}
+		    {% if 'global_admin' in request.session.user.flags %}
+		      {% ifequal organization request.session.user.organization %}
+		        <li><a href="{% url "account_list_registrations" %}">{% trans "Show pending registrations" %}</a></li>
+		      {% else %}    
+		        <li><a href="{% url "account_list_registrations_all" %}">{% trans "Show pending registrations" %}</a></li>
+		      {% endifequal %}
+		    {% else %}
+		      <li><a href="{% url "account_list_registrations" %}">{% trans "Show pending registrations" %}</a></li>
+		    {% endif %}
+		  </ul>
+		</div>
+	{% endif %}
+		<div class="btn-group">
+		<form>
+			<button type="submit" formaction="{%url "account.register"%}" class="btn btn-success"><span class="glyphicon glyphicon-plus"></span> {% trans "Create new Account" %}</button>
+		</form>
+		</div>
+	</div><!--end: bar-->
+	<div id="content">
+		<script src="/js/enhancetable.js"></script>
+		{% if accounts %}
+		<table class="sortable,filterable table table-striped">
+		  <tr>
+		    <th>{% trans "Name" %}</th>
+		    <th>{% trans "Origin" %}</th>
+		    <th>{% trans "Full name" %}</th>
+		    <th>{% trans "Organization" %}</th>
+		   	<th>{% trans "Flags" %}</th>
+		  </tr>
+		{% for account in accounts %}
+		  <tr>
+		    <td>
+		      {% if "new_account" in account.flags %}
+		      <span class="glyphicon glyphicon-question-sign" title={% trans "New account" %}></span>
+		      {% else %}{% if "global_admin" in account.flags or "global_topl_admin" in account.flags or "global_host_manager" in account.flags %}
+		      <span class="glyphicon glyphicon-star" title={% trans "Account with global permissions" %}></span>
+		      {% else %}{% if "orga_admin" in account.flags or "orga_topl_admin" in account.flags or "orga_host_manager" in account.flags %}
+		      <span class="glyphicon glyphicon-star-empty" title={% trans "Account with organization-wide permissions" %}></span>
+		      {% else %}
+		      <span class="glyphicon glyphicon-user" title={% trans "Regular user" %}></span>
+		      {% endif %}{% endif %}{% endif %}
+		      <a href="{%url "account.info" account.name%}">{{account.name}}</a>
+		    </td>
+		    <td>{{account.origin}}</td>
+		    <td>{{account.realname}}</td>
+		    <td>{{account.organization}}</td>    
+		    <td>
+		    	<div class="hoverdescription" style="white-space:normal">
+		    		{{account.flags|join:", "}}
+		    		<div class="hiddenbox">
+		    			{{account.flags_name }}
+		    		</div>
+		    	</div>
+		    </td>
+		  </tr>
+		{% endfor %}
+		</table>
+		{% else %}
+		{% ifequal with_flag 'new_account' %}
+		<p>{% trans "There are no pending registrations." %}</p>
+		{% else %}
+		<p>{% trans "There are no accounts yet." %}</p>
+		{% endifequal %}
+		{% endif %}
+	</div><!--end: content-->
+</div><!--end: right-->
 {% endblock %}

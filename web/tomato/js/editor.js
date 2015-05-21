@@ -731,7 +731,7 @@ var TutorialWindow = Window.extend({
 		this.text.empty();
 		this.text.append(text);
 
-		this.setTitle(gettext("Tutorial") + " [" + (this.tutorialStatus+1) + "/" + this.tutorialSteps.length + "]");
+		this.setTitle(gettext("Tutorial") + " [" + (this.tutorialState.step+1) + "/" + this.tutorialSteps.length + "]");
 		
 		//dirty hack: un-set the window's height property
 		this.div[0].style.height = "";
