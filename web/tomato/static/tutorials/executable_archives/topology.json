@@ -1,0 +1,29 @@
+{
+  "file_information": {
+    "version": 3
+  }, 
+  "topology": {
+    "connections": [],
+    "elements": [
+      {
+        "type": "openvz", 
+        "id": 1658, 
+        "parent": null, 
+        "attrs": {
+          "profile": "normal", 
+          "site": null, 
+          "name": "openvz1", 
+          "template": "debian-6.0_x86", 
+          "_pos": {
+            "y": 0.3181818181818182, 
+            "x": 0.23333333333333334
+          }
+        }
+      }
+    ], 
+    "attrs": {
+      "_snap_to_grid": true, 
+      "name": "Tutorial: Executable Archives"
+    }
+  }
+}

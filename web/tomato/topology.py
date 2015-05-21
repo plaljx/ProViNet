@@ -18,17 +18,20 @@
 
 from django.shortcuts import render, redirect
 from django import forms
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
+from django.core.urlresolvers import reverse
+
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+from django.utils.translation import ugettext_lazy as _
 
 import json, re, time
 
 from tutorial import loadTutorial
 from lib import wrap_rpc, AuthError, serverInfo
 
-from admin_common import BootstrapForm, Buttons
+from admin_common import RemoveConfirmForm, help_url, BootstrapForm, Buttons
 from tomato.crispy_forms.layout import Layout
-from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
-from django.utils.translation import ugettext_lazy as _
+
 
 class ImportTopologyForm(BootstrapForm):
 	topologyfile = forms.FileField(label=_("Topology File"))	

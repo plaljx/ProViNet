@@ -1,0 +1,123 @@
+{
+  "file_information": {
+    "version": 3
+  }, 
+  "topology": {
+    "connections": [
+      {
+        "elements": [
+          6201, 
+          6202
+        ], 
+        "type": "bridge", 
+        "attrs": {
+          "bandwidth_to": 10000, 
+          "bandwidth_from": 10000, 
+          "emulation": true
+        }, 
+        "id": 1739
+      }, 
+      {
+        "elements": [
+          6203, 
+          6204
+        ], 
+        "type": "fixed_bridge", 
+        "attrs": {
+          "bandwidth_to": 10000, 
+          "bandwidth_from": 10000, 
+          "emulation": true
+        }, 
+        "id": 1740
+      }
+    ], 
+    "elements": [
+      {
+        "type": "tinc_endpoint", 
+        "attrs": {
+          "name": "tinc_endpoint6204", 
+          "mode": "switch"
+        }, 
+        "parent": 6199, 
+        "id": 6204
+      }, 
+      {
+        "type": "external_network_endpoint", 
+        "attrs": {
+          "name": "external_network_endpoint6203"
+        }, 
+        "parent": 6200, 
+        "id": 6203
+      }, 
+      {
+        "type": "openvz_interface", 
+        "attrs": {
+          "use_dhcp": true, 
+          "name": "eth0"
+        }, 
+        "parent": 6198, 
+        "id": 6202
+      }, 
+      {
+        "type": "tinc_endpoint", 
+        "attrs": {
+          "name": "tinc_endpoint6201", 
+          "mode": "switch"
+        }, 
+        "parent": 6199, 
+        "id": 6201
+      }, 
+      {
+        "type": "external_network", 
+        "attrs": {
+          "kind": "internet", 
+          "samenet": false, 
+          "name": "internet1", 
+          "_pos": {
+            "y": 0.043917245238366785, 
+            "x": 0.5227272727272727
+          }
+        }, 
+        "parent": null, 
+        "id": 6200
+      }, 
+      {
+        "type": "tinc_vpn", 
+        "attrs": {
+          "mode": "switch", 
+          "name": "switch1", 
+          "_pos": {
+            "y": 0.043917245238366785, 
+            "x": 0.3663101604278075
+          }
+        }, 
+        "parent": null, 
+        "id": 6199
+      }, 
+      {
+        "info_sync_date": 0, 
+        "type": "openvz", 
+        "id": 6198, 
+        "parent": null, 
+        "attrs": {
+          "profile": "normal", 
+          "_endpoint": true, 
+          "hostname": "openvz1", 
+          "site": null, 
+          "_pos": {
+            "y": 0.04026761020187044, 
+            "x": 0.25
+          }, 
+          "gateway6": "", 
+          "gateway4": "", 
+          "template": "ubuntu-12.04_x86_64", 
+          "rootpassword": "", 
+          "name": "openvz1"
+        }
+      }
+    ], 
+    "attrs": {
+      "name": "Tutorial: Templates & Images"
+    }
+  }
+}
