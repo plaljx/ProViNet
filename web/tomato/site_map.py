@@ -200,4 +200,4 @@ def details_link(api, request, src, dst):
 
 @wrap_rpc
 def details_site(api, request, site):
-	return render(request, "map/usage.html",{'usage':api.link_statistics(site,site),'name':"inside "+api.site_info(site)['description'],'user':api.user});
+	return render(request, "map/usage.html",{'usage':api.link_statistics(site,site),'name':"inside " + api.site_info(site)['description'],'user':api.user});

@@ -173,7 +173,7 @@ def info(api, request, res_id):
 
 @wrap_rpc
 def add(api, request, tech=None):
-	message_after = '<h2>' + _('Tracker URL') + '</h2>' + _('	The torrent tracker of this backend is:') +	'<pre><tt>'+serverInfo()["TEMPLATE_TRACKER_URL"]+'</tt></pre>'
+	message_after = string_concat('<h2>',  _('Tracker URL') ,  '</h2>	',  _('The torrent tracker of this backend is:'), '<pre><tt>', serverInfo()["TEMPLATE_TRACKER_URL"], '</tt></pre>')
 	if request.method == 'POST':
 		form = AddTemplateForm(request.POST, request.FILES)
 		if form.is_valid():
@@ -214,7 +214,7 @@ def remove(api, request, res_id=None):
 			return HttpResponseRedirect(reverse("template_list"))
 	form = RemoveConfirmForm.build(reverse("tomato.template.remove", kwargs={"res_id": res_id}))
 	res = api.resource_info(res_id)
-	return render(request, "form.html", {"heading": _("Remove Template"), "message_before": _("Are you sure you want to remove the template '")+res["attrs"]["name"]+"'?", 'form': form})	
+	return render(request, "form.html", {"heading": _("Remove Template"), "message_before": string_concat(_("Are you sure you want to remove the template '"), res["attrs"]["name"], "'?"), 'form': form})	
 
 @wrap_rpc
 def edit_torrent(api, request, res_id=None):
@@ -231,12 +231,12 @@ def edit_torrent(api, request, res_id=None):
 			return HttpResponseRedirect(reverse("tomato.template.info", kwargs={"res_id": res_id}))
 		label = request.POST["label"]
 		UserError.check(label, UserError.INVALID_DATA, _("Form transmission failed."))
-		return render(request, "form.html", {'form': form, "heading":_("Edit Template Torrent for '")+label+"' ("+request.POST["tech"]+")"})	
+		return render(request, "form.html", {'form': form, "heading": string_concat(_("Edit Template Torrent for "), "'", label, "' (", request.POST["tech"], ")")})	
 	else:
 		UserError.check(res_id, UserError.INVALID_DATA, _("No resource specified."))
 		res_info = api.resource_info(res_id)
 		form = ChangeTemplateTorrentForm(res_id, {'res_id': res_id})
-		return render(request, "form.html", {'form': form, "heading":_("Edit Template Torrent for '")+res_info['attrs']['label']+"' ("+res_info['attrs']['tech']+")"})
+		return render(request, "form.html", {'form': form, "heading": string_concat(_("Edit Template Torrent for "), "'", res_info['attrs']['label'], "' (", res_info['attrs']['tech'], ")")})
 		
 @wrap_rpc
 def edit(api, request, res_id=None):
@@ -246,7 +246,7 @@ def edit(api, request, res_id=None):
 			formData = form.cleaned_data
 			creation_date = str(formData['creation_date'])
 			res_inf = api.resource_info(res_id)
-			UserError.check(res_inf['type'] == 'template',UserError.INVALID_RESOURCE_TYPE,_("This resource is not a template"), data={'id':formData['res_id']})
+			UserError.check(res_inf['type'] == 'template',UserError.INVALID_RESOURCE_TYPE, _("This resource is not a template"), data={'id':formData['res_id']})
 			attrs = {'label':formData['label'],
 					'restricted': formData['restricted'],
 					'subtype':formData['subtype'],
@@ -262,14 +262,14 @@ def edit(api, request, res_id=None):
 			return HttpResponseRedirect(reverse("tomato.template.info", kwargs={"res_id": res_id}))
 		label = request.POST["label"]
 		UserError.check(label, UserError.INVALID_DATA, _("Form transmission failed."))
-		return render(request, "form.html", {'label': label, 'form': form, "heading":_("Edit Template Data for '")+label+"' ("+request.POST['tech']+")"})
+		return render(request, "form.html", {'label': label, 'form': form, "heading": string_concat(_("Edit Template Data for "), "'", label, "' (", request.POST['tech'], ")")})
 	else:
 		UserError.check(res_id, UserError.INVALID_DATA, _("No resource specified."))
 		res_info = api.resource_info(res_id)
 		origData = res_info['attrs']
 		origData['res_id'] = res_id
 		form = EditTemplateForm(res_id, (origData['tech']=="kvmqm"), origData)
-		return render(request, "form.html", {'label': res_info['attrs']['label'], 'form': form, "heading":_("Edit Template Data for '")+res_info['attrs']['label']+"' ("+res_info['attrs']['tech']+")"})
+		return render(request, "form.html", {'label': res_info['attrs']['label'], 'form': form, "heading": string_concat(_("Edit Template Data for "), "'", res_info['attrs']['label'], "' (", res_info['attrs']['tech'], ")")})
 
 @wrap_rpc
 def download_torrent(api, request, res_id):

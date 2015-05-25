@@ -185,7 +185,7 @@ def remove(api, request, res_id=None):
 			return HttpResponseRedirect(reverse("profile_list"))
 	form = RemoveConfirmForm.build(reverse("tomato.profile.remove", kwargs={"res_id": res_id}))
 	res = api.resource_info(res_id)
-	return render(request, "form.html", {"heading": _("Remove Device Profile"), "message_before": _("Are you sure you want to remove the device profile '")+res["attrs"]["name"]+"'?", 'form': form})	
+	return render(request, "form.html", {"heading": _("Remove Device Profile"), "message_before": string_concat(_("Are you sure you want to remove the device profile "), "'", res["attrs"]["name"], "'?"), 'form': form})	
 	
 @wrap_rpc
 def edit(api, request, res_id=None):

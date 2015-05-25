@@ -25,7 +25,7 @@ from django.core.urlresolvers import reverse
 import uuid
 import urllib2, urllib
 from urlparse import urljoin
-from settings import TUTORIAL_DIR
+from settings import server_url, TUTORIAL_URL
 from django.utils.translation import ugettext_lazy as _
 
 
@@ -34,11 +34,9 @@ from django.utils.translation import ugettext_lazy as _
 # - a tut desc file in ./editor_tutorial/'id'.js
 # - a topology file in ./editor_tutorial/'id'.tomato3
 def get_tutorial_list_url(request):
-	serverhost = "http://127.0.0.1"
 	serverport = request.META["SERVER_PORT"]
-	tutorial_list_url = serverhost +":" + serverport + TUTORIAL_DIR + "index.json"
-	return tutorial_list_url
-	
+	tutorial_list_url = server_url +":" + serverport + TUTORIAL_URL
+	return tutorial_list_url	
 
 @wrap_rpc
 def list(api, request):
@@ -64,7 +62,7 @@ def start(api, request):
 	if token != correct_token:
 		request.session["id"] = session_id
 		form = ConfirmForm.build(reverse("tomato.tutorial.start")+"?"+urllib.urlencode({"token": correct_token, "url": url}))
-		return render(request, "form.html", {"heading": _("Load tutorial"), "message_before": _("Are you sure you want to load the tutorial from the following URL?") + "<pre>"+url+"</pre>", 'form': form})
+		return render(request, "form.html", {"heading": _("Load tutorial"), "message_before": string_concat(_("Are you sure you want to load the tutorial from the following URL?"), "<pre>", url, "</pre>"), 'form': form})
 	_, _, top_dict, data, _ = loadTutorial(url)
 	top_dict['topology']['attrs']['_tutorial_state'] = {'enabled': True,
 											'url': url,

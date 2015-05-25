@@ -31,7 +31,7 @@ from lib import wrap_rpc, AuthError, serverInfo
 
 from admin_common import RemoveConfirmForm, help_url, BootstrapForm, Buttons
 from tomato.crispy_forms.layout import Layout
-
+from django.utils.translation import ugettext_lazy as _
 
 class ImportTopologyForm(BootstrapForm):
 	topologyfile = forms.FileField(label=_("Topology File"))	
@@ -137,7 +137,7 @@ def usage(api, request, id): #@ReservedAssignment
 	if not api.user:
 		raise AuthError()
 	usage=api.topology_usage(id)
-	return render(request, "main/usage.html", {'usage': json.dumps(usage), 'name': _('Topology') + '#%d' % int(id)})
+	return render(request, "main/usage.html", {'usage': json.dumps(usage), 'name': string_concat(_('Topology'), '#%d' % int(id))})
 
 @wrap_rpc
 def create(api, request):
@@ -159,11 +159,11 @@ def import_(api, request):
 			id_, _, _, errors = api.topology_import(topology_structure)
 			api.topology_modify(id_, {'_initialized': True})
 			if errors != []:
-				errors = ["%s %s:" + _("failed to set") + "%s=%r, %s" % (type_, cid, key, val, err) for type_, cid, key, val, err in errors]
-				note = _("Errors occured during import") + ":\n" + "\n".join(errors);
+				errors = [string_concat("%s %s:",  _("failed to set"), "%s=%r, %s" % (type_, cid, key, val, err)) for type_, cid, key, val, err in errors]
+				note = string_concat(_("Errors occured during import"), ":\n" ,  "\n".join(errors));
 				t = api.topology_info(id_)
 				if t['attrs'].has_key('_notes') and t['attrs']['_notes']:
-					note += "\n__________\n" + _("Original Notes") + ":\n" + t['attrs']['_notes']
+					note += string_concat("\n__________\n",  _("Original Notes"), ":\n", t['attrs']['_notes'])
 				api.topology_modify(id_,{'_notes':note,'_notes_autodisplay':True})				
 			return redirect("tomato.topology.info", id=id_)
 		else:
@@ -192,4 +192,4 @@ def remove(api, request, id):
 			api.topology_remove(id)
 			return HttpResponseRedirect(reverse("tomato.topology.list"))
 	form = RemoveConfirmForm.build(reverse("tomato.topology.remove", kwargs={"id": id}))
-	return render(request, "form.html", {"heading":_("Remove topology"), "message_before":_("Are you sure you want to remove the topology")+id+"?", 'form': form})
+	return render(request, "form.html", {"heading":_("Remove topology"), "message_before":string_concat(_("Are you sure you want to remove the topology"), "'", id,"'?"), 'form': form})
