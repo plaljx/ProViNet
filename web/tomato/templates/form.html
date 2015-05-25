@@ -5,10 +5,10 @@
 {% load i18n %}
 
 {% block header %}
-<script language="JavaScript" type="text/javascript" src="js/jquery.js"></script>
-<script language="JavaScript" type="text/javascript" src="js/jquery-ui.js"></script>
-<link type="text/css" href="style/jquery-ui.css" rel="stylesheet" />
-<link type="text/css" href="style/panel.css" rel="stylesheet" />
+<script language="JavaScript" type="text/javascript" src="/js/jquery.js"></script>
+<script language="JavaScript" type="text/javascript" src="/js/jquery-ui.js"></script>
+<link type="text/css" href="/style/jquery-ui.css" rel="stylesheet" />
+<link type="text/css" href="/style/panel.css" rel="stylesheet" />
 <script>
   $(function() {
     $( ".datepicker" ).datepicker();
@@ -30,7 +30,7 @@
 		{% crispy form %}
 		{{message_after|safe}}
 		<script>
-		$('form .backbutton').live('click', function(e) {
+		$('form .backbutton').on('click', function(e) {
 			history.back();
 		});
 		</script>

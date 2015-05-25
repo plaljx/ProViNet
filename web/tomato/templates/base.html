@@ -1,8 +1,9 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
  <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="{{ LANGUAGE_CODE }}" lang="{{ LANGUAGE_CODE }}">
-
 <head>
+
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
  {% load i18n %}
 
 <title>{% trans "ProViNet - BUPT NIC" %}</title>
@@ -12,6 +13,7 @@
 <!-- Bootstrap core CSS -->
 <link href="/style/bootstrap.css" rel="stylesheet">
 <link href="/style/bootstrap-multiselect.css" rel="stylesheet">
+<link href="/style/bootstrap-file.css" rel="stylesheet">
 <!-- Custom styles for this template -->
 <link href="/style/justified-nav.css" rel="stylesheet">
 <link href="/style/icomoon-rss.css" rel="stylesheet">
@@ -21,6 +23,7 @@
 <script src="/js/bootstrap.min.js"></script>
 <script src="/js/bootstrap-multiselect.js"></script>
 <script src="/js/tab.js"></script>
+<script src="/js/loading_popup.js"></script>
 
 {% block header %}
 {% endblock %}
@@ -34,7 +37,7 @@ style = document.createElement('style');
 
 style.type = 'text/css';
 if (style.styleSheet){
-style.styleiSheet.cssText = css;
+style.styleSheet.cssText = css;
 } else {
 style.appendChild(document.createTextNode(css));
 }
@@ -66,7 +69,7 @@ head.appendChild(style);
 					<a href="{%url "account.info" request.session.user.name %}" title="account information"> <img src="/img/user_panel.png" width=25px  height=25px alt="user" class="img-rounded"></a>
 				</td>
 				<td width="15%">
-					<a href="{%url "setting.setting"%}" title="setting"> <img src="/img/config_panel.png" width=25px  height=25px alt="setting" class="img-rounded"></a>
+					<a href="{%url "sysconfig.config"%}" title="sysconfig"> <img src="/img/config_panel.png" width=25px  height=25px alt="config" class="img-rounded"></a>
 				</td>
 				<td width="15%">
 					<a href= "{%url "tutorial.list"%}" title="tutorial"> <img src="/img/tutorial_panel.png" width=25px  height=25px alt="people" class="img-rounded"></a>
@@ -87,29 +90,35 @@ head.appendChild(style);
 	<li ><a href="{%url "topology_list_all"%}">{% trans "All Topologies" %}</a></li>
 {% endif %}
 {% if not "no_topology_create" in request.session.user.flags %}
-	<li><a href="{%url "topology.create"%}">{% trans "Create Topology" %}</a></li>
+	<li><a href="{%url "topology.create"%}" onClick="loadbusy(event,'Loading Topology Editor')">{% trans "Create Topology" %}</a></li>
 	<li><a href="{%url "topology.import_"%}">{% trans "Import Topology" %}</a></li>
  {% endif %}
  {% if request.session.user.isAdmin %}
 	<li class="t"><span class="glyphicon glyphicon-cloud"></span>{% trans "Admin" %} </a></li>
 	<li><a href="{%url "account_list_all"%}">{% trans "Account List" %}</a></li>
-	<li><a href="{%url "host.list"%}">{% trans "Hosts" %}</a></li>
+	<li><a href="{%url "admin.host.list"%}">{% trans "Hosts" %}</a></li>
 	<li><a href="{%url "template.list"%}">{% trans "Templates" %}</a></li>
 	<li><a href="{%url "profile.list"%}">{% trans "Device profiles" %}</a></li>
 	<li><a href="{%url "external_network.list"%}">{% trans "External networks" %}</a></li>
+	{% if request.session.user.hasDebugFlag %}
+	<li><a href="{%url "dumpmanager.group_list"%}">{% trans "Dumpmanager" %}</a></li>
+	{% endif %}
 {% endif %}
 {% endif %}
 <li class="t"><span class="glyphicon glyphicon-book"></span>{% trans "Info" %}</a></li>
+{% if not request.session.user %}
+<li class="current"><a href="/login">{% trans "Log In" %}</a></li>
+{% endif %}
 <li><a href="{%url "main.index"%}">{% trans "Home" %}</a></li>
 <li><a href="{%url "main.statistics"%}">{% trans "Statistics" %}</a></li>
-<li><a href="{%url "organization.list"%}">{% trans "Organizations" %}</a></li>
-<li><a href="{%url "site.map"%}">{% trans "Sites map" %}</a></li>
+<li><a href="{%url "admin.organization.list"%}">{% trans "Organizations" %}</a></li>
+<li><a href="{%url "site_map.map"%}">{% trans "Sites map" %}</a></li>
 </div><!--end: panel_menu-->
 
 </div><!--end: left_panel-->
-{% endblock %}
 
 {% block content %}
 {% endblock %}
 </body>
+{% endblock %}<!--endblock: page-->
 </html>

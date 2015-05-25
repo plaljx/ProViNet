@@ -3,22 +3,33 @@
 
 from django import VERSION as DJANGO_VERSION
 from django.utils.translation import ugettext_lazy as _
-import platform 
+import platform
 
-DEBUG = True
+RUNNING_ENVIROMENT = "development"
+# RUNNING_ENVIROMENT = "production"
+if RUNNING_ENVIROMENT == "development":
+	DEBUG = True
+else:
+	DEBUG = False
 TEMPLATE_DEBUG = DEBUG
-OPERATING_SYSTEM = platform.system()
+ENABLE_DEBUG_TOOL = False
 
+OPERATING_SYSTEM = platform.system()
 if OPERATING_SYSTEM == "Windows":
 	MY_LOCALE_PATH = "D:\ProViNet\web\tomato\locale"
 	MY_SYSCONF_PATH = "D:\ProViNet\conf\web.conf"
+	STATIC_ROOT = ('D:\ProViNet\web\tomato\static')
+	STATIC_URL = ('/static/')
 else:
 	MY_LOCALE_PATH = "/usr/share/tomato/web/tomato/locale"
 	MY_SYSCONF_PATH = "/etc/tomato/web.conf"
+	STATIC_ROOT = "/usr/share/tomato/web/tomato/static"
+	STATIC_URL = '/static/'
 	
 LOCALE_PATHS = (
-    MY_LOCALE_PATH
+	MY_LOCALE_PATH
 )
+TUTORIAL_URL = "/static/tutorials/index.json"
 
 ADMINS = (
     # ('Your Name', 'your_email@domain.com'),
@@ -79,7 +90,9 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.locale.LocaleMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
 )
-
+if ENABLE_DEBUG_TOOL:
+	MIDDLEWARE_CLASSES += ( 'debug_toolbar.middleware.DebugToolbarMiddleware',)
+	
 AUTHENTICATION_BACKENDS = ('django.contrib.auth.backends.RemoteUserAuthBackend',)
 
 ROOT_URLCONF = 'tomato.urls'
@@ -102,7 +115,7 @@ TEMPLATE_CONTEXT_PROCESSORS = ('django.core.context_processors.request',
 
 import os
 CURRENT_DIR = os.path.dirname(__file__)
-TEMPLATE_DIRS = os.path.join(CURRENT_DIR, 'templates')
+TEMPLATE_DIRS =(os.path.join(CURRENT_DIR, 'templates'),)
 
 INSTALLED_APPS = (
     'django.contrib.auth',
@@ -111,12 +124,19 @@ INSTALLED_APPS = (
     'tomato.crispy_forms',
     'tomato'
 )
+if ENABLE_DEBUG_TOOL:
+	INSTALLED_APPS += ('django.contrib.staticfiles',)
+	INSTALLED_APPS += ( 'debug_toolbar',)
+	
+if RUNNING_ENVIROMENT == "production":
+	INSTALLED_APPS += ('django.contrib.staticfiles',)
 
 server_protocol = "http"
 server_host = "localhost"
 server_port = "8000"
-server_httprealm="Tiandon Hoelab"
-tutorial_list_url="http://packages.tomato-lab.org/tutorials/index.json"
+server_httprealm="BUPT ProViNet"
+# tutorial_list_url="http://packages.tomato-lab.org/tutorials/index.json"
+server_url = "http://127.0.0.1"
 
 CRISPY_TEMPLATE_PACK = "bootstrap3"
 

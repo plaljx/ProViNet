@@ -28,6 +28,8 @@ else:
 
 # Support javascript i18n
 from django.views.i18n import javascript_catalog
+from django.conf.urls.static import static
+import settings
 js_info_dict = {
     'packages': ('tomato',),
 }
@@ -40,7 +42,7 @@ urlpatterns = patterns('',
     (r'^img/(?P<path>.*)$', 'django.views.static.serve', {'document_root': 'tomato/img'}),
     (r'^js/(?P<path>.*)$', 'django.views.static.serve', {'document_root': 'tomato/js'}),
     (r'^style/(?P<path>.*)$', 'django.views.static.serve', {'document_root': 'tomato/style'}),
-    (r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': 'tomato/static'}),
+    (r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': 'tomato/static', 'show_indexes': True}),
     (r'^help$', 'tomato.help.help'),
     (r'^help/contact$', 'tomato.help.contact_form'),
     (r'^help/(?P<page>.*)$', 'tomato.help.help'),
@@ -69,6 +71,7 @@ urlpatterns = patterns('',
     (r'^topology/(?P<id>\d+)/usage$', 'tomato.usage.topology'),
     (r'^topology/create$', 'tomato.topology.create'),
     (r'^topology/import$', 'tomato.topology.import_'),
+    (r'^topology/(?P<id>\d+)/remove$', 'tomato.topology.remove'),
     (r'^tutorial$', 'tomato.tutorial.list'),
     (r'^tutorial/start$', 'tomato.tutorial.start'),
     (r'^connection/(?P<id>\d+)/usage$', 'tomato.usage.connection'),
@@ -168,5 +171,8 @@ urlpatterns = patterns('',
     (r'^dumpmanager/source/(?P<source>[^/]+)/dump/(?P<dump_id>[\d_.]+)/remove$', 'tomato.dumpmanager.dump_remove'),
     (r'^dumpmanager/source/(?P<source>[^/]+)/dump/(?P<dump_id>[\d_.]+)/export$', 'tomato.dumpmanager.dump_export'),
     (r'^dumpmanager/source/(?P<source>[^/]+)/dump/(?P<dump_id>[\d_.]+)/export_data$', 'tomato.dumpmanager.dump_export_with_data'),
-    url(r'^setting$','tomato.setting.setting', name="setting"),
+    url(r'^sysconfig$','tomato.sysconfig.config', name="sysconfig"),
 )
+
+if settings.RUNNING_ENVIROMENT == "development":
+	urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
