@@ -23,6 +23,7 @@ from django.core.urlresolvers import reverse
 
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import string_concat
 
 import json, re, time
 
@@ -144,6 +145,7 @@ def create(api, request):
 	if not api.user:
 		raise AuthError()
 	info=api.topology_create()
+	api.topology_modify(info['id'],{'_initialized':False})
 	return redirect("tomato.topology.info", id=info["id"])
 
 @wrap_rpc
