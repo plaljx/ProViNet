@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 
 # ToMaTo (Topology management software) 
 # Copyright (C) 2010 Dennis Schwerdel, University of Kaiserslautern
@@ -16,15 +16,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-import os, sys
+import os
+os.environ['TOMATO_MAINTENANCE']="true"
 
-if __name__ == "__main__":
-	opt = sys.argv[1]
-	if opt in ("cleanup", "compilemessages", "convert_to_south", "createcachetable", \
-			"makemessages", "runfcgi", "runserver", "startapp", "testserver"):
-		print "This command is not supported in ToMaTo"
-	else:
-		os.environ['TOMATO_MAINTENANCE']="true"
-		os.environ.setdefault("DJANGO_SETTINGS_MODULE", "tomato.config")
-		from django.core.management import execute_from_command_line
-		execute_from_command_line(sys.argv)
+import sys, tomato #@UnusedImport, pylint: disable-msg=W0611
+
+opt = sys.argv[1]
+if opt in ("cleanup", "compilemessages", "convert_to_south", "createcachetable", \
+		"makemessages", "runfcgi", "runserver", "startapp", "testserver"):
+	print "This command is not supported in ToMaTo"
+else:
+	from django.core.management import execute_manager
+	if __name__ == "__main__":
+		execute_manager(tomato.config)
