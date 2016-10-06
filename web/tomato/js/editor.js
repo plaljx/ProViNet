@@ -3134,7 +3134,7 @@ var Element = Component.extend({
 				var div = $('<div/>');
 				this.upload_form = $('<form method="post" id="upload_form" enctype="multipart/form-data" action="'+url+'" target="upload_target">\
 								<div class="input-group">\
-				                    <span class="btn btn-primary btn-file input-group-btn">\
+				                    <span class="btn-left btn-primary btn-file input-group-btn">\
 				                        Browse <input type="file" name="upload" onChange="javascript: $(\'#upload_window_upload\').button(\'enable\'); $(this).parents(\'.input-group\').find(\':text.form-control\').val(this.value.replace(/\\\\/g, \'/\').replace(/.*\\//, \'\'));"/>\
 				                    </span>\
 									<input type="text" class="form-control" readonly>\
