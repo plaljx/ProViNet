@@ -1,9 +1,9 @@
-import sys, os, time, traceback, hashlib, zlib, threading, re, base64, gzip
+import sys, os, time, traceback, hashlib, zlib, threading, re, base64, gzip, inspect
 
 from . import anyjson as json
 from .cmd import run, CommandError  # @UnresolvedImport
 from .. import config, scheduler
-from .error import InternalError
+from .error import InternalError, generate_inspect_trace
 
 # in the init function, this is set to a number of commands to be run in order to collect environment data, logs, etc.
 #these are different in hostmanager and backend, and thus not set in this file, which is shared between these both.
@@ -20,10 +20,12 @@ dumps = {}
 #when adding or removing keys to this array, it has to be locked.
 dumps_lock = threading.RLock()
 
+boot_time = 0
+
 #structure for dumps:
 # { timestamp:time.Time  # time the error was detected
 #   description:dict     # short description about what happened (i.e., for an exception: position in code, exception subject)
-#   type:string        # Teason why the dump was created (i.e., "Exception"). 
+#   type:string          # Reason why the dump was created (i.e., "Exception").
 #   group_id:string      # an id given to what happened. Group ID should be the same iff it happened due to the same reason (same stack trace, same position in code, same exception, etc).
 #   data:any             # anything, depending on what happened. not in RAM due to size, only in the file.
 #   dump_id:string       # ID of the dump. used to address the dump
@@ -33,10 +35,10 @@ dumps_lock = threading.RLock()
 #use envCmds to get the environment data.
 def getEnv():
 	data = {}
-	for name, cmd in envCmds.iteritems():
+	for name, cmd in envCmds.items():
 		try:
 			data[name] = run(cmd).splitlines()
-		except CommandError, err:
+		except CommandError as err:
 			data[name] = str(err)
 	return data
 
@@ -113,11 +115,18 @@ def save_dump(timestamp=None, caller=None, description=None, type=None, group_id
 		}
 
 		#save it (in the dumps array, and on disk)
+		try:
+			meta_str = json.dumps(dump_meta)
+			data_str = json.dumps(data)
+		except Exception:
+			import traceback
+			traceback.print_exc()
+			raise
 		with open(get_absolute_path(dump_id, True), "w") as f:
-			json.dump(dump_meta, f)
+			f.write(meta_str)
 		fp = gzip.GzipFile(get_absolute_path(dump_id, False), "w", 9)
 		try:
-			fp.write(json.dumps(data))
+			fp.write(data_str)
 		finally:
 			fp.close()
 		dumps[dump_id] = dump_meta
@@ -249,6 +258,9 @@ def getAll(after=None, list_only=False, include_data=False, compress_data=True):
 			return_list.append(dump)
 	return return_list
 
+def get_recent_dumps():
+	global boot_time
+	return len(getAll(max(boot_time, time.time()-6*60*60), True))
 
 #initialize dump management on server startup.
 def init(env_cmds, tomatoComponent, tomatoVersion):
@@ -257,9 +269,11 @@ def init(env_cmds, tomatoComponent, tomatoVersion):
 		global dumps
 		global tomato_component
 		global tomato_version
+		global boot_time
 		envCmds = env_cmds
 		tomato_component = tomatoComponent
 		tomato_version = tomatoVersion
+		boot_time = time.time()
 
 		if not os.path.exists(config.DUMP_DIR):
 			os.mkdir(config.DUMP_DIR)
@@ -268,7 +282,11 @@ def init(env_cmds, tomatoComponent, tomatoVersion):
 			for d in dump_file_list:
 				if d.endswith('.meta.json'):
 					dump_id = re.sub('\.meta\.json', '', d)
-					dump = load_dump(dump_id, push_to_dumps=True, load_data=False, load_from_file=True, dump_on_error=True)
+					try:
+						dump = load_dump(dump_id, push_to_dumps=True, load_data=False, load_from_file=True, dump_on_error=True)
+					except:
+						import traceback
+						traceback.print_exc()
 	scheduler.scheduleRepeated(60 * 60 * 24, auto_cleanup, immediate=True)
 
 
@@ -288,16 +306,16 @@ def dumpException(**kwargs):
 	
 	return dumpUnknownException(type_, value, trace, **kwargs)
 
-	
-	
-	
-	
-	
-	
+
 # function to handle an exception where no special handler is available.
 # Should only be called by dumpException	
 def dumpUnknownException(type_, value, trace, **kwargs):
-	exception = {"type": type_.__name__, "value": str(value), "trace": trace}
+	exception = {
+		"type": type_.__name__,
+		"value": str(value),
+		"trace": trace,
+		"inspect_trace": generate_inspect_trace(inspect.currentframe())
+	}
 	exception_forid = {"type": type_.__name__, "value": re.sub("[a-fA-F0-9]+","x",str(value)), "trace": trace}
 	exception_id = hashlib.md5(json.dumps(exception_forid)).hexdigest()
 	description = {"subject": exception['value'], "type": exception['type']}
@@ -313,20 +331,24 @@ def dumpError(error):
 	try:
 		if not error.todump:
 			return None
-		error.todump=False
+		error.todump = False
+
+		trace = error.trace
+		data = {
+			"exception":{
+				"trace": trace,
+				"inspect_trace": error.frame_trace
+			}
+		}
 		
-		(type_, value, trace) = sys.exc_info()
-		trace = traceback.extract_tb(trace) if trace else None
-		data = {"exception":{"trace":trace}}
-		
-		description = error.__dict__
+		description = error.raw
 		del description['todump']
 		
 		exception_id = error.group_id()
 		
 		return save_dump(caller=False, description=description, type="Error", group_id=exception_id, data=data)
 	except:
-		dumpException(originalError=error)
+		dumpException(originalError=str(error))
 
 import error
 error.dumpError = dumpError
