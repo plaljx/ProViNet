@@ -4,36 +4,65 @@ Created on Jan 24, 2014
 @author: dswd
 '''
 
-import threading, time, thread
+import threading, time, random
 
 MAX_WAIT = 3600.0
 
 class Task:
-	def __init__(self, fn, args=[], kwargs={}, timeout=0, repeated=False, immediate=False):
+	def __init__(self, fn, args=None, kwargs=None, timeout=0, repeated=False, immediate=False, random_offset=True):
+		if not kwargs:
+			kwargs = {}
+		if not args:
+			args = ()
 		self.timeout = timeout
 		self.repeated = repeated
 		self.fn = fn
 		self.args = args
 		self.kwargs = kwargs
-		self.next = time.time() + (0 if immediate else timeout) 
+
+		# if random offset to be used as first timeout, next_timeout must be randomly selected.
+		if random_offset:
+			next_time = random.random() * timeout
+		else:
+			next_time = timeout
+
+		# if there is an additional, immediate execution, next_time has to be used as next_timeout, and next_time must be 0.
+		if immediate:
+			self.next_timeout = next_time  # will be overwritten by self.timeout after first execute()
+			next_time = 0
+		else:
+			self.next_timeout = timeout
+
+		self.next = time.time() + next_time
+
 		self.busy = False
+		self.last = None
+		self.duration = None
 	def execute(self):
+		self.last = time.time()
 		try:
 			self.fn(*self.args, **self.kwargs)
 		except Exception:
 			import traceback
 			traceback.print_exc()
+		self.duration = time.time()-self.last
+		self.last = self.next
 		if self.repeated:
-			self.next = time.time() + self.timeout
+			self.next = time.time() + self.next_timeout
+			self.next_timeout = self.timeout
 		else:
 			self.next = 0
 	def info(self):
 		return {
 			"method": self.fn.__module__+"."+self.fn.__name__,
 			"busy": self.busy,
+			"args": [str(arg) for arg in self.args],
+			"kwargs": {name: str(value) for name, value in self.kwargs.items()},
 			"repeated": self.repeated,
 			"timeout": self.timeout,
-			"next": self.next
+			"next": self.next,
+			"last": self.last,
+			"duration": self.duration
 		}
 
 class TaskScheduler(threading.Thread):
@@ -47,7 +76,6 @@ class TaskScheduler(threading.Thread):
 		self.stopped = False
 		self.wakeup = threading.Event()
 		self.stopped_confirm = threading.Event()
-		self.daemon = True
 		self.maxLateTime = maxLateTime
 		self.maxWorkers = maxWorkers
 		self.minWorkers = minWorkers
@@ -64,21 +92,24 @@ class TaskScheduler(threading.Thread):
 			_, nextTask = self._nextTask()
 			return min(nextTask.next - time.time(), MAX_WAIT) if nextTask else MAX_WAIT
 	def _adaptWorkers(self, wait, mainThread):
+		startThread = False
 		with self.workersLock:
-			self.waitFrac *= 0.9
-			self.waitFrac += 0.1 if wait > 0.0 else 0.0
+			self.waitFrac *= 0.99
+			self.waitFrac += 0.01 if wait > 0.0 else 0.0
 			if wait < -self.maxLateTime or self.waitFrac < 0.1:
 				if self.workers < self.maxWorkers:
 					self.workers += 1
 					self.waitFrac = 0.5
-					thread.start_new_thread(self._workerLoop, ())
+					startThread = True
 			if wait >= MAX_WAIT or self.waitFrac > 0.9:
 				if self.workers > self.minWorkers and not mainThread:
 					return False
 			if self.workers < self.minWorkers:
 				self.workers += 1
 				self.waitFrac = 0.5
-				thread.start_new_thread(self._workerLoop, ())
+				startThread = True
+		if startThread:
+			threading.Thread(target=self._workerLoop).start()
 		return True #continue running
 	def _workerLoop(self, mainThread=False):
 		while not self.stopped:
@@ -117,7 +148,7 @@ class TaskScheduler(threading.Thread):
 			self.workers += 1
 			while self.workers < self.minWorkers:
 				self.workers += 1
-				thread.start_new_thread(self._workerLoop, ())
+				threading.Thread(target=self._workerLoop).start()
 		self._workerLoop(True)
 	def stop(self):
 		self.stopped = True
@@ -133,18 +164,27 @@ class TaskScheduler(threading.Thread):
 	def scheduleOnce(self, timeout, fn, *args, **kwargs):
 		return self._schedule(Task(fn, args, kwargs, timeout=timeout, repeated=False))
 	def scheduleRepeated(self, timeout, fn, *args, **kwargs):
-		immediate = kwargs.get("immediate", False)
-		if "immediate" in kwargs:
-			del kwargs["immediate"]			
-		return self._schedule(Task(fn, args, kwargs, timeout=timeout, repeated=True, immediate=immediate))
+		#print "Ignoring task %s" % fn
+		#return
+		immediate = kwargs.pop("immediate", True)
+		random_offset = kwargs.pop("random_offset", True)
+		return self._schedule(Task(fn, args, kwargs, timeout=timeout, repeated=True, immediate=immediate, random_offset=random_offset))
 	def cancelTask(self, taskId):
 		with self.tasksLock:
 			del self.tasks[taskId]
 	def info(self):
 		tasks = []
 		with self.tasksLock:
-			for id_, t in self.tasks.iteritems():
+			for id_, t in self.tasks.items():
 				info = t.info()
 				info["id"] = id_
 				tasks.append(info)
-		return tasks
+		info = {
+			"tasks": tasks,
+			"max_late_time": self.maxLateTime,
+			"max_workers": self.maxWorkers,
+			"min_workers": self.minWorkers,
+			"workers": self.workers,
+			"wait_frac": self.waitFrac
+		}
+		return info
