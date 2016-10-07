@@ -17,12 +17,13 @@
 
 import os.path, sys
 from django.db import models
-from .. import connections, elements, fault, config
+from .. import connections, elements, config
 from ..resources import template
 from ..lib.attributes import Attr #@UnresolvedImport
 from ..lib import decorators, util, cmd #@UnresolvedImport
 from ..lib.cmd import fileserver, process, net, path, CommandError #@UnresolvedImport
 from ..lib.util import joinDicts #@UnresolvedImport
+from ..lib.error import UserError, InternalError
 
 DHCP_CMDS = ["[ -e /sbin/dhclient ] && /sbin/dhclient -nw %s",
 			 "[ -e /sbin/dhcpcd ] && /sbin/dhcpcd %s"]
@@ -158,11 +159,11 @@ class OpenVZ(elements.RexTFVElement,elements.Element):
 	vncpid = vncpid_attr.attribute()
 	vncpassword_attr = Attr("vncpassword", type="str")
 	vncpassword = vncpassword_attr.attribute()
-	ram_attr = Attr("ram", desc="RAM", unit="MB", type="int", minValue=64, maxValue=4096, faultType=fault.new_user, default=256)
+	ram_attr = Attr("ram", desc="RAM", unit="MB", type="int", minValue=64, maxValue=4096, default=256)
 	ram = ram_attr.attribute()
-	cpus_attr = Attr("cpus", desc="Number of CPUs", type="float", minValue=0.1, maxValue=4.0, faultType=fault.new_user, default=1.0)
+	cpus_attr = Attr("cpus", desc="Number of CPUs", type="float", minValue=0.1, maxValue=4.0, default=1.0)
 	cpus = cpus_attr.attribute()
-	diskspace_attr = Attr("diskspace", desc="Disk space", unit="MB", type="int", minValue=512, maxValue=102400, faultType=fault.new_user, default=10240)
+	diskspace_attr = Attr("diskspace", desc="Disk space", unit="MB", type="int", minValue=512, maxValue=102400, default=10240)
 	diskspace = diskspace_attr.attribute()
 	rootpassword_attr = Attr("rootpassword", desc="Root password", type="str")
 	rootpassword = rootpassword_attr.attribute()
@@ -235,7 +236,8 @@ class OpenVZ(elements.RexTFVElement,elements.Element):
 	# 9: locked
 	# [51] Can't umount /var/lib/vz/root/...: Device or resource busy
 	@decorators.retryOnError(errorFilter=lambda x: isinstance(x, cmd.CommandError) and x.errorCode in [9, 51])
-	def _vzctl(self, cmd_, args=[], timeout=None):
+	def _vzctl(self, cmd_, args=None, timeout=None):
+		if not args: args = []
 		cmd_ = ["vzctl", cmd_, str(self.vmid)] + args
 		if timeout:
 			cmd_ = ["perl", "-e", "alarm %d; exec @ARGV" % timeout] + cmd_
@@ -257,20 +259,22 @@ class OpenVZ(elements.RexTFVElement,elements.Element):
 			return ST_PREPARED
 		if "deleted" in res:
 			return ST_CREATED
-		fault.raise_("Unable to determine openvz state", fault.INTERNAL_ERROR) #pragma: no cover
+		raise InternalError(message="Unable to determine openvz state", code=InternalError.INVALID_STATE,
+			data={"state": res})
 
 	def _checkState(self):
 		savedState = self.state
 		realState = self._getState()
 		if savedState != realState:
 			self.setState(realState, True) #pragma: no cover
-		fault.check(savedState == realState, "Saved state of %s element #%d was wrong, saved: %s, was: %s", (self.type, self.id, savedState, realState), fault.INTERNAL_ERROR)
+		InternalError.check(savedState == realState, InternalError.WRONG_DATA, "Saved state is wrong",
+			data={"type": self.type, "id": self.id, "saved_state": savedState, "real_state": realState})
 
 	def _template(self):
 		if self.template:
 			return self.template.upcast()
 		pref = template.getPreferred(self.TYPE)
-		fault.check(pref, "Failed to find template for %s", self.TYPE, fault.INTERNAL_ERROR)
+		InternalError.check(pref, InternalError.CONFIGURATION_ERROR, "Failed to find template", data={"type": self.TYPE})
 		return pref
 
 	def _nextIfaceName(self):
@@ -294,7 +298,7 @@ class OpenVZ(elements.RexTFVElement,elements.Element):
 		
 	def _setCpus(self):
 		assert self.state != ST_CREATED
-		self._vzctl("set", ["--cpulimit", "%d%%" % int(self.cpus * 100), "--save"])
+		self._vzctl("set", ["--cpulimit", str(int(self.cpus * 100)), "--cpus", str(int(self.cpus)), "--save"])
 
 	def _setRam(self):
 		assert self.state != ST_CREATED
@@ -315,6 +319,11 @@ class OpenVZ(elements.RexTFVElement,elements.Element):
 		assert self.state != ST_CREATED
 		if self.hostname:
 			self._vzctl("set", ["--hostname", self.hostname, "--save"])
+			if self.state == ST_STARTED:
+				try:
+					self._execute("hostname '%s'" % self.hostname)
+				except cmd.CommandError:
+					pass
 
 	def _setGateways(self):
 		assert self.state == ST_STARTED
@@ -324,14 +333,24 @@ class OpenVZ(elements.RexTFVElement,elements.Element):
 					self._execute("ip -4 route del default")
 			except cmd.CommandError:
 				pass
-			self._execute("ip -4 route replace default via %s" % self.gateway4)
+			try:
+				self._execute("ip -4 route replace default via %s" % self.gateway4)
+			except cmd.CommandError as exc:
+				if exc.errorCode == 8:
+					raise UserError(code=UserError.INVALID_VALUE, message="Invalid IPv4 gateway", data={"gateway": self.gateway4})
+				raise
 		if self.gateway6:
 			try:
 				while True:
 					self._execute("ip -6 route del default")
 			except cmd.CommandError:
 				pass
-			self._execute("ip -6 route replace default via %s" % self.gateway6)
+			try:
+				self._execute("ip -6 route replace default via %s" % self.gateway6)
+			except cmd.CommandError as exc:
+				if exc.errorCode == 8:
+					raise UserError(code=UserError.INVALID_VALUE, message="Invalid IPv6 gateway", data={"gateway": self.gateway6})
+				raise
 
 	def _useImage(self, path_):
 		assert self.state != ST_CREATED
@@ -342,7 +361,7 @@ class OpenVZ(elements.RexTFVElement,elements.Element):
 
 	def _checkImage(self, path_):
 		res = cmd.run(["tar", "-tzvf", path_, "./sbin/init"])
-		fault.check("0/0" in res, "Image contents not owned by root")
+		UserError.check("0/0" in res, UserError.INVALID_VALUE, "Image contents not owned by root")
 
 	#The nlXTP directory
 	def _nlxtp_path(self,filename):
@@ -420,6 +439,9 @@ class OpenVZ(elements.RexTFVElement,elements.Element):
 		if tplPath.endswith(".tar.gz"):
 			tplPath = tplPath[:-len(".tar.gz")]
 		tplPath = os.path.relpath(tplPath, "/var/lib/vz/template/cache") #calculate relative path to trick openvz
+		imgPath = self._imagePath()
+		if path.exists(imgPath):
+			path.remove(imgPath, recursive=True)
 		self._vzctl("create", ["--ostemplate", tplPath, "--config", "default"])
 		self._vzctl("set", ["--devices", "c:10:200:rw", "--capability", "net_admin:on", "--save"])
 		self.setState(ST_PREPARED, True) #must be here or the set commands fail
@@ -433,8 +455,10 @@ class OpenVZ(elements.RexTFVElement,elements.Element):
 		
 	def action_destroy(self):
 		self._checkState()
+		self._vzctl("set", ["--hostname", "workaround", "--save"]) #Workaround for fault in vzctl 4.0-1pve6
 		try:
 			self._vzctl("destroy")
+			self._vzctl("set", ["--hostname", self.hostname, "--save"]) #Workaround for fault in vzctl 4.0-1pve6
 		except cmd.CommandError, exc:
 			if exc.errorCode == 41: # [41] Container is currently mounted (umount first)
 				self._vzctl("umount")
@@ -453,7 +477,8 @@ class OpenVZ(elements.RexTFVElement,elements.Element):
 		self._execute("while fgrep -q boot /proc/1/cmdline; do sleep 1; done")
 		for interface in self.getChildren():
 			ifName = self._interfaceName(interface.name)
-			fault.check(util.waitFor(lambda :net.ifaceExists(ifName)), "Interface did not start properly: %s", ifName, fault.INTERNAL_ERROR) 
+			InternalError.check(util.waitFor(lambda :net.ifaceExists(ifName)), "Interface did not start properly",
+				InternalError.ASSERTION, data={"interface": ifName})
 			con = interface.getConnection()
 			if con:
 				con.connectInterface(self._interfaceName(interface.name))
@@ -461,13 +486,15 @@ class OpenVZ(elements.RexTFVElement,elements.Element):
 		self._setGateways()
 		net.freeTcpPort(self.vncport)
 		self.vncpid = cmd.spawnShell("while true; do vncterm -timeout 0 -rfbport %d -passwd %s -c bash -c 'while true; do vzctl enter %d; sleep 1; done'; sleep 1; done" % (self.vncport, self.vncpassword, self.vmid), useExec=False)
-		fault.check(util.waitFor(lambda :net.tcpPortUsed(self.vncport)), "VNC server did not start", code=fault.INTERNAL_ERROR)
+		InternalError.check(util.waitFor(lambda :net.tcpPortUsed(self.vncport)), InternalError.ASSERTION,
+			"VNC server did not start")
 		if not self.websocket_port:
 			self.websocket_port = self.getResource("port")
 		if websockifyVersion:
 			net.freeTcpPort(self.websocket_port)
 			self.websocket_pid = cmd.spawn(["websockify", "0.0.0.0:%d" % self.websocket_port, "localhost:%d" % self.vncport, '--cert=/etc/tomato/server.pem'])
-			fault.check(util.waitFor(lambda :net.tcpPortUsed(self.websocket_port)), "Websocket VNC wrapper did not start")
+			InternalError.check(util.waitFor(lambda :net.tcpPortUsed(self.websocket_port)),
+				InternalError.ASSERTION, "Websocket VNC wrapper did not start")
 				
 	def action_stop(self):
 		self._checkState()
@@ -482,7 +509,9 @@ class OpenVZ(elements.RexTFVElement,elements.Element):
 		if self.websocket_pid:
 			process.killTree(self.websocket_pid)
 			del self.websocket_pid
+		self._vzctl("set", ["--hostname", "workaround", "--save"]) #Workaround for fault in vzctl 4.0-1pve6
 		self._vzctl("stop")
+		self._vzctl("set", ["--hostname", self.hostname, "--save"]) #Workaround for fault in vzctl 4.0-1pve6
 		self.setState(ST_PREPARED, True)
 
 	def action_upload_grant(self):
@@ -492,12 +521,12 @@ class OpenVZ(elements.RexTFVElement,elements.Element):
 		return fileserver.addGrant(self.dataPath("rextfv_up.tar.gz"), fileserver.ACTION_UPLOAD)
 		
 	def action_upload_use(self):
-		fault.check(os.path.exists(self.dataPath("uploaded.tar.gz")), "No file has been uploaded")
+		UserError.check(os.path.exists(self.dataPath("uploaded.tar.gz")), UserError.NO_DATA_AVAILABLE, "No file has been uploaded")
 		self._checkImage(self.dataPath("uploaded.tar.gz"))
 		self._useImage(self.dataPath("uploaded.tar.gz"))
 		
 	def action_rextfv_upload_use(self):
-		fault.check(os.path.exists(self.dataPath("rextfv_up.tar.gz")), "No file has been uploaded")
+		UserError.check(os.path.exists(self.dataPath("rextfv_up.tar.gz")), UserError.NO_DATA_AVAILABLE, "No file has been uploaded")
 		self._use_rextfv_archive(self.dataPath("rextfv_up.tar.gz"))
 		if self.state == ST_STARTED:
 			try:
@@ -519,7 +548,7 @@ class OpenVZ(elements.RexTFVElement,elements.Element):
 		try:
 			return self._execute(cmd)
 		except CommandError, err:
-			fault.raise_("Command failed with error code %d: %s" % (err.errorCode, err.errorMessage), code=fault.USER_ERROR)
+			raise UserError(code=UserError.COMMAND_FAILED, message="Command failed", data={"code": err.errorCode, "message": err.errorMessage})
 
 	def upcast(self):
 		return self

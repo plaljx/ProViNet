@@ -16,12 +16,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from django.db import models
-import random, sys
+import random
 
-from .. import fault, config
-from ..user import User
-from ..lib import db, attributes, util, logging #@UnresolvedImport
-from ..lib.decorators import *
+from .. import config
+from ..lib import db, attributes, logging #@UnresolvedImport
+from ..lib.error import UserError, InternalError
 
 TYPES = {}
 
@@ -32,12 +31,15 @@ def give(type_, num, owner):
 	elif isinstance(owner, Connection):
 		instance = ResourceInstance.objects.get(type=type_, num=num, ownerConnection=owner)
 	else:
-		fault.raise_("Owner must either be Element or Connection, was %s" % owner.__class__.__name__, fault.INTERNAL_ERROR)
+		raise InternalError(code=InternalError.INVALID_PARAMETER,
+			message="Owner must either be Element or Connection", data={"owner_type": owner.__class__.__name__})
 	instance.delete()
 
-def take(type_, owner, blacklist=[]):
+def take(type_, owner, blacklist=None):
+	if not blacklist: blacklist = []
 	range_ = config.RESOURCES.get(type_)
-	fault.check(range_, "No resource entry for type %s found", type_, fault.INTERNAL_ERROR)
+	InternalError.check(range_, InternalError.CONFIGURATION_ERROR, "No resource entry found",
+		data={"resource_type": type_})
 	for try_ in xrange(0, 100): 
 		num = random.choice(range_)
 		if num in blacklist:
@@ -54,7 +56,7 @@ def take(type_, owner, blacklist=[]):
 			return num
 		except:
 			pass
-	fault.raise_("Failed to obtain resource of type %s after %d tries" % (type_, try_), code=fault.INTERNAL_ERROR)
+	raise InternalError(code=InternalError.RESOURCE_ERROR, message="Failed to obtain resource", data={"type": type_, "tries": try_})
 
 from ..elements import Element
 from ..connections import Connection
@@ -66,7 +68,8 @@ class Resource(db.ChangesetMixin, attributes.Mixin, models.Model):
 	class Meta:
 		pass
 
-	def init(self, attrs={}):
+	def init(self, attrs=None):
+		if not attrs: attrs = {}
 		self.attrs = {}
 		self.save()
 		self.modify(attrs)
@@ -79,8 +82,8 @@ class Resource(db.ChangesetMixin, attributes.Mixin, models.Model):
 		except:
 			import traceback
 			traceback.print_exc()
-		fault.raise_("Failed to cast resource #%d to type %s" % (self.id, self.type), code=fault.INTERNAL_ERROR)
-	
+		raise InternalError(message="Failed to cast resource", code=InternalError.UPCAST, data={"id": self.id, "type": self.type})
+
 	def modify(self, attrs):
 		logging.logMessage("modify", category="resource", type=self.type, id=self.id, attrs=attrs)
 		for key, value in attrs.iteritems():
@@ -113,7 +116,8 @@ class ResourceInstance(db.ChangesetMixin, attributes.Mixin, models.Model):
 	class Meta:
 		unique_together = (("num", "type"),)
 
-	def init(self, type, num, owner, attrs={}): #@ReservedAssignment
+	def init(self, type, num, owner, attrs=None): #@ReservedAssignment
+		if not attrs: attrs = {}
 		self.type = type
 		self.num = num
 		if isinstance(owner, Element):
@@ -121,7 +125,8 @@ class ResourceInstance(db.ChangesetMixin, attributes.Mixin, models.Model):
 		elif isinstance(owner, Connection):
 			self.ownerConnection = owner
 		else:
-			fault.raise_("Owner must either be Element or Connection, was %s" % owner.__class__.__name__, fault.INTERNAL_ERROR)
+			raise InternalError(code=InternalError.INVALID_PARAMETER,
+				message="Owner must either be Element or Connection", data={"owner_type": owner.__class__.__name__})
 		self.attrs = attrs
 		self.save()
 
@@ -140,8 +145,9 @@ def getAll(**kwargs):
 	allRes = (res.upcast() for res in Resource.objects.filter(**kwargs))
 	return (res for res in allRes if not hasattr(res, "owner") or res.owner == currentUser())
 
-def create(type_, attrs={}):
-	fault.check(type_ in TYPES, "Unknown resource type: %s" % type_, fault.USER_ERROR)
+def create(type_, attrs=None):
+	if not attrs: attrs = {}
+	UserError.check(type_ in TYPES, UserError.UNSUPPORTED_TYPE, "Unknown resource type", data={"type": type_})
 	res = TYPES[type_](owner=currentUser())
 	res.init(attrs)
 	res.save()

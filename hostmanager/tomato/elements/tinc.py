@@ -16,10 +16,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import os, shutil, hashlib, base64
-from .. import connections, elements, fault, config
+from .. import connections, elements, config
 from ..lib import util, cmd #@UnresolvedImport
 from ..lib.attributes import Attr #@UnresolvedImport
 from ..lib.cmd import process, net, path #@UnresolvedImport
+from ..lib.error import UserError, InternalError
 
 DOC="""
 Element type: ``tinc``
@@ -89,7 +90,7 @@ class Tinc(elements.Element):
 	port = port_attr.attribute()
 	path_attr = Attr("path")
 	path = path_attr.attribute()
-	mode_attr = Attr("mode", desc="Mode", states=[ST_CREATED], options={"hub": "Hub (broadcast)", "switch": "Switch (learning)"}, faultType=fault.new_user, default="switch")
+	mode_attr = Attr("mode", desc="Mode", states=[ST_CREATED], options={"hub": "Hub (broadcast)", "switch": "Switch (learning)"}, default="switch")
 	mode = mode_attr.attribute()
 	privkey_attr = Attr("privkey", desc="Private key")
 	privkey = privkey_attr.attribute()
@@ -145,13 +146,13 @@ class Tinc(elements.Element):
 		return hashlib.md5(pubkey).hexdigest()
 				
 	def modify_mode(self, val):
-		self.connect = val
+		self.mode = val
 
 	def modify_peers(self, val):
 		for peer in val:
-			fault.check("host" in peer, "Peer does not contain host")
-			fault.check("port" in peer, "Peer does not contain port")
-			fault.check("pubkey" in peer, "Peer does not contain pubkey")
+			UserError.check("host" in peer, UserError.INVALID_VALUE, "Peer does not contain host")
+			UserError.check("port" in peer, UserError.INVALID_VALUE, "Peer does not contain port")
+			UserError.check("pubkey" in peer, UserError.INVALID_VALUE, "Peer does not contain pubkey")
 		self.peers = val
 
 	def action_start(self):
@@ -192,7 +193,8 @@ class Tinc(elements.Element):
 		cmd.run(["tincd", "-c", self.path, "--pidfile=%s" % os.path.join(self.path, "tinc.pid")])
 		self.setState(ST_STARTED)
 		ifName = self._interfaceName()
-		fault.check(util.waitFor(lambda :net.ifaceExists(ifName)), "Interface did not start properly: %s", ifName, fault.INTERNAL_ERROR) 
+		InternalError.check(util.waitFor(lambda :net.ifaceExists(ifName)), InternalError.ASSERTION,
+			"Interface did not start properly", data={"interface": ifName})
 		net.ifUp(ifName)
 		con = self.getConnection()
 		if con:
@@ -235,8 +237,10 @@ class Tinc(elements.Element):
 			usage.memory = process.memory(pid)
 			cputime = process.cputime(pid)
 			usage.updateContinuous("cputime", cputime, data)
-			traffic = sum(net.trafficInfo(self.interfaceName()))
-			usage.updateContinuous("traffic", traffic, data)
+			trafficA, trafficB = net.trafficInfo(self.interfaceName())
+			if not trafficA is None and not trafficB is None:
+				traffic = trafficA + trafficB
+				usage.updateContinuous("traffic", traffic, data)
 			
 if not config.MAINTENANCE:
 	tincVersion = cmd.getDpkgVersion("tinc")

@@ -15,10 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from .. import connections, fault, config
+from .. import connections, config
 from ..lib import cmd #@UnresolvedImport
 from ..lib.attributes import Attr #@UnresolvedImport
 from ..lib.cmd import tc, net, process, path, fileserver #@UnresolvedImport
+from ..lib.error import UserError
 
 import os
 
@@ -36,39 +37,39 @@ class Bridge(connections.Connection):
 	emulation_attr = Attr("emulation", desc="Enable emulation", type="bool", default=True)
 	emulation = emulation_attr.attribute()
 
-	bandwidth_to_attr = Attr("bandwidth_to", desc="Bandwidth", unit="kbit/s", type="float", minValue=0, maxValue=1000000, faultType=fault.new_user, default=10000)
+	bandwidth_to_attr = Attr("bandwidth_to", desc="Bandwidth", unit="kbit/s", type="float", minValue=0, maxValue=1000000, default=10000)
 	bandwidth_to = bandwidth_to_attr.attribute()
-	bandwidth_from_attr = Attr("bandwidth_from", desc="Bandwidth", unit="kbit/s", type="float", minValue=0, maxValue=1000000, faultType=fault.new_user, default=10000)
+	bandwidth_from_attr = Attr("bandwidth_from", desc="Bandwidth", unit="kbit/s", type="float", minValue=0, maxValue=1000000, default=10000)
 	bandwidth_from = bandwidth_from_attr.attribute()
 
-	lossratio_to_attr = Attr("lossratio_to", desc="Loss ratio", unit="%", type="float", minValue=0.0, maxValue=100.0, faultType=fault.new_user, default=0.0)
+	lossratio_to_attr = Attr("lossratio_to", desc="Loss ratio", unit="%", type="float", minValue=0.0, maxValue=100.0, default=0.0)
 	lossratio_to = lossratio_to_attr.attribute()
-	lossratio_from_attr = Attr("lossratio_from", desc="Loss ratio", unit="%", type="float", minValue=0.0, maxValue=100.0, faultType=fault.new_user, default=0.0)
+	lossratio_from_attr = Attr("lossratio_from", desc="Loss ratio", unit="%", type="float", minValue=0.0, maxValue=100.0, default=0.0)
 	lossratio_from = lossratio_from_attr.attribute()
 	
-	duplicate_to_attr = Attr("duplicate_to", desc="Duplication ratio", unit="%", type="float", minValue=0.0, maxValue=100.0, faultType=fault.new_user, default=0.0)
+	duplicate_to_attr = Attr("duplicate_to", desc="Duplication ratio", unit="%", type="float", minValue=0.0, maxValue=100.0, default=0.0)
 	duplicate_to = duplicate_to_attr.attribute()
-	duplicate_from_attr = Attr("duplicate_from", desc="Duplication ratio", unit="%", type="float", minValue=0.0, maxValue=100.0, faultType=fault.new_user, default=0.0)
+	duplicate_from_attr = Attr("duplicate_from", desc="Duplication ratio", unit="%", type="float", minValue=0.0, maxValue=100.0, default=0.0)
 	duplicate_from = duplicate_from_attr.attribute()
 
-	corrupt_to_attr = Attr("corrupt_to", desc="Corruption ratio", unit="%", type="float", minValue=0.0, maxValue=100.0, faultType=fault.new_user, default=0.0)
+	corrupt_to_attr = Attr("corrupt_to", desc="Corruption ratio", unit="%", type="float", minValue=0.0, maxValue=100.0, default=0.0)
 	corrupt_to = corrupt_to_attr.attribute()
-	corrupt_from_attr = Attr("corrupt_from", desc="Corruption ratio", unit="%", type="float", minValue=0.0, maxValue=100.0, faultType=fault.new_user, default=0.0)
+	corrupt_from_attr = Attr("corrupt_from", desc="Corruption ratio", unit="%", type="float", minValue=0.0, maxValue=100.0, default=0.0)
 	corrupt_from = corrupt_from_attr.attribute()
 
-	delay_to_attr = Attr("delay_to", desc="Delay", unit="ms", type="float", minValue=0.0, faultType=fault.new_user, default=0.0)
+	delay_to_attr = Attr("delay_to", desc="Delay", unit="ms", type="float", minValue=0.0, default=0.0)
 	delay_to = delay_to_attr.attribute()
-	delay_from_attr = Attr("delay_from", desc="Delay", unit="ms", type="float", minValue=0.0, faultType=fault.new_user, default=0.0)
+	delay_from_attr = Attr("delay_from", desc="Delay", unit="ms", type="float", minValue=0.0, default=0.0)
 	delay_from = delay_from_attr.attribute()
 
-	jitter_to_attr = Attr("jitter_to", desc="Jitter", unit="ms", type="float", minValue=0.0, faultType=fault.new_user, default=0.0)
+	jitter_to_attr = Attr("jitter_to", desc="Jitter", unit="ms", type="float", minValue=0.0, default=0.0)
 	jitter_to = jitter_to_attr.attribute()
-	jitter_from_attr = Attr("jitter_from", desc="Jitter", unit="ms", type="float", minValue=0.0, faultType=fault.new_user, default=0.0)
+	jitter_from_attr = Attr("jitter_from", desc="Jitter", unit="ms", type="float", minValue=0.0, default=0.0)
 	jitter_from = jitter_from_attr.attribute()
 
-	distribution_to_attr = Attr("distribution_to", desc="Distribution", type="str", options={"uniform": "Uniform", "normal": "Normal", "pareto": "Pareto", "paretonormal": "Pareto-Normal"}, faultType=fault.new_user, default="uniform")
+	distribution_to_attr = Attr("distribution_to", desc="Distribution", type="str", options={"uniform": "Uniform", "normal": "Normal", "pareto": "Pareto", "paretonormal": "Pareto-Normal"}, default="uniform")
 	distribution_to = distribution_to_attr.attribute()
-	distribution_from_attr = Attr("distribution_from", desc="Distribution", type="str", options={"uniform": "Uniform", "normal": "Normal", "pareto": "Pareto", "paretonormal": "Pareto-Normal"}, faultType=fault.new_user, default="uniform")
+	distribution_from_attr = Attr("distribution_from", desc="Distribution", type="str", options={"uniform": "Uniform", "normal": "Normal", "pareto": "Pareto", "paretonormal": "Pareto-Normal"}, default="uniform")
 	distribution_from = distribution_from_attr.attribute()
 	
 
@@ -78,7 +79,7 @@ class Bridge(connections.Connection):
 	capture_filter = capture_filter_attr.attribute()
 	capture_port_attr = Attr("capture_port", type="int")
 	capture_port = capture_port_attr.attribute()
-	capture_mode_attr = Attr("capture_mode", desc="Capture mode", type="str", options={"net": "Via network", "file": "For download"}, faultType=fault.new_user, default="file")
+	capture_mode_attr = Attr("capture_mode", desc="Capture mode", type="str", options={"net": "Via network", "file": "For download"}, default="file")
 	capture_mode = capture_mode_attr.attribute()
 	capture_pid_attr = Attr("capture_pid", type="int")
 	capture_pid = capture_pid_attr.attribute()
@@ -147,7 +148,7 @@ class Bridge(connections.Connection):
 		elif self.capture_mode == "net":
 			self.capture_pid = cmd.spawn(["tcpserver", "-qHRl", "0", "0", str(self.capture_port), "tcpdump", "-i", self.bridge, "-s0", "-nUw", "-", self.capture_filter])
 		else:
-			fault.raise_("Capture mode must be either file or net")
+			raise UserError(code=UserError.INVALID_CONFIGURATION, message="Capture mode must be either file or net")
 				
 	def _stopCapturing(self):
 		if not self.capturing or self.state == ST_CREATED:
@@ -182,10 +183,12 @@ class Bridge(connections.Connection):
 		elA, elB = [el for el in els]
 		if elA.id > elB.id:
 			#force ordering on connected elements, so from and to have defined meanings
+			#lower number is A, higher number is B, A -> B is FROM, B -> A is TO
 			elA, elB = elB, elA
 		ifA, ifB = elA.interfaceName(), elB.interfaceName()
 		if not ifA or not ifB:
 			return
+		#set attributes in reversed manner as it only applies to traffic being received
 		attrsA = dict([(k.replace("_to", ""), v) for k, v in self.attrs.iteritems() if k.endswith("_to")])
 		attrsB = dict([(k.replace("_from", ""), v) for k, v in self.attrs.iteritems() if k.endswith("_from")])
 		tc.setLinkEmulation(ifA, **attrsA)
@@ -198,8 +201,14 @@ class Bridge(connections.Connection):
 		ifA, ifB = [el.interfaceName() for el in els]
 		if not ifA or not ifB:
 			return
-		tc.clearLinkEmulation(ifA)
-		tc.clearLinkEmulation(ifB)
+		try:
+			tc.clearLinkEmulation(ifA)
+		except:
+			pass
+		try:
+			tc.clearLinkEmulation(ifB)
+		except:
+			pass
 	
 	def modify_emulation(self, val):
 		if self.emulation == val:
@@ -334,9 +343,9 @@ class Bridge(connections.Connection):
 		net.bridgeRemoveInterface(self.bridge, ifname)
 
 	def action_download_grant(self, limitSize=None):
-		fault.check(os.path.exists(self.dataPath("capture")), "Nothing captured so far")
+		UserError.check(os.path.exists(self.dataPath("capture")), UserError.NO_DATA_AVAILABLE, "Nothing captured so far")
 		entries = [os.path.join(self.dataPath("capture"), f) for f in path.entries(self.dataPath("capture"))]
-		fault.check(entries, "Nothing captured so far")
+		UserError.check(entries, UserError.NO_DATA_AVAILABLE, "Nothing captured so far")
 		net.tcpslice(self.dataPath("capture.pcap"), entries, limitSize)
 		return fileserver.addGrant(self.dataPath("capture.pcap"), fileserver.ACTION_DOWNLOAD, repeated=True)
 		

@@ -16,10 +16,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from django.db import models
-from .. import resources, fault, config
+from .. import resources, config
 from ..user import User
 from ..lib import attributes #@UnresolvedImport
 from ..lib.cmd import bittorrent, path #@UnresolvedImport
+from ..lib.error import UserError, InternalError #@UnresolvedImport
 import os, base64, hashlib
 
 PATTERNS = {
@@ -33,8 +34,13 @@ class Template(resources.Resource):
 	tech = models.CharField(max_length=20)
 	name = models.CharField(max_length=50)
 	preference = models.IntegerField(default=0)
-	torrent_data = attributes.attribute("torrent_data", str)
-	
+	torrent_data = attributes.attribute("torrent_data", str)  #encoded as base64
+	kblang = attributes.attribute("kblang",str,null=False,default="en-us")
+
+	@property
+	def torrent_data_hash(self):
+		return hashlib.md5(base64.b64decode(self.torrent_data)).hexdigest() if self.torrent_data else None
+
 	TYPE = "template"
 
 	class Meta:
@@ -46,7 +52,7 @@ class Template(resources.Resource):
 		self.type = self.TYPE
 		attrs = args[0]
 		for attr in ["name", "tech", "torrent_data"]:
-			fault.check(attr in attrs, "Template needs attribute %s", attr) 
+			UserError.check(attr in attrs, UserError.INVALID_CONFIGURATION, "Attribute missing", data={"attribute": attr})
 		self.modify_tech(attrs["tech"])
 		self.modify_name(attrs["name"])
 		resources.Resource.init(self, *args, **kwargs)
@@ -55,14 +61,14 @@ class Template(resources.Resource):
 		return self
 	
 	def getPath(self):
-		hash = hashlib.md5(self.torrent_data or "").hexdigest()
+		hash = self.torrent_data_hash
 		return os.path.join(config.TEMPLATE_DIR, PATTERNS[self.tech] % hash)
 	
 	def getTorrentPath(self):
 		return self.getPath() + ".torrent"
 
 	def modify_tech(self, val):
-		fault.check(val in PATTERNS.keys(), "Unsupported template tech: %s", val)
+		UserError.check(val in PATTERNS.keys(), UserError.UNSUPPORTED_TYPE, "Unsupported template tech", data={"tech": val})
 		self.tech = val
 	
 	def modify_name(self, val):
@@ -70,6 +76,11 @@ class Template(resources.Resource):
 
 	def modify_preference(self, val):
 		self.preference = val
+		
+	def modify_kblang(self, val):
+		from ..elements.kvmqm import kblang_options
+		UserError.check(val in kblang_options, UserError.UNSUPPORTED_TYPE, "Unsupported value for kblang: %s" % val, data={"kblang":val})
+		self.kblang = val
 
 	def modify_torrent_data(self, val):
 		if val != self.torrent_data:
@@ -106,10 +117,12 @@ class Template(resources.Resource):
 		if self.torrent_data:
 			del info["attrs"]["torrent_data"]
 		info["attrs"]["ready"] = self.isReady()
+		info["attrs"]["size"] = os.path.getsize(self.getPath()) if os.path.exists(self.getPath()) else 0
 		info["attrs"]["name"] = self.name
 		info["attrs"]["tech"] = self.tech
 		info["attrs"]["preference"] = self.preference
-		info["attrs"]["torrent_data_hash"] = hashlib.md5(str(self.torrent_data)).hexdigest() if self.torrent_data else None
+		info["attrs"]["torrent_data_hash"] = self.torrent_data_hash
+		info["attrs"]["kblang"] = self.kblang
 		return info
 
 def get(tech, name):
@@ -120,7 +133,7 @@ def get(tech, name):
 	
 def getPreferred(tech):
 	tmpls = Template.objects.filter(tech=tech, owner=currentUser()).order_by("-preference")
-	fault.check(tmpls, "No template of type %s registered", tech) 
+	InternalError.check(tmpls, InternalError.CONFIGURATION_ERROR, "No template registered", data={"tech": tech})
 	return tmpls[0]
 
 resources.TYPES[Template.TYPE] = Template

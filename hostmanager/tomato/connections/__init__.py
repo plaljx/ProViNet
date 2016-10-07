@@ -21,8 +21,7 @@ from django.db import models
 from .. import dump
 from ..user import User
 from ..accounting import UsageStatistics
-from ..lib import db, attributes, util, logging #@UnresolvedImport
-from ..lib.decorators import *
+from ..lib import db, attributes, logging #@UnresolvedImport
 
 ST_CREATED = "created"
 ST_STARTED = "started"
@@ -92,9 +91,11 @@ class Connection(db.ChangesetMixin, attributes.Mixin, models.Model):
 	class Meta:
 		pass
 
-	def init(self, el1, el2, attrs={}):
+	def init(self, el1, el2, attrs=None):
+		if not attrs: attrs = {}
 		concept_ = self.determineConcept(el1, el2)
-		fault.check(concept_, "No connection concept found to connect elements of type %s and %s with connection of type %s", (el1.type, el2.type, self.type))
+		UserError.check(concept_, UserError.UNABLE_TO_CONNECT, "Not able to connect the two elements with this connection type",
+			data={"element_types": (el1.type, el2.type), "connection_type": self.type})
 		self.owner = currentUser()
 		self.attrs = dict(self.DEFAULT_ATTRS)
 		self.save()
@@ -106,13 +107,6 @@ class Connection(db.ChangesetMixin, attributes.Mixin, models.Model):
 			os.makedirs(self.dataPath())
 		self.modify(attrs)
 
-	def dump(self, **kwargs):
-		try:
-			data = self.info()
-		except Exception, ex:
-			data = {"info_exception": str(ex), "type": self.type, "id": self.id, "state": self.state, "attrs": self.attrs}
-		dump.dump(connection=data, **kwargs)
-		
 	def dumpException(self, **kwargs):
 		try:
 			data = self.info()
@@ -152,7 +146,7 @@ class Connection(db.ChangesetMixin, attributes.Mixin, models.Model):
 			return getattr(self, self.type)
 		except:
 			pass
-		fault.raise_("Failed to cast connection #%d to type %s" % (self.id, self.type), code=fault.INTERNAL_ERROR)
+		raise InternalError(message="Failed to cast connection", code=InternalError.UPCAST, data={"id": self.id, "type": self.type})
 
 	def dataPath(self, filename=""):
 		"""
@@ -189,9 +183,10 @@ class Connection(db.ChangesetMixin, attributes.Mixin, models.Model):
 		@param attrs: Attributes to change
 		@type attrs: dict
 		"""
-		fault.check(not self.isBusy(), "Object is busy", code=fault.OBJECT_BUSY)
+		UserError.check(not self.isBusy(), UserError.ENTITY_BUSY, "Object is busy")
 		for key in attrs.keys():
-			fault.check(key in self.CAP_ATTRS, "Unsuported attribute for %s: %s", (self.type, key), code=fault.UNSUPPORTED_ATTRIBUTE)
+			UserError.check(key in self.CAP_ATTRS, UserError.UNSUPPORTED_ATTRIBUTE, "Unsupported attribute",
+				data={"connection_type": self.type, "attribute": key})
 			self.CAP_ATTRS[key].check(self, attrs[key])
 		
 	def modify(self, attrs):
@@ -214,9 +209,8 @@ class Connection(db.ChangesetMixin, attributes.Mixin, models.Model):
 		try:
 			for key, value in attrs.iteritems():
 				getattr(self, "modify_%s" % key)(value)
-		except Exception, exc:
-			if fault.unexpectedError(exc):
-				self.dumpException()
+		except InternalError, err:
+			self.dumpException()
 			raise				
 		finally:
 			self.setBusy(False)				
@@ -232,10 +226,13 @@ class Connection(db.ChangesetMixin, attributes.Mixin, models.Model):
 		@param action: Action to check
 		@type action: str
 		"""
-		fault.check(not self.isBusy(), "Object is busy", code=fault.OBJECT_BUSY)
-		fault.check(action in self.CAP_ACTIONS, "Unsuported action for %s: %s", (self.type, action), code=fault.UNSUPPORTED_ACTION)
-		fault.check(self.state in self.CAP_ACTIONS[action], "Action %s of %s can not be executed in state %s", (action, self.type, self.state), code=fault.INVALID_STATE)
-	
+		UserError.check(not self.isBusy(), UserError.ENTITY_BUSY, "Object is busy")
+		UserError.check(action in self.CAP_ACTIONS, UserError.UNSUPPORTED_ACTION, "Unsuported action",
+			data={"connection_type": self.type, "action": action})
+		UserError.check(self.state in self.CAP_ACTIONS[action], UserError.INVALID_STATE,
+			"Action can not be executed in this state",
+			data={"action": action, "connection_type": self.type, "state": self.state})
+
 	def action(self, action, params):
 		"""
 		Executes the action with the given parameters. This method first
@@ -256,15 +253,16 @@ class Connection(db.ChangesetMixin, attributes.Mixin, models.Model):
 		self.setBusy(True)
 		try:
 			res = getattr(self, "action_%s" % action)(**params)
-		except Exception, exc:
-			if fault.unexpectedError(exc):
-				self.dumpException()
+		except InternalError, err:
+			self.dumpException()
 			raise
 		finally:
 			self.setBusy(False)
 		self.save()
 		if action in self.CAP_NEXT_STATE:
-			fault.check(self.state == self.CAP_NEXT_STATE[action], "Action %s of %s lead to wrong state, should be %s, was %s", (action, self.type, self.CAP_NEXT_STATE[action], self.state), fault.INTERNAL_ERROR)		
+			InternalError.check(self.state == self.CAP_NEXT_STATE[action], InternalError.INVALID_NEXT_STATE,
+				"Action lead to wrong state", data={"action": action, "element_type": self.type,
+				"expected_state": self.CAP_NEXT_STATE[action], "reached_state": self.state})
 		logging.logMessage("action end", category="connection", id=self.id, action=action, params=params, res=res)
 		logging.logMessage("info", category="connection", id=self.id, info=self.info())			
 		return res
@@ -274,8 +272,10 @@ class Connection(db.ChangesetMixin, attributes.Mixin, models.Model):
 		self.save()
 
 	def checkRemove(self):
-		fault.check(not self.isBusy(), "Object is busy", code=fault.OBJECT_BUSY)
-		fault.check(not REMOVE_ACTION in self.CAP_ACTIONS or self.state in self.CAP_ACTIONS[REMOVE_ACTION], "Connector type %s can not be removed in its state %s", (self.type, self.state), code=fault.INVALID_STATE)
+		UserError.check(not self.isBusy(), UserError.ENTITY_BUSY, "Object is busy")
+		UserError.check(not REMOVE_ACTION in self.CAP_ACTIONS or self.state in self.CAP_ACTIONS[REMOVE_ACTION],
+			UserError.INVALID_STATE, "Connector can not be removed in its current state",
+			data={"connection_type": self.type, "state": self.state})
 
 	def remove(self):
 		self.checkRemove()
@@ -303,7 +303,8 @@ class Connection(db.ChangesetMixin, attributes.Mixin, models.Model):
 			"elements": sorted(els), #sort elements so that first one is from and second one is to
 		}
 		
-	def getResource(self, type_, blacklist=[]):
+	def getResource(self, type_, blacklist=None):
+		if not blacklist: blacklist = []
 		from .. import resources #needed to break import cycle
 		return resources.take(type_, self, blacklist=blacklist)
 			
@@ -330,12 +331,16 @@ def get(id_, **kwargs):
 def getAll(**kwargs):
 	return (con.upcast() for con in Connection.objects.filter(**kwargs))
 
-def create(el1, el2, type_=None, attrs={}):
-	fault.check(not el1.connection, "Element #%d is already connected", el1.id)
-	fault.check(not el2.connection, "Element #%d is already connected", el2.id)
-	fault.check(el1.owner == el2.owner == currentUser(), "Element belongs to different user")
+def create(el1, el2, type_=None, attrs=None):
+	if not attrs: attrs = {}
+	UserError.check(not el1.connection, UserError.ALREADY_CONNECTED, "Element is already connected",
+		data={"element_id": el1.id})
+	UserError.check(not el2.connection, UserError.ALREADY_CONNECTED, "Element is already connected",
+		data={"element_id": el2.id})
+	UserError.check(el1.owner == el2.owner == currentUser(), UserError.DIFFERENT_USER,
+		"Element belongs to different user")
 	if type_:
-		fault.check(type_ in TYPES, "Unsupported type: %s", type_)
+		UserError.check(type_ in TYPES, UserError.UNSUPPORTED_TYPE, "Unsupported type", data={"type": type_})
 		con = TYPES[type_]()
 		try:
 			con.init(el1, el2, attrs)
@@ -350,6 +355,8 @@ def create(el1, el2, type_=None, attrs={}):
 		for type_ in TYPES:
 			if TYPES[type_].determineConcept(el1, el2):
 				return create(el1, el2, type_, attrs)
-		fault.check(False, "Failed to find matching connection type for element types %s and %s", (el1.type, el2.type))
+		UserError.check(False, UserError.UNABLE_TO_CONNECT, "Failed to find matching connection type",
+			data={"element_types": (el1.type, el2.type)})
 
-from .. import fault, currentUser, config
+from .. import currentUser, config
+from ..lib.error import UserError, InternalError

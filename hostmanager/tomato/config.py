@@ -37,6 +37,8 @@ evaluated in the right context.
 
 import os
 
+DUMMY_FLOPPY = "/usr/share/tomato-hostmanager/contrib/dummy_floppy.raw"
+
 LOG_FILE = "/var/log/tomato/main.json.log"
 """
 The location of the logfile. All relevant logging information will be written 
@@ -76,32 +78,40 @@ field is set to ``None`` (the default), the template directory will be a
 subdirectory of the data directory.
 """
 
-SERVER = {
+SERVER = [{
+	"TYPE": "https+xmlrpc",
 	"PORT": 8000,
-	"SSL": True,
 	"SSL_OPTS": {
-		"cert_file" : "/etc/tomato/server.cert",
-		"key_file": "/etc/tomato/server.cert",
+		"cert_file" : "/etc/tomato/server.pem",
+		"key_file": "/etc/tomato/server.pem",
 		"client_certs": "/etc/tomato/client_certs",
 	}
-}
+}, {
+  "TYPE": "ssl+jsonrpc",
+	"PORT": 8003,
+	"SSL_OPTS": {
+		"cert_file" : "/etc/tomato/server.pem",
+		"key_file": "/etc/tomato/server.pem",
+		"client_certs": "/etc/tomato/client_certs.pem",
+	}
+}]
 """
 This field defines where and how to start the API server. It is a list of 
 server entries where each server entry is a dict containing the following
 values:
 
+   ``TYPE`` (default: ``https+xmlrpc``)
+      The type/protocol of the server. Available protocols are ``https+xmlrpc``
+      and ``ssl+jsonrpc``.
+
    ``PORT`` (default: ``8000``)
       The port number of the API server. This defaults to 8000. If several
       server entries are configured, each one needs its own free port number.
    
-   ``SSL`` (default: ``True``)
-      Whether SSL should be used or not. Since the authentication uses SSL
-      client certificates, this setting must be ``True``.
-   
    ``SSL_OPTS``
       This dict contains the following options for the SSL usage:
       
-      ``key_file``, ``cert_file`` (default: ``'/etc/tomato/server.cert'``)
+      ``key_file``, ``cert_file`` (default: ``'/etc/tomato/server.pem'``)
          The paths of the files containing the private key and the SSL 
          certificate for the server in PEM format.
          If one file contains both information, these fields can point to the
@@ -162,6 +172,8 @@ BITTORRENT_RESTART = 60 * 30 # 30 minutes
 This field defines how often the bittorrent client should be restarted.
 """
 
+BITTORRENT_PORT_RANGE = (8010, 8020)
+
 RESOURCES = {
 	'port': xrange(6000, 7000),
 	'vmid': xrange(1000, 2000)
@@ -173,6 +185,8 @@ systems that also need those resources, these entries might need to be adapted.
 """
 
 WEBSOCKIFY_PORT_BLACKLIST = [6000, 6666]
+
+MAX_REQUESTS = 50
 
 import socket
 _socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

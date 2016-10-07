@@ -19,6 +19,7 @@ import os, sys, thread
 
 # tell django to read config from module tomato.config
 os.environ['DJANGO_SETTINGS_MODULE']=__name__+".config"
+os.environ['TOMATO_MODULE'] = "hostmanager"
 
 def db_migrate():
 	"""
@@ -45,24 +46,29 @@ def currentUser():
 def setCurrentUser(user):
 	_currentUser.user = user
 
-def login(credentials, sslCert):
-	if not sslCert:
+def login(commonName):
+	if not commonName:
 		return False
-	username = sslCert.get_subject().commonName
-	user, _ = User.objects.get_or_create(name=username)
+	user, _ = User.objects.get_or_create(name=commonName)
 	setCurrentUser(user)
-	return bool(sslCert)
+	return bool(commonName)
+
+from lib import logging
+def handleError():
+	import traceback
+	traceback.print_exc()
+	dump.dumpException()
+	logging.logException()
 
 from lib import tasks #@UnresolvedImport
 scheduler = tasks.TaskScheduler(maxLateTime=30.0, minWorkers=2)
 
 from models import *
-	
-import api
 
-from . import dump, lib, resources, accounting, rpcserver, elements, firewall #@UnresolvedImport
+from . import resources, rpcserver, firewall, dump #@UnresolvedImport
+from .resources import network
 from lib.cmd import bittorrent, fileserver, process #@UnresolvedImport
-from lib import logging, util #@UnresolvedImport
+from lib import util #@UnresolvedImport
 
 scheduler.scheduleRepeated(config.BITTORRENT_RESTART, util.wrap_task(bittorrent.restartClient))
 
@@ -72,8 +78,8 @@ def start():
 	logging.openDefault(config.LOG_FILE)
 	dump.init()
 	db_migrate()
-	firewall.add_all_networks(resources.network.getAll())
-	bittorrent.startClient(config.TEMPLATE_DIR)
+	firewall.add_all_networks(network.getAll())
+	bittorrent.startClient(config.TEMPLATE_DIR, config.BITTORRENT_PORT_RANGE[0], config.BITTORRENT_PORT_RANGE[1])
 	fileserver.start()
 	rpcserver.start()
 	scheduler.start()
@@ -95,15 +101,15 @@ def _printStackTraces():
 	
 def _stopHelper():
 	stopped.wait(10)
-	if stopped.isSet():
+	if stopped.isSet() and threading.activeCount() == 1:
 		return
-	print >>sys.stderr, "Stopping takes long, waiting some more time..."
+	print >>sys.stderr, "Stopping takes long. Waiting 20 more seconds"
 	stopped.wait(10)
-	if stopped.isSet():
+	if stopped.isSet() and threading.activeCount() == 1:
 		return
-	print >>sys.stderr, "Ok last chance, killing process in 10 seconds..."
+	print >>sys.stderr, "Killing process in 10 seconds..."
 	stopped.wait(10)
-	if stopped.isSet():
+	if stopped.isSet() and threading.activeCount() == 1:
 		return
 	print >>sys.stderr, "Some threads are still running:"
 	_printStackTraces()
@@ -115,10 +121,10 @@ def stop(*args):
 		print >>sys.stderr, "Shutting down..."
 		thread.start_new_thread(_stopHelper, ())
 		firewall.remove_all_networks(resources.network.getAll())
+		bittorrent.stopClient()
 		rpcserver.stop()
 		scheduler.stop()
 		fileserver.stop()
-		bittorrent.stopClient()
 		logging.closeDefault()
 		stopped.set()
 	except:
