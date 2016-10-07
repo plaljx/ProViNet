@@ -175,8 +175,6 @@ class XMLRPCHandler(SecureRequestHandler, BaseHTTPServer.BaseHTTPRequestHandler)
 
 	def send(self, response):
 		try:
-			#import pdb
-			#pdb.set_trace()
 			res = xmlrpclib.dumps(response, methodresponse=True, allow_none=True)
 		except:
 			import traceback
