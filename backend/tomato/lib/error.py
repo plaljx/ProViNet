@@ -1,5 +1,6 @@
 import os, hashlib, re
 import httplib
+import inspect, traceback
 
 from . import anyjson as json
 
@@ -8,16 +9,62 @@ dumpError = None
 MODULE = os.environ.get("TOMATO_MODULE", "unknown")
 TYPES = {}
 
+def generate_inspect_trace(frame=None):
+	res = []
+	if frame is None:
+		frame = inspect.currentframe()
+
+	# there may be recursive errors if repr(obj) fails for any local variable at any point.
+	# thus, we need to figure out whether we have such a recursion before any repr function is called.
+	# we detect a recursion by testing whether this function appears multiple times in the stack.
+	# the try: outside the repr() or str() function below does not mean that this function is not called in error handling.
+	self_count = 0  # count how often this function is in the trace. abort if recursion may be happening
+	for frame_ in inspect.getouterframes(frame):
+		if frame_[3] == generate_inspect_trace.__name__:
+			self_count += 1
+		if self_count > 1:  # assume recursion if this function is in the stack 2 or more times
+			return []
+
+	for frame_ in inspect.getouterframes(frame):
+		obj = {
+			'locals': {},
+			'file': frame_[1],
+			'line_no': frame_[2],
+			'function': frame_[3],
+			'code': frame_[4]
+		}
+		for k, v in frame_[0].f_locals.iteritems():
+			try:
+				v_ = repr(v)
+			except:
+				try:
+					v_ = str(v)
+				except:
+					v_ = "<unreadable object>"
+			if len(v_) > 1000:
+				v_ = v_[:1000]
+			obj['locals'][k] = v_
+
+		res.append(obj)
+
+
+	res.reverse()
+	return res
+
 class Error(Exception):
 	TYPE = "general"
 	UNKNOWN = None
 
-	def __init__(self, code=None, message=None, data=None, type=None, todump=None, module=MODULE, httpcode=None,onscreenmessage=None):
+	def __init__(self, code=None, message=None, data=None, type=None, todump=None, module=MODULE, httpcode=None, onscreenmessage=None, frame=None, frame_trace=None, trace=None):
 		self.type = type or self.TYPE
 		self.code = code
 		self.message = message
 		self.data = data or {}
 		self.module = module
+		if trace is None:
+			self.trace = traceback.extract_stack()
+		else:
+			self.trace = trace
 		if httpcode is None:
 			self.httpcode = getCodeHTTPErrorCode(code)
 		else:
@@ -29,7 +76,15 @@ class Error(Exception):
 		if todump is not None:
 			self.todump = todump
 		else:
-			self.todump = not isinstance(self, UserError)
+			self.todump = not isinstance(self, UserError) and self.module == MODULE \
+						  or isinstance(self, UserError) and self.module != MODULE
+		if frame_trace is None:  # this must be last because it may call repr(self)
+			if frame is None:
+				self.frame_trace = generate_inspect_trace(inspect.currentframe())
+			else:
+				self.frame_trace = generate_inspect_trace(frame)
+		else:
+			self.frame_trace = frame_trace
 		
 	
 	def group_id(self):
@@ -55,7 +110,10 @@ class Error(Exception):
 		"""
 		creates a dict representation of this error.
 		"""
-		return self.__dict__
+		res = dict(self.__dict__)
+		if 'frame_trace' in res:
+			del res['frame_trace']
+		return res
 
 	@property
 	def rawstr(self):
@@ -79,22 +137,28 @@ class Error(Exception):
 	@classmethod
 	def check(cls, condition, code, message, todump=None, *args, **kwargs):
 		if condition: return
-		exception = cls(code=code, message=message,todump=todump, *args, **kwargs)
+		exception = cls(code=code, message=message, todump=todump,
+										frame=inspect.currentframe(), trace=traceback.extract_stack(), *args, **kwargs)
 		exception.dump()
 		raise exception
 
 	@classmethod
-	def wrap(cls, error, code=UNKNOWN, message=None, *args, **kwargs):
-		exception = cls(code=code, message=message or str(error), *args, **kwargs)
-		exception.dump()
-		return exception
+	def wrap(cls, error, code=UNKNOWN, todump=None, message=None, trace=None, frame_trace=None, frame=None, *args, **kwargs):
+		return cls(code=code, message=message or repr(error), todump=todump, trace=trace, frame_trace=frame_trace, frame=frame, *args, **kwargs)
 
 	def __str__(self):
-		return "%s %s error [%s]: %s (%r)" % (self.module, self.type, self.code, self.message or "", self.data)
+		lines = []
+		for k, v in self.data.items():
+			if k == "trace":
+				lines.append("\ttrace=")
+				for l in v.splitlines():
+					lines.append("\t\t" + l)
+			else:
+				lines.append("\t%s=%r" % (k, v))
+		return "%s %s error [%s]: %s\n%s" % (self.module, self.type, self.code, self.message or "", "\n".join(lines))
 
 	def __repr__(self):
 		return "Error(module=%r, type=%r, code=%r, message=%r, data=%r, onscreenmessage=%r)" % (self.module, self.type, self.code, self.message, self.data,self.onscreenmessage)
-
 
 def ErrorType(Type):
 	TYPES[Type.TYPE]=Type
