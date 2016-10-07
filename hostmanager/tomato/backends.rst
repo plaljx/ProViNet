@@ -38,6 +38,8 @@ After modifying the SSL keys, the certificate index must be rebuilt. ::
 If a different directory has been set in the configuration file, it must be 
 used here instead.
 
+  update-tomato-client-certs
+
 Note that the hostmanager does not have to be restarted after rebuilding the
 index.
 Also note that the hostmanager will issue the command to rebuild the 
